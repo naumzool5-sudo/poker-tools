@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NLH Чек-лист — NL2 (v4.2)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f4f6f9;
+    color: #1f2937;
+    line-height: 1.5;
+    padding: 24px 16px;
+  }
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    padding: 28px 32px 36px;
+  }
+  h1 { font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: #64748b; margin-bottom: 8px; }
+  .ver { font-size: 11px; color: #94a3b8; margin-bottom: 18px; }
+  .newbox {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #78350f;
+  }
+  .newbox b { color: #92400e; }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #fff;
+  }
+  .btn:hover { filter: brightness(0.95); }
+  .btn-reset { background: #ef4444; }
+  .btn-reset:hover { background: #dc2626; }
+  .btn-export { background: #2563eb; }
+  .btn-export:hover { background: #1d4ed8; }
+  .btn-import { background: #059669; }
+  .btn-import:hover { background: #047857; }
+
+  .status {
+    font-size: 12px;
+    color: #059669;
+    min-height: 18px;
+    margin-bottom: 18px;
+  }
+  .status.err { color: #dc2626; }
+
+  section { margin-bottom: 22px; }
+  h2 {
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .preflop h2 { background: #fee2e2; color: #991b1b; }
+  .postflop h2 { background: #dbeafe; color: #1e40af; }
+  .pfr h2 { background: #e0f2fe; color: #075985; }
+  .caller h2 { background: #ecfccb; color: #3f6212; }
+  .threebet h2 { background: #fae8ff; color: #86198f; }
+  .river h2 { background: #ffedd5; color: #9a3412; }
+  .multiway h2 { background: #cffafe; color: #155e75; }
+  .opponents h2 { background: #fef3c7; color: #92400e; }
+  .psy h2 { background: #ede9fe; color: #5b21b6; }
+  .routine h2 { background: #dcfce7; color: #166534; }
+
+  ul { list-style: none; }
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 4px;
+    border-bottom: 1px dashed #e5e7eb;
+    font-size: 14px;
+  }
+  li:last-child { border-bottom: none; }
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border: 2px solid #94a3b8;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 2px;
+    position: relative;
+    transition: all 0.15s;
+  }
+  input[type="checkbox"]:checked {
+    background: #22c55e;
+    border-color: #22c55e;
+  }
+  input[type="checkbox"]:checked::after {
+    content: "✓";
+    position: absolute;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    left: 2px;
+    top: -2px;
+  }
+  .lbl { flex: 1; }
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 10px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .tag-red { background: #fecaca; color: #991b1b; }
+  .tag-green { background: #bbf7d0; color: #166534; }
+  .tag-new { background: #fef3c7; color: #92400e; }
+  .footer {
+    margin-top: 26px;
+    padding-top: 16px;
+    border-top: 2px solid #e5e7eb;
+    font-size: 12px;
+    color: #64748b;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>NLH Чек-лист — NL2</h1>
+  <div class="sub">Галочки сохраняются автоматически · экспорт/импорт для синхронизации</div>
+  <div class="ver">Версия 4.2 · обновлено 25.11.2026 · TAG · 6-max · 2 стола (3 — только тест)</div>
+
+  <div class="newbox"><b>Что нового в v4.2:</b> рум GG вместо CoinPoker, 2 стола вместо 3. В чек-лист встроены правила разбора 21–25.11: цель ставки, сет хочет колл, комбо до фолда, блеф только по наблюдению.</div>
+
+  <div class="toolbar">
+    <button class="btn btn-reset" onclick="resetChecklist()">Сбросить все галочки</button>
+    <button class="btn btn-export" onclick="exportChecklist()">Экспорт JSON</button>
+    <button class="btn btn-import" onclick="document.getElementById('importFile').click()">Импорт JSON</button>
+    <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importChecklist(event)">
+  </div>
+  <div class="status" id="status"></div>
+
+  <section class="preflop">
+    <h2>🎯 Префлоп — перед каждым действием</h2>
+    <ul>
+      <li><input type="checkbox" class="chk" id="c1"><span class="lbl">Никакого <b>open-limp</b>. Только <b>raise or fold</b>. <span class="tag tag-red">главный лик</span></span></li>
+      <li><input type="checkbox" class="chk" id="c2"><span class="lbl"><b>SB: никакого лимпа.</b> Только raise or fold.</span></li>
+      <li><input type="checkbox" class="chk" id="c3"><span class="lbl">Опен-сайзинг по умолчанию: <b>0.06 (3 BB)</b>, не мин-рейз 2 BB.</span></li>
+      <li><input type="checkbox" class="chk" id="c4"><span class="lbl">3-бет после минрейза: <b>3x–4x (0.12–0.15)</b>, не мин-3-бет.</span></li>
+      <li><input type="checkbox" class="chk" id="c5"><span class="lbl"><b>4-бет от EP/UTG на NL2 → QQ/AK = колл, не 5-бет-шов.</b> <span class="tag tag-red">главный лик</span></span></li>
+      <li><input type="checkbox" class="chk" id="c6"><span class="lbl"><b>QQ/AK против 4-бета:</b> колл или фолд, не шов. <b>Одна пара — не рука для стека</b>.</span></li>
+      <li><input type="checkbox" class="chk" id="c7"><span class="lbl">Нет <b>олл-инов 40–50bb</b> с ATo / A8s / AQo без ридса.</span></li>
+      <li><input type="checkbox" class="chk" id="c8"><span class="lbl">Нет <b>колла 3-бета OOP</b> с QJs и подобными маргинальными бродвеями — фолд.</span></li>
+      <li><input type="checkbox" class="chk" id="c9"><span class="lbl">С <b>AK, AQ, QQ</b> на поздних позициях — всегда <b>3-бет</b>, не колл.</span></li>
+      <li><input type="checkbox" class="chk" id="c10"><span class="lbl">С <b>AA, KK, QQ, AK</b> — всегда рейз, никогда лимп.</span></li>
+      <li><input type="checkbox" class="chk" id="c11"><span class="lbl">Спектр опена расширяется от EP к BTN — по чартам.</span></li>
+      <li><input type="checkbox" class="chk" id="c30"><span class="lbl">3-бет сайзинг строго <b>3x–4x</b> в стандартных спотах: <b>0.14–0.18</b>. Никаких мин-3-бетов. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c31"><span class="lbl">Против фиша не открываю слишком широко с маргинальными руками — он всё равно коллит. <span class="tag tag-new">v4</span></span></li>
+    </ul>
+  </section>
+
+  <section class="postflop">
+    <h2>♠️ Постфлоп — общие правила</h2>
+    <ul>
+      <li><input type="checkbox" class="chk" id="c12"><span class="lbl"><b>Топ-пара / оверпара — не рука для стека.</b> Контроль банка.</span></li>
+      <li><input type="checkbox" class="chk" id="c13"><span class="lbl"><b>На монотонной доске</b> топ-пара после рейза флопа и двух баррелей → <b>фолд</b>.</span></li>
+      <li><input type="checkbox" class="chk" id="c14"><span class="lbl">C-bet: сухая доска — <b>1/3 пота</b>, мокрая — <b>2/3</b>.</span></li>
+      <li><input type="checkbox" class="chk" id="c15"><span class="lbl">Второй баррель на тёрне — только <b>топ-пара+, сильное дро или блокеры</b>.</span></li>
+      <li><input type="checkbox" class="chk" id="c16"><span class="lbl">Никаких <b>пот-бет блефов в мультипоте с A-high без эквити</b>.</span></li>
+      <li><input type="checkbox" class="chk" id="c17"><span class="lbl"><b>Никаких овербет-олл-инов с одной парой</b> — это блеф, не вэлью.</span></li>
+      <li><input type="checkbox" class="chk" id="c18"><span class="lbl"><b>NFD на тёрне</b> — колл только при понятных имплайд-оддсах.</span></li>
+      <li><input type="checkbox" class="chk" id="c19"><span class="lbl">Ривер: опп чекает, у меня сильная рука — <b>тонкое вэлью 1/3–1/2 пота</b>.</span></li>
+      <li><input type="checkbox" class="chk" id="c20"><span class="lbl"><b>Правило одной улицы</b> — каждая улица новое решение.</span></li>
+      <li><input type="checkbox" class="chk" id="c21"><span class="lbl">Фолды с мусором — <b>сохранять дисциплину</b>. <span class="tag tag-green">плюс</span></span></li>
+      <li><input type="checkbox" class="chk" id="c32"><span class="lbl">C-bet по текстуре: средняя доска — <b>1/2 пота</b>, спаренная — <b>1/3 пота</b>. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c33"><span class="lbl"><b>Когда НЕ ставить C-bet:</b> доска не подходит диапазону; против 2+ оппонентов; против частого чек-рейзера; со средней рукой, которая хочет шоудаун. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c34"><span class="lbl"><b>Тёрн:</b> не бомби автоматом после колла флопа. Иначе — чек, готовься к чек-фолду или чек-коллу. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c35"><span class="lbl"><b>Ривер:</b> вэлью-бет с топ-парой+, двумя парами, сетом. Размер <b>1/2–3/4 пота</b>. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c36"><span class="lbl"><b>Ривер:</b> блеф только с блокерами и против слабого оппонента. На микролимитах — редко. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c37"><span class="lbl"><b>Ривер:</b> средняя рука без вэлью — <b>чек/фолд</b>, не героический колл. <span class="tag tag-new">v4</span></span></li>
+    </ul>
+  </section>
+
+  <section class="pfr">
+    <h2>⚡ Ты — PFR (агрессор префлоп)</h2>
+    <ul>
+      <li><input type="checkbox" class="chk" id="c38"><span class="lbl">C-bet на большинстве досков. На мокрых — крупнее. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c39"><span class="lbl">Если флоп пришёл A/K и у меня QQ — не привязываюсь. Контроль банка. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c40"><span class="lbl">Оверпара в 4-бет поте — <b>не рука для стека</b> на NL2 без ридса. <span class="tag tag-new">v4</span></span></li>
+    </ul>
+  </section>
+
+  <section class="caller">
+    <h2>🛡️ Ты — коллер (защита BB)</h2>
+    <ul>
+      <li><input type="checkbox" class="chk" id="c41"><span class="lbl">Флоп: чек почти всегда. Не донкать без сильной руки. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c42"><span class="lbl">Чек-рейз: сет, две пары, топ-пара + хороший кикер, сильное дро. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c43"><span class="lbl">Чек-колл: средняя пара, топ-пара слабый кикер, дро — если pot odds позволяют. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c44"><span class="lbl">Чек-фолд: мусор без эквити. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c45"><span class="lbl">Тёрн: если чек-рейз флопа не сработал — часто чек. С сильной рукой — продолжать. С дро — считать pot odds. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c46"><span class="lbl">Ривер: сильная рука — вэлью-бет; средняя — чек/колл только если оппонент реально блефует; мусор — чек/фолд. <span class="tag tag-new">v4</span></span></li>
+    </ul>
+  </section>
+
+  <section class="threebet">
+    <h2>🎲 3-бет и 4-бет поты</h2>
+    <ul>
+      <li><input type="checkbox" class="chk" id="c47"><span class="lbl">Коллер 3-бета: диапазон узкий — <b>JJ-99, AQs, AJs, KQs</b>. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c48"><span class="lbl">Коллер 3-бета: на флопе — чек/фолд без топ-пары или сильного дро. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c49"><span class="lbl">Коллер 3-бета: не привязываться к оверпарам на мокрых досках. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c50"><span class="lbl">С QQ+, AK готов к 4-бету, но <b>не шовю на стек без плана</b>. <span class="tag tag-new">v4</span></span></li>
+    </ul>
+  </section>
+
+  <section class="river">
+    <h2>🌊 Ривер-дисциплина — главный лик сессии 31.10</h2>
+    <ul>
+      <li><input type="checkbox" class="chk" id="c51"><span class="lbl">Не коллировать огромные овербеты оппонентов с маргинальными руками: вторые пары, топ-пара со слабым кикером. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c52"><span class="lbl">Перед коллом большого ривер-бета: спросить «какие руки хуже ставят так?» Если ответа нет — <b>фолд</b>. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c53"><span class="lbl">На NL2 огромный ривер-овербет — чаще вэлью, чем блеф. Дисциплина важнее героизма. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c54"><span class="lbl">С сильной рукой (сет, две пары, топ-пара топ-кикер) — не боюсь, но считаю комбо. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c55"><span class="lbl">Никаких овербет-блефов без эквити на ривере. <span class="tag tag-new">v4</span></span></li>
+    </ul>
+  </section>
+
+  <section class="multiway">
+    <h2>👥 Мультипот (2+ оппонента)</h2>
+    <ul>
+      <li><input type="checkbox" class="chk" id="c56"><span class="lbl">Играть тайтовее и прямолинейнее. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c57"><span class="lbl">C-bet реже — только с сильными руками или хорошими дро. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c58"><span class="lbl">Блеф почти не работает — фолдят реже. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c59"><span class="lbl">Вэлью-бетить крупнее — есть кому платить. <span class="tag tag-new">v4</span></span></li>
+    </ul>
+  </section>
+
+  <section class="opponents">
+    <h2>🧩 Против типов оппонентов</h2>
+    <ul>
+      <li><input type="checkbox" class="chk" id="c60"><span class="lbl"><b>Фиш</b> (VPIP 40%+, PFR 5–15%, AF &lt; 1.5): вэлью широко и крупно, не блефовать, если он рейзит — у него сильная рука. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c61"><span class="lbl"><b>Нит</b> (VPIP 15–20%, PFR 10–15%, AF &lt; 2): фолдить на его рейзы, можно блефовать на сухих досках — он часто фолдит. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c62"><span class="lbl"><b>Рег TAG</b> (VPIP 20–25%, PFR 18–22%, AF 2.5–4): играть сбалансированно, не открывать слишком широко, в позиции 3-бетить шире. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c63"><span class="lbl"><b>Маньяк LAG</b> (VPIP 30%+, PFR 25%+, AF 4+): ловить сильные руки, не блефовать, дать ему блефовать в меня, чек/колл с топ-парой+ на нескольких улицах. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c64"><span class="lbl">На микролимитах <b>80% — фиши</b>. Значит: больше вэлью-бетов, меньше блефов. <span class="tag tag-new">v4</span></span></li>
+    </ul>
+  </section>
+
+  <section class="psy">
+    <h2>🧠 Психология (после PLO)</h2>
+    <ul>
+      <li><input type="checkbox" class="chk" id="c22"><span class="lbl">В NLH <b>топ-пара — сила</b>, а не маргинальная рука.</span></li>
+      <li><input type="checkbox" class="chk" id="c23"><span class="lbl"><b>Считаю комбо:</b> если у оппа 3 комбо сета и 30 комбо хуже — страх необоснован.</span></li>
+      <li><input type="checkbox" class="chk" id="c24"><span class="lbl"><b>Вэлью-тест:</b> «если бы не страх — ставил бы?» → если да, ставлю.</span></li>
+      <li><input type="checkbox" class="chk" id="c25"><span class="lbl">Не <b>results-oriented</b>: оцениваю по диапазонам, а не по шоудауну.</span></li>
+      <li><input type="checkbox" class="chk" id="c65"><span class="lbl"><b>Monster under the bed:</b> перед фолдом на крупную ставку считаю натсы и руки хуже. Но с маргинальной рукой против огромного овербета — дисциплина важнее. <span class="tag tag-new">v4</span></span></li>
+      <li><input type="checkbox" class="chk" id="c66"><span class="lbl"><b>Тильт от переезда:</b> пауза, дыхание, без revenge-колла. Если 3 сомнительных решения подряд — стоп-сессия. <span class="tag tag-new">v4</span></span></li>
+    </ul>
+  </section>
+
+  <section class="routine">
+    <h2>✅ Рутина сессии</h2>
+    <ul>
+      <li><input type="checkbox" class="chk" id="c26"><span class="lbl"><b>Старт:</b> открыл чарты, чек-лист, дневник.</span></li>
+      <li><input type="checkbox" class="chk" id="c27"><span class="lbl"><b>Старт:</b> напомнил себе 5 главных ликов.</span></li>
+      <li><input type="checkbox" class="chk" id="c28"><span class="lbl"><b>Финиш:</b> записал 3–5 ключевых раздач в дневник.</span></li>
+      <li><input type="checkbox" class="chk" id="c29"><span class="lbl"><b>Финиш:</b> отметил новые лики.</span></li>
+      <li><input type="checkbox" class="chk" id="c67"><span class="lbl"><b>Финиш:</b> проверил, не было ли лимпа, мин-3-бета, шова с QQ/AK в 4-бет поте и колла ривер-овербета. <span class="tag tag-new">v4</span></span></li>
+    </ul>
+  </section>
+
+  <div class="footer">
+    NLH Чек-лист v4.2 · NL2 · GG · TAG · 6-max
+  </div>
+</div>
+
+<script>
+  // ===== Базовое сохранение (как в v3) =====
+  const checkboxes = document.querySelectorAll('.chk');
+  const statusEl = document.getElementById('status');
+
+  function setStatus(msg, isError) {
+    statusEl.textContent = msg || '';
+    statusEl.classList.toggle('err', !!isError);
+    if (msg) {
+      clearTimeout(setStatus._t);
+      setStatus._t = setTimeout(() => { statusEl.textContent = ''; }, 4000);
+    }
+  }
+
+  checkboxes.forEach(box => {
+    const saved = localStorage.getItem(box.id);
+    if (saved === 'true') {
+      box.checked = true;
+    }
+    box.addEventListener('change', () => {
+      localStorage.setItem(box.id, box.checked);
+    });
+  });
+
+  // ===== Сброс =====
+  function resetChecklist() {
+    if (confirm('Ты уверен, что хочешь сбросить все галочки?')) {
+      checkboxes.forEach(box => {
+        box.checked = false;
+        localStorage.setItem(box.id, 'false');
+      });
+      setStatus('Все галочки сброшены.');
+    }
+  }
+
+  // ===== Экспорт JSON =====
+  function exportChecklist() {
+    const data = {};
+    checkboxes.forEach(box => {
+      data[box.id] = !!box.checked;
+    });
+
+    const payload = {
+      app: 'nlh-checklist',
+      version: 'v4.2',
+      exportedAt: new Date().toISOString(),
+      data: data
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const date = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const stamp = `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;
+    a.href = url;
+    a.download = `nlh_checklist_v4_${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    setStatus('Экспорт готов: ' + a.download);
+  }
+
+  // ===== Импорт JSON =====
+  function importChecklist(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        if (!parsed || typeof parsed !== 'object' || !parsed.data || typeof parsed.data !== 'object') {
+          throw new Error('Неверный формат файла');
+        }
+
+        let applied = 0;
+        checkboxes.forEach(box => {
+          if (Object.prototype.hasOwnProperty.call(parsed.data, box.id)) {
+            const val = !!parsed.data[box.id];
+            box.checked = val;
+            localStorage.setItem(box.id, val);
+            applied++;
+          }
+        });
+
+        setStatus(`Импорт применён: ${applied} галочек. Версия в файле: ${parsed.version || '—'}.`);
+      } catch (err) {
+        setStatus('Ошибка импорта: ' + err.message, true);
+      } finally {
+        event.target.value = '';
+      }
+    };
+    reader.readAsText(file);
+  }
+</script>
+</body>
+</html>
