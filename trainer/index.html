@@ -1,0 +1,2417 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Тренажер Чартов v9.1 — Compact UI</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Trainer">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #0f172a; color: #f8fafc; min-height: 100vh;
+    display: flex; justify-content: center; align-items: flex-start; padding: 10px;
+    touch-action: manipulation;
+  }
+  .app {
+    width: 100%; max-width: 540px; background: #1e293b; border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5); padding: 15px;
+  }
+  
+  /* Mobile full-width and larger grid */
+  @media (max-width: 600px) {
+    body { padding: 0; }
+    .app { max-width: 100%; border-radius: 0; padding: 8px; min-height: 100vh; }
+  }
+
+  h1 { font-size: 18px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+  .subtitle { font-size: 11px; text-align: center; color: #94a3b8; margin-bottom: 12px; }
+  #profile-badge { color: #60a5fa; font-weight: 600; }
+
+  .settings-toggle {
+    width: 100%; padding: 10px 14px; background: #0f172a; color: #94a3b8;
+    border: 1px solid #334155; border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px; transition: background 0.15s;
+  }
+  .settings-toggle:hover { background: #1e293b; }
+  .settings-toggle-chevron { transition: transform 0.2s; display: inline-block; font-size: 10px; }
+  .settings-toggle.open .settings-toggle-chevron { transform: rotate(180deg); }
+
+  .settings-panel { display: none; margin-bottom: 12px; }
+  .settings-panel.open { display: block; }
+
+  .app.view-range > .settings-toggle,
+  .app.view-range > .settings-panel,
+  .app.view-range > h1,
+  .app.view-range > .subtitle { display: none !important; }
+
+  .profile-bar { display: flex; gap: 6px; margin-bottom: 12px; align-items: stretch; }
+  .profile-bar select {
+    flex: 1; padding: 10px; background: #0f172a; color: #f8fafc; border: 2px solid #3b82f6;
+    border-radius: 8px; font-size: 14px; font-weight: 700; outline: none; cursor: pointer; min-width: 0;
+  }
+  .btn-icon {
+    background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 10px 14px;
+    font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap;
+  }
+  .btn-icon:hover { background: #2563eb; }
+  .btn-icon.secondary { background: #475569; }
+  .btn-icon.secondary:hover { background: #334155; }
+  .btn-icon.danger { background: #ef4444; }
+  .btn-icon.danger:hover { background: #dc2626; }
+  .btn-icon svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  @media (max-width: 420px) { .btn-text { display: none; } .btn-icon { padding: 10px 12px; } }
+
+  .controls { display: flex; gap: 8px; margin-bottom: 12px; align-items: stretch; }
+  .modes { display: flex; gap: 4px; background: #0f172a; padding: 4px; border-radius: 8px; flex: 1; }
+  .modes button { flex: 1; padding: 8px 4px; border: none; background: transparent; color: #94a3b8; font-weight: 600; font-size: 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+  .modes button.active { background: #3b82f6; color: white; }
+  .modes button:hover:not(.active) { background: #1e293b; color: #f1f5f9; }
+
+  .filter-row { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+  .filter-row select { flex: 1; padding: 8px; background: #0f172a; color: #f8fafc; border: 1px solid #334155; border-radius: 6px; font-size: 12px; outline: none; cursor: pointer; min-width: 100px; }
+  .toggle-wrapper { display: flex; align-items: center; gap: 6px; background: #0f172a; padding: 8px 10px; border-radius: 6px; border: 1px solid #334155; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .toggle-wrapper input { cursor: pointer; }
+
+  .score-bar { display: flex; justify-content: space-between; font-size: 12px; color: #94a3b8; margin-bottom: 12px; padding: 8px 12px; background: #0f172a; border-radius: 6px; flex-wrap: wrap; gap: 8px; }
+  .score-bar span strong { color: #f1f5f9; font-size: 14px; }
+  .score-bar .session-progress { color: #60a5fa; }
+  .timer-display { color: #f59e0b; font-weight: bold; display: none; }
+  .timer-display.active { display: inline; }
+
+  .table-zone {
+    position: relative; width: 100%; aspect-ratio: 1 / 1; max-height: 380px;
+    margin: 10px 0; display: flex; justify-content: center; align-items: center;
+  }
+  .poker-table {
+    width: 85%; height: 65%; background: #152b22; border: 10px solid #2d3748;
+    border-radius: 50% / 50%; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) rotateX(15deg);
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 15px 30px rgba(0,0,0,0.6);
+  }
+  .seat {
+    position: absolute; width: 48px; height: 48px; border-radius: 50%;
+    background: #1e293b; border: 3px solid #475569; display: flex;
+    justify-content: center; align-items: center; font-size: 12px; font-weight: 800;
+    color: #cbd5e1; z-index: 10; transform: translate(-50%, -50%);
+    transition: all 0.3s ease;
+  }
+  .seat.opener { border-color: #ef4444; animation: pulse-red 1.5s infinite; color: #fff; }
+  @keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); }
+    70% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  }
+  .dealer-chip {
+    position: absolute; bottom: -5px; right: -5px; background: #f8fafc; color: #0f172a;
+    width: 18px; height: 18px; border-radius: 50%; font-size: 11px;
+    display: flex; justify-content: center; align-items: center; font-weight: 900;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6); border: 1px solid #cbd5e1; z-index: 15;
+  }
+  .hero-seat-container {
+    position: absolute; bottom: 0%; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; z-index: 20;
+  }
+  .hero-cards { display: flex; gap: 8px; position: relative; margin-bottom: 8px; }
+  .mini-card {
+    width: 60px; height: 85px; border-radius: 6px; display: flex; flex-direction: column;
+    justify-content: flex-start; align-items: center; padding-top: 4px; font-size: 26px;
+    font-weight: 800; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    font-family: "Georgia", serif; position: relative; border: 1px solid rgba(255,255,255,0.2);
+  }
+  .card-spade  { background: #1e293b; }
+  .card-heart  { background: #ef4444; }
+  .card-diamond{ background: #3b82f6; }
+  .card-club   { background: #22c55e; }
+  .suit-icon { font-size: 22px; line-height: 1; margin-top: -2px; }
+  .hero-name {
+    background: #1e293b; border: 2px solid #3b82f6; color: #fff; padding: 4px 20px;
+    border-radius: 12px; font-size: 14px; font-weight: 800;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5), 0 0 15px rgba(59, 130, 246, 0.4); position: relative;
+  }
+
+  .action-buttons { display: flex; gap: 6px; margin-bottom: 10px; }
+  .action-buttons button { flex: 1; padding: 14px 4px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; text-transform: uppercase; letter-spacing: 0.5px; }
+  .btn-fold { background: #475569; color: white; }
+  .btn-call { background: #f59e0b; color: white; }
+  .btn-raise { background: #10b981; color: white; }
+  .btn-3bet { background: #8b5cf6; color: white; }
+  .btn-skip { background: #334155; color: #cbd5e1; flex: 0.6; }
+  .btn-hint { background: #1e293b; color: #60a5fa; border: 1px solid #3b82f6; flex: 0.6; }
+  .action-buttons button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .action-buttons button:hover:not(:disabled) { filter: brightness(1.2); }
+
+  .feedback { padding: 10px; border-radius: 8px; text-align: center; font-weight: 600; font-size: 14px; margin-bottom: 12px; min-height: 40px; display: flex; align-items: center; justify-content: center; }
+  .feedback.correct { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+  .feedback.wrong { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .feedback.skip { background: rgba(148,163,184,0.15); color: #94a3b8; border: 1px solid rgba(148,163,184,0.3); }
+  .feedback.hidden { visibility: hidden; }
+
+  .answer-nav { display: flex; gap: 8px; margin-bottom: 12px; }
+  .answer-nav.hidden { display: none; }
+  .answer-nav button { flex: 1; padding: 14px; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+  .btn-ranges-view { background: #334155; color: #cbd5e1; }
+  .btn-ranges-view:hover { background: #475569; }
+  .btn-ranges-view.active { background: #10b981; color: white; }
+  .btn-next { background: #3b82f6; color: white; }
+  .btn-next:hover { background: #2563eb; }
+
+  .grid-wrap { margin-bottom: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 2px; margin-bottom: 8px; }
+  .grid-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 7.5px; font-weight: 700; border-radius: 2px; color: #64748b; overflow: hidden; line-height: 1; }
+  .grid-cell.pair { background: rgba(148,163,184,0.12); }
+  .grid-cell.suited { background: rgba(148,163,184,0.06); }
+  .grid-cell.offsuit { background: rgba(148,163,184,0.03); }
+  .grid-cell.in-raise { background: #10b981; color: white; }
+  .grid-cell.in-3bet { background: #8b5cf6; color: white; }
+  .grid-cell.in-call { background: #f59e0b; color: white; }
+  .grid-cell.current { box-shadow: 0 0 0 2px #f1f5f9 inset; z-index: 2; }
+  .grid-legend { display: flex; gap: 10px; font-size: 10px; color: #94a3b8; flex-wrap: wrap; justify-content: center; }
+  .grid-legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+
+  .range-hint { font-size: 11px; color: #64748b; font-style: italic; margin-top: 10px; text-align: center; line-height: 1.4; }
+  .range-hint:empty { display: none; }
+
+  .tools { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .tools button { flex: 1; min-width: 80px; padding: 8px; background: #334155; color: #cbd5e1; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .tools button:hover { background: #475569; }
+
+  .mode-switch { display: flex; gap: 8px; margin-top: 12px; margin-bottom: 8px; }
+  .mode-switch button {
+    flex: 1; padding: 10px; background: #0f172a; color: #94a3b8;
+    border: 1px solid #334155; border-radius: 8px; font-size: 13px;
+    font-weight: 700; cursor: pointer; transition: all 0.15s;
+  }
+  .mode-switch button.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+  .mode-switch button:hover:not(.active) { background: #1e293b; color: #f1f5f9; }
+
+  .sync-status { font-size: 10px; text-align: center; margin-top: 10px; color: #64748b; }
+  .sync-status.ok { color: #10b981; }
+  .sync-status.err { color: #ef4444; }
+  .powered-by { text-align: center; font-size: 10px; color: #475569; margin-top: 8px; letter-spacing: 0.3px; }
+
+  /* === RANGE BUILDER (13×13) === */
+  .rb-header { font-size: 14px; font-weight: 700; text-align: center; color: #f1f5f9; margin-bottom: 10px; }
+  .rb-group { margin-bottom: 10px; }
+  .rb-group-title { font-size: 11px; font-weight: 700; color: #60a5fa; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .rb-checks { display: flex; flex-wrap: wrap; gap: 4px; }
+  .rb-check {
+    display: flex; align-items: center; gap: 4px; background: #0f172a;
+    padding: 4px 8px; border-radius: 4px; font-size: 11px; color: #cbd5e1;
+    cursor: pointer; border: 1px solid #334155;
+  }
+  .rb-check input { cursor: pointer; }
+
+  .rb-selector-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .rb-selector-label { font-size: 12px; color: #94a3b8; white-space: nowrap; }
+  #rb-range-select { flex: 1; padding: 8px; background: #0f172a; color: #f8fafc; border: 1px solid #334155; border-radius: 6px; font-size: 12px; outline: none; }
+
+  .rb-range-name {
+    font-size: 18px; font-weight: 800; text-align: center; color: #60a5fa;
+    margin: 10px 0; padding: 10px; background: #0f172a; border-radius: 8px;
+  }
+
+  /* Кисти */
+  .rb-brushes { display: flex; gap: 6px; margin-bottom: 8px; }
+  .rb-brush-btn {
+    flex: 1; padding: 8px; border: 2px solid transparent; border-radius: 8px;
+    font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.15s;
+    background: #334155; color: #cbd5e1;
+  }
+  .rb-brush-btn[data-action="3bet"] { background: rgba(139, 92, 246, 0.2); color: #a78bfa; border-color: rgba(139, 92, 246, 0.3); }
+  .rb-brush-btn[data-action="call"] { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border-color: rgba(245, 158, 11, 0.3); }
+  .rb-brush-btn.active[data-action="3bet"] { background: #8b5cf6; color: white; border-color: #8b5cf6; }
+  .rb-brush-btn.active[data-action="call"] { background: #f59e0b; color: white; border-color: #f59e0b; }
+  .rb-brush-btn.active[data-action="fold"] { background: #475569; color: white; border-color: #f1f5f9; }
+
+  .rb-grid {
+    display: grid; grid-template-columns: repeat(13, 1fr); gap: 1.5px;
+    margin-bottom: 8px; user-select: none; -webkit-user-select: none; touch-action: none;
+  }
+  .rb-cell {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 9.5px; font-weight: 700; border-radius: 3px; cursor: pointer;
+    color: #64748b; background: #0f172a; border: 1px solid #1e293b; transition: all 0.1s;
+  }
+  .rb-cell.pair { background: #1e293b; }
+  .rb-cell.marked-3bet { background: #8b5cf6; color: white; border-color: #8b5cf6; }
+  .rb-cell.marked-call { background: #f59e0b; color: white; border-color: #f59e0b; }
+  .rb-cell.correct { background: #10b981; color: white; border-color: #10b981; }
+  .rb-cell.extra { background: #ef4444; color: white; border-color: #ef4444; }
+  .rb-cell.missing { background: #f59e0b; color: white; border-color: #f59e0b; }
+
+  .rb-hint { font-size: 11px; color: #64748b; text-align: center; margin-bottom: 8px; font-style: italic; }
+
+  .rb-buttons { display: flex; gap: 8px; margin-bottom: 8px; }
+  .btn-rb-clear {
+    flex: 1; padding: 10px; background: #334155; color: #cbd5e1;
+    border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .btn-rb-clear:hover:not(:disabled) { background: #475569; }
+  .btn-rb-check {
+    flex: 1; padding: 10px; background: #3b82f6; color: white;
+    border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .btn-rb-check:hover:not(:disabled) { background: #2563eb; }
+  .btn-rb-clear:disabled, .btn-rb-check:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .rb-result { padding: 12px; background: #0f172a; border-radius: 8px; margin-bottom: 8px; text-align: center; }
+  .rb-result.hidden { display: none; }
+  .rb-score { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+  .rb-score.good { color: #10b981; }
+  .rb-score.mid { color: #f59e0b; }
+  .rb-score.bad { color: #ef4444; }
+  .rb-details { font-size: 12px; color: #94a3b8; margin-bottom: 6px; }
+  .rb-legend { display: flex; gap: 12px; justify-content: center; font-size: 11px; color: #94a3b8; flex-wrap: wrap; }
+  .rb-legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+
+  .rb-next-wrap { margin-bottom: 12px; }
+  .rb-next-wrap .btn-next { width: 100%; padding: 12px; border-radius: 10px; }
+
+  /* === Увеличение сетки в режиме 13×13 === */
+  .app.view-range {
+    padding: 4px;
+  }
+  .app.view-range .rb-header {
+    margin-bottom: 4px;
+  }
+
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; padding: 15px; z-index: 1000; overflow-y: auto; }
+  .modal.open { display: flex; }
+  .modal-content { background: #1e293b; border-radius: 12px; padding: 20px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+  .modal-content h2 { font-size: 17px; margin-bottom: 14px; color: #f1f5f9; }
+  .modal-content h3 { font-size: 13px; margin-top: 16px; margin-bottom: 8px; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid #334155; }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-row .label { color: #94a3b8; }
+  .stat-row .val { color: #f1f5f9; font-weight: 600; }
+  .stat-row .val.good { color: #10b981; }
+  .stat-row .val.bad { color: #f87171; }
+  .stat-row .val.mid { color: #f59e0b; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 20px; }
+  .modal-actions button { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px; }
+  .modal-actions .primary { background: #3b82f6; color: white; }
+  .modal-actions .danger { background: #ef4444; color: white; }
+  .modal-actions .secondary { background: #334155; color: #cbd5e1; }
+
+  .editor-tabs { display: flex; gap: 4px; margin-bottom: 12px; background: #0f172a; padding: 4px; border-radius: 8px; }
+  .editor-tabs button { flex: 1; padding: 8px; border: none; background: transparent; color: #94a3b8; font-weight: 600; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  .editor-tabs button.active { background: #3b82f6; color: white; }
+
+  .editor-toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: stretch; flex-wrap: wrap; }
+  .editor-toolbar input[type="text"] { flex: 1; padding: 8px 12px; background: #0f172a; color: #f8fafc; border: 1px solid #334155; border-radius: 6px; font-size: 13px; min-width: 150px; }
+  .editor-toolbar select { flex: 1; padding: 8px; background: #0f172a; color: #f8fafc; border: 1px solid #334155; border-radius: 6px; font-size: 12px; outline: none; min-width: 100px; }
+
+  .import-row { display: flex; gap: 6px; margin-bottom: 12px; width: 100%; }
+  .import-row input { flex: 1; padding: 8px; background: #0f172a; color: #f8fafc; border: 1px solid #334155; border-radius: 6px; font-size: 12px; font-family: monospace; }
+  .import-row button { padding: 8px 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
+
+  .brush-buttons { display: flex; gap: 6px; margin-bottom: 12px; }
+  .brush-btn { flex: 1; padding: 10px; border: 2px solid transparent; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+  .brush-btn[data-action="fold"] { background: #334155; color: #cbd5e1; }
+  .brush-btn[data-action="call"] { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border-color: rgba(245, 158, 11, 0.3); }
+  .brush-btn[data-action="raise"], .brush-btn[data-action="3bet"] { background: rgba(139, 92, 246, 0.2); color: #a78bfa; border-color: rgba(139, 92, 246, 0.3); }
+  .brush-btn.active[data-action="fold"] { border-color: #f1f5f9; background: #475569; color: white; }
+  .brush-btn.active[data-action="call"] { background: #f59e0b; color: white; border-color: #f59e0b; }
+  .brush-btn.active[data-action="raise"], .brush-btn.active[data-action="3bet"] { background: #8b5cf6; color: white; border-color: #8b5cf6; }
+
+  .editor-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 3px; margin-bottom: 12px; user-select: none; touch-action: none; }
+  .editor-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; border-radius: 3px; cursor: pointer; color: #64748b; background: #0f172a; border: 1px solid #1e293b; transition: all 0.1s; }
+  .editor-cell.pair { background: #1e293b; }
+  .editor-cell.in-raise { background: #10b981; color: white; border-color: #10b981; }
+  .editor-cell.in-3bet { background: #8b5cf6; color: white; border-color: #8b5cf6; }
+  .editor-cell.in-call { background: #f59e0b; color: white; border-color: #f59e0b; }
+
+  .form-group { margin-bottom: 12px; }
+  .form-group label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+  .form-group input { width: 100%; padding: 10px; background: #0f172a; color: #f8fafc; border: 1px solid #334155; border-radius: 6px; font-size: 13px; }
+
+  .chart-container { width: 100%; overflow: hidden; }
+  .chart-container canvas { display: block; width: 100%; height: auto; }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <h1>🃏 Тренажер Чартов v9.1</h1>
+  <div class="subtitle">Cloud Sync · PWA · SRS · Game + 13×13 · <span id="profile-badge">—</span></div>
+
+  <button class="settings-toggle" id="settings-toggle" onclick="toggleSettings()">
+    <span id="settings-toggle-label">⚙️ Настройки</span>
+    <span class="settings-toggle-chevron">▼</span>
+  </button>
+
+  <div class="settings-panel" id="settings-panel">
+    <div class="profile-bar">
+      <select id="profile-selector" onchange="changeProfile(this.value)"></select>
+      <button class="btn-icon" onclick="openEditor(true)" title="Создать новую базу">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <span class="btn-text">Создать</span>
+      </button>
+      <button class="btn-icon secondary" onclick="openEditor(false)" title="Редактировать текущую">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span class="btn-text">Редактор</span>
+      </button>
+    </div>
+
+    <div class="controls">
+      <div class="modes">
+        <button data-mode="rfi" class="active">RFI</button>
+        <button data-mode="3bet_ip">3-Bet IP</button>
+        <button data-mode="3bet_oop">3-Bet OOP</button>
+        <button data-mode="bb">BB Def</button>
+        <button data-mode="mix">Микс</button>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <select id="spot-filter"><option value="all">Все позиции</option></select>
+      <label class="toggle-wrapper"><input type="checkbox" id="hard-mode"> Hard Mode</label>
+      <label class="toggle-wrapper"><input type="checkbox" id="srs-mode" checked> SRS</label>
+      <label class="toggle-wrapper"><input type="checkbox" id="speed-mode"> Speed</label>
+    </div>
+
+    <div class="filter-row">
+      <select id="session-length" title="Количество раздач в сессии">
+        <option value="10">Сессия: 10 раздач</option>
+        <option value="20" selected>Сессия: 20 раздач</option>
+        <option value="30">Сессия: 30 раздач</option>
+        <option value="50">Сессия: 50 раздач</option>
+      </select>
+      <select id="speed-interval" style="display:none;" title="Интервал Speed Mode">
+        <option value="20">⏱ 20 сек</option>
+        <option value="30">⏱ 30 сек</option>
+        <option value="40">⏱ 40 сек</option>
+        <option value="50">⏱ 50 сек</option>
+        <option value="60" selected>⏱ 60 сек</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ================= GAME VIEW ================= -->
+  <div id="game-view">
+    <div class="score-bar">
+      <span>Точность: <strong id="accuracy">—</strong></span>
+      <span>Стрик: <strong id="streak">0</strong> / <strong id="best-streak">0</strong></span>
+      <span class="session-progress">Сессия: <strong id="session-progress">0/20</strong></span>
+      <span class="timer-display" id="timer-display">⏱ 60s</span>
+    </div>
+
+    <div class="table-zone">
+      <div class="poker-table"></div>
+      <div id="opponents-container"></div>
+
+      <div class="hero-seat-container">
+        <div class="hero-cards" id="hero-cards"></div>
+        <div class="hero-name" id="hero-pos-label">
+          <span id="hero-pos-text">BTN</span>
+          <div class="dealer-chip" id="hero-dealer-chip" style="display:none; top: -8px; right: -8px; bottom: auto;">D</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="feedback hidden" id="feedback">—</div>
+
+    <div class="action-buttons" id="actions">
+      <button class="btn-hint" id="btn-hint" onclick="showHint()">Подсказка</button>
+      <button class="btn-fold" id="btn-fold" onclick="answer('fold')">Фолд</button>
+      <button class="btn-call" id="btn-call" onclick="answer('call')" style="display:none;">Колл</button>
+      <button class="btn-raise" id="btn-raise" onclick="answer('raise')" style="display:none;">Рейз</button>
+      <button class="btn-3bet" id="btn-3bet" onclick="answer('3bet')" style="display:none;">3-Бет</button>
+      <button class="btn-skip" id="btn-skip" onclick="skip()">Пропуск</button>
+    </div>
+
+    <div class="answer-nav hidden" id="answer-nav">
+      <button class="btn-ranges-view" id="btn-ranges-view" onclick="toggleAnswerRanges()">📖 Ranges</button>
+      <button class="btn-next" id="btn-next" onclick="handleAnswerNext()">Далее →</button>
+    </div>
+
+    <div class="grid-wrap" id="grid-wrap" style="display:none;">
+      <div class="grid" id="grid"></div>
+      <div class="grid-legend" id="grid-legend"></div>
+      <div class="range-hint" id="range-hint"></div>
+    </div>
+  </div>
+
+  <!-- ================= RANGE BUILDER VIEW ================= -->
+  <div id="range-view" style="display:none;">
+    <div class="rb-header">🃏 13×13 — Сборка ренджей</div>
+
+    <button class="settings-toggle" id="rb-toggle" onclick="toggleRbPanel()">
+      <span id="rb-toggle-label">⚙️ Выбор ренджей</span>
+      <span class="settings-toggle-chevron">▼</span>
+    </button>
+
+    <div class="settings-panel" id="rb-panel">
+      <div class="rb-group">
+        <div class="rb-group-title">RFI</div>
+        <div class="rb-checks" id="rb-checks-rfi"></div>
+      </div>
+      <div class="rb-group">
+        <div class="rb-group-title">3-Bet</div>
+        <div class="rb-checks" id="rb-checks-3bet"></div>
+      </div>
+      <div class="rb-group">
+        <div class="rb-group-title">BB Defense</div>
+        <div class="rb-checks" id="rb-checks-bb"></div>
+      </div>
+    </div>
+
+    <div class="rb-selector-row">
+      <label for="rb-range-select" class="rb-selector-label">Тренируемый рендж:</label>
+      <select id="rb-range-select" onchange="rbChangeRange()"></select>
+    </div>
+
+    <div class="rb-range-name" id="rb-range-name">—</div>
+
+    <div class="rb-brushes" id="rb-brushes"></div>
+
+    <div class="rb-grid" id="rb-grid"></div>
+
+    <div class="rb-hint" id="rb-hint">Свайпом отметь руки. Для BB Defense: 🟣 3-Бет / 🟠 Колл. Затем «Проверить».</div>
+
+    <div class="rb-buttons">
+      <button class="btn-rb-clear" id="rb-clear-btn" onclick="rbClearAll()">Очистить всё</button>
+      <button class="btn-rb-check" id="rb-check-btn" onclick="rbCheck()">Проверить</button>
+    </div>
+
+    <div class="rb-result hidden" id="rb-result"></div>
+
+    <div class="rb-next-wrap" id="rb-next-wrap" style="display:none;">
+      <button class="btn-next" onclick="rbNext()">Далее →</button>
+    </div>
+  </div>
+
+  <!-- ================= TOOLS + MODE SWITCH ================= -->
+  <div class="tools">
+    <button onclick="showStats()">📊 Статистика</button>
+    <button onclick="openSyncModal()">☁️ Синхронизация</button>
+    <button onclick="exportAll()">💾 Экспорт</button>
+    <button onclick="document.getElementById('import-file').click()">📂 Импорт</button>
+  </div>
+  <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importAll(event)">
+
+  <div class="mode-switch">
+    <button data-view="game" class="active" onclick="rbSwitchView('game')">Game</button>
+    <button data-view="range" onclick="rbSwitchView('range')">13×13</button>
+  </div>
+
+  <div class="sync-status" id="sync-status">Облако не подключено</div>
+  <div class="powered-by">PoWeRed by DEEPSEEK for NaumZooL (As4Hi)</div>
+</div>
+
+<div class="modal" id="session-modal">
+  <div class="modal-content">
+    <h2>🏁 Сессия завершена</h2>
+    <div id="session-summary"></div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeSession()">Закрыть</button>
+      <button class="primary" onclick="newSession()">Новая сессия</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="stats-modal">
+  <div class="modal-content">
+    <h2>📊 Статистика</h2>
+    <div id="stats-content"></div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="document.getElementById('stats-modal').classList.remove('open')">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="sync-modal">
+  <div class="modal-content">
+    <h2>☁️ Синхронизация с облаком</h2>
+    <p style="font-size: 12px; color: #94a3b8; margin-bottom: 16px;">Вставь Bin ID и API Key из твоего аккаунта JSONBin.io. Данные будут сохраняться в облаке и подтягиваться на всех устройствах.</p>
+
+    <div class="form-group">
+      <label>Bin ID</label>
+      <input type="text" id="sync-bin-id" placeholder="65f1a...">
+    </div>
+    <div class="form-group">
+      <label>X-Master-Key</label>
+      <input type="password" id="sync-api-key" placeholder="$2b$10$...">
+    </div>
+
+    <div class="modal-actions" style="margin-top: 20px;">
+      <button class="secondary" onclick="pullFromCloud()">☁️ Из облака</button>
+      <button class="secondary" onclick="pushToCloud(true)">☁️ В облако</button>
+      <button class="danger" onclick="disconnectSync()">Отключить</button>
+      <button class="secondary" onclick="document.getElementById('sync-modal').classList.remove('open')">Отмена</button>
+      <button class="primary" onclick="connectSync()">Подключить</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="editor-modal">
+  <div class="modal-content">
+    <h2>⚙️ Визуальный редактор</h2>
+
+    <div class="editor-toolbar">
+      <input type="text" id="editor-profile-name" placeholder="Название базы">
+      <button class="btn-icon secondary" onclick="duplicateEditorProfile()" title="Сохранить как копию">
+        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      </button>
+      <button class="btn-icon danger" onclick="clearEditorGrid()" title="Очистить всё">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+      </button>
+    </div>
+
+    <div class="import-row">
+      <input type="text" id="import-range-text" placeholder="Вставить текст: 77+, ATs+...">
+      <button onclick="applyImportedRange()">Применить</button>
+    </div>
+
+    <div class="editor-tabs">
+      <button class="active" onclick="switchEditorTab('rfi', this)">RFI</button>
+      <button onclick="switchEditorTab('3bet_ip', this)">3-Bet IP</button>
+      <button onclick="switchEditorTab('3bet_oop', this)">3-Bet OOP</button>
+      <button onclick="switchEditorTab('bb', this)">BB Defense</button>
+    </div>
+
+    <div class="editor-toolbar" id="editor-pos-bar">
+      <select id="editor-pos-select" onchange="changeEditorPosition(this.value)"></select>
+    </div>
+
+    <div class="brush-buttons" id="editor-brushes"></div>
+    <div id="editor-counts" style="font-size:12px;color:#94a3b8;margin:2px 0 10px;"></div>
+
+    <div class="editor-grid" id="editor-grid"></div>
+
+    <div class="modal-actions" style="margin-top: 24px;">
+      <button class="danger" onclick="deleteProfile()">Удалить</button>
+      <button class="secondary" onclick="document.getElementById('editor-modal').classList.remove('open')">Отмена</button>
+      <button class="primary" onclick="saveProfile()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_CHARTS = {
+  rfi: {
+    'EP': '77+, ATs+, KTs+, QTs+, JTs, ATo+, KJo+',
+    'MP': '55+, A9s+, K9s+, Q9s+, J9s+, T9s, 98s, 87s, 76s, 65s, ATo+, KJo+, QJo',
+    'CO': '22+, A2s+, K9s+, Q9s+, J9s+, T9s, 98s, 87s, 76s, 65s, 54s, A9o+, KTo+, QTo+, JTo',
+    'BTN': '22+, A2s+, K2s+, Q5s+, J7s+, T7s+, 96s+, 86s+, 75s+, 64s+, 54s, A2o+, K9o+, Q9o+, J9o+, T9o',
+    'SB': '22+, A2s+, K7s+, Q8s+, J8s+, T7s+, 96s+, 86s+, 75s+, 64s+, 54s, A9o+, KTo+, QTo+, JTo'
+  },
+  '3bet_ip': {
+    'CO vs EP': 'QQ+, AKs, AKo',
+    'CO vs MP': 'JJ+, AKs, AKo, AQs',
+    'BTN vs EP': 'QQ+, AKs, AKo, AQs',
+    'BTN vs MP': 'JJ+, AKs, AKo, AQs',
+    'BTN vs CO': 'TT+, AKs, AKo, AQs, AJs, KQs'
+  },
+  '3bet_oop': {
+    'SB vs EP': 'QQ+, AKs, AKo',
+    'SB vs MP': 'JJ+, AKs, AKo, AQs',
+    'SB vs CO': 'TT+, AKs, AKo, AQs, AJs',
+    'SB vs BTN': '99+, AJs+, AQo+, KQs'
+  },
+  bb: {
+    'vs EP': { '3bet': 'QQ+, AK', 'call': '22-99, AQs-ATs, KQs, KJs, QJs, JTs, AQo, AJo, KQo' },
+    'vs MP': { '3bet': 'JJ+, AK, AQs', 'call': '22-TT, A9s+, KTs+, QTs+, JTs, T9s, 98s, 87s, 76s, 65s, AQo, AJo, KQo, KJo, QJo' },
+    'vs CO': { '3bet': 'TT+, AKs, AKo, AQs, AJs', 'call': '22-99, A2s-A9s, K9s+, Q9s+, J9s+, T8s+, 97s+, 86s+, 75s+, 65s, 54s, ATo+, KTo+, QTo+, JTo' },
+    'vs BTN': { '3bet': '99+, AJs+, AQo+, KQs', 'call': '22-88, A2s+, K5s+, Q7s+, J7s+, T7s+, 96s+, 85s+, 74s+, 64s+, 53s+, 43s, A2o+, K9o+, Q9o+, J9o+, T9o, 98o' },
+    'vs SB': { '3bet': '66+, A8s+, ATo+, KTs+, KJo+, QTs+, QJo', 'call': '__COMPUTED__' }
+  }
+};
+
+const APP_SCHEMA_VERSION = 10;
+const CHARTS_KEY = 'chartTrainerData';
+const STATS_KEY = 'chartTrainerV6';
+const MISTAKES_KEY = 'chartTrainerMistakes';
+const HISTORY_KEY = 'chartTrainerHistory';
+const SYNC_KEY = 'chartTrainerSyncConfig';
+const UI_PREFS_KEY = 'chartTrainerUIPrefs';
+
+let profiles = {};
+let activeProfileName = '';
+let stats = {
+  correct: 0, total: 0, streak: 0, bestStreak: 0,
+  byMode: { rfi: { t: 0, c: 0 }, '3bet': { t: 0, c: 0 }, bb: { t: 0, c: 0 } },
+  byKey: {},
+  rangeBuilder: {
+    totalRanges: 0, totalSessions: 0, totalAccuracySum: 0,
+    byRange: {},
+    byGroup: {
+      rfi: { attempts: 0, accuracySum: 0 },
+      threeBet: { attempts: 0, accuracySum: 0 },
+      bbDef: { attempts: 0, accuracySum: 0 }
+    },
+    srs: {}
+  }
+};
+let sessionHistory = [];
+let mistakes = {};
+let syncConfig = { binId: '', apiKey: '' };
+let isSyncing = false;
+let syncTimeout = null;
+
+function ensureRangeBuilderStats() {
+  if (!stats.rangeBuilder || typeof stats.rangeBuilder !== 'object') {
+    stats.rangeBuilder = {
+      totalRanges: 0, totalSessions: 0, totalAccuracySum: 0,
+      byRange: {},
+      byGroup: {
+        rfi: { attempts: 0, accuracySum: 0 },
+        threeBet: { attempts: 0, accuracySum: 0 },
+        bbDef: { attempts: 0, accuracySum: 0 }
+      },
+      srs: {}
+    };
+    return;
+  }
+  const rb = stats.rangeBuilder;
+  if (!rb.byRange) rb.byRange = {};
+  if (!rb.byGroup) rb.byGroup = { rfi: { attempts: 0, accuracySum: 0 }, threeBet: { attempts: 0, accuracySum: 0 }, bbDef: { attempts: 0, accuracySum: 0 } };
+  if (!rb.srs) rb.srs = {};
+  if (typeof rb.totalRanges !== 'number') rb.totalRanges = 0;
+  if (typeof rb.totalAccuracySum !== 'number') rb.totalAccuracySum = 0;
+  if (typeof rb.totalSessions !== 'number') rb.totalSessions = 0;
+}
+
+function toggleSettings() {
+  const panel = document.getElementById('settings-panel');
+  const btn = document.getElementById('settings-toggle');
+  const label = document.getElementById('settings-toggle-label');
+  const isOpen = panel.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+  label.textContent = isOpen ? '⚙️ Скрыть настройки' : '⚙️ Настройки';
+  try {
+    const prefs = JSON.parse(localStorage.getItem(UI_PREFS_KEY) || '{}');
+    prefs.settingsOpen = isOpen;
+    localStorage.setItem(UI_PREFS_KEY, JSON.stringify(prefs));
+  } catch(e) {}
+}
+
+function initSync() {
+  const saved = localStorage.getItem(SYNC_KEY);
+  if (saved) {
+    try { syncConfig = JSON.parse(saved); } catch(e){}
+  }
+  updateSyncUI();
+  if (syncConfig.binId && syncConfig.apiKey) {
+    pullFromCloud();
+  }
+}
+
+function updateSyncUI() {
+  const el = document.getElementById('sync-status');
+  if (syncConfig.binId && syncConfig.apiKey) {
+    el.textContent = '☁️ Облако подключено';
+    el.className = 'sync-status ok';
+  } else {
+    el.textContent = 'Облако не подключено (только локально)';
+    el.className = 'sync-status';
+  }
+}
+
+function openSyncModal() {
+  document.getElementById('sync-bin-id').value = syncConfig.binId || '';
+  document.getElementById('sync-api-key').value = syncConfig.apiKey || '';
+  document.getElementById('sync-modal').classList.add('open');
+}
+
+async function connectSync() {
+  const binId = document.getElementById('sync-bin-id').value.trim();
+  const apiKey = document.getElementById('sync-api-key').value.trim();
+  if (!binId || !apiKey) return alert('Заполните оба поля!');
+
+  const testConfig = { binId, apiKey };
+  let cloudRecord = null;
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+      headers: { 'X-Master-Key': apiKey }
+    });
+    if (res.ok) {
+      const j = await res.json();
+      cloudRecord = j.record;
+    }
+  } catch (e) {}
+
+  const cloudHasData = cloudRecord && cloudRecord.profiles && Object.keys(cloudRecord.profiles).length > 0;
+
+  if (!cloudHasData) {
+    syncConfig = testConfig;
+    localStorage.setItem(SYNC_KEY, JSON.stringify(syncConfig));
+    updateSyncUI();
+    document.getElementById('sync-modal').classList.remove('open');
+    await pushToCloud(true);
+    return;
+  }
+
+  const choice = confirm(
+    'В облаке есть сохранённые данные.\n\n' +
+    'OK = загрузить из облака (локальные будут заменены)\n' +
+    'Отмена = перезаписать облако локальными данными'
+  );
+
+  syncConfig = testConfig;
+  localStorage.setItem(SYNC_KEY, JSON.stringify(syncConfig));
+  updateSyncUI();
+  document.getElementById('sync-modal').classList.remove('open');
+
+  if (choice) {
+    await pullFromCloud();
+  } else {
+    await pushToCloud(true);
+  }
+}
+
+function disconnectSync() {
+  if (!confirm('Отключить синхронизацию?')) return;
+  syncConfig = { binId: '', apiKey: '' };
+  localStorage.removeItem(SYNC_KEY);
+  updateSyncUI();
+  document.getElementById('sync-modal').classList.remove('open');
+}
+
+async function pullFromCloud() {
+  if (!syncConfig.binId || !syncConfig.apiKey || isSyncing) return;
+  isSyncing = true;
+  document.getElementById('sync-status').textContent = '☁️ Загрузка...';
+
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${syncConfig.binId}/latest`, {
+      headers: { 'X-Master-Key': syncConfig.apiKey }
+    });
+    if (!res.ok) throw new Error('Ошибка сети');
+    const json = await res.json();
+
+    if (json.record && Object.keys(json.record).length > 0) {
+      if (json.record.schemaVersion && json.record.schemaVersion > APP_SCHEMA_VERSION) {
+        alert('В облаке данные из более новой версии (' + json.record.schemaVersion + '). Обнови приложение, чтобы не потерять их.');
+      } else {
+        if (json.record.profiles) profiles = json.record.profiles;
+        if (json.record.activeProfileName) activeProfileName = json.record.activeProfileName;
+        if (json.record.stats) stats = json.record.stats;
+        if (json.record.mistakes) mistakes = json.record.mistakes;
+        if (json.record.sessionHistory) sessionHistory = json.record.sessionHistory;
+
+        ensureRangeBuilderStats();
+        localStorage.setItem(CHARTS_KEY, JSON.stringify(profiles));
+        localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+        localStorage.setItem(MISTAKES_KEY, JSON.stringify(mistakes));
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(sessionHistory));
+
+        session = { questions: [] };
+        currentSessionMistakes = [];
+
+        renderProfileSelector();
+        initRanges();
+        rbInit();
+        updateSpotFilter();
+        updateScoreDisplay();
+        nextQuestion();
+      }
+    }
+    document.getElementById('sync-status').textContent = '☁️ Синхронизировано';
+  } catch (err) {
+    console.error(err);
+    document.getElementById('sync-status').textContent = '⚠️ Ошибка загрузки';
+    document.getElementById('sync-status').className = 'sync-status err';
+  } finally {
+    isSyncing = false;
+  }
+}
+
+async function pushToCloud(force = false) {
+  if (!syncConfig.binId || !syncConfig.apiKey || isSyncing) return;
+  isSyncing = true;
+  if (force) document.getElementById('sync-status').textContent = '☁️ Отправка...';
+
+  const payload = { schemaVersion: APP_SCHEMA_VERSION, profiles, activeProfileName, stats, mistakes, sessionHistory };
+
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${syncConfig.binId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': syncConfig.apiKey
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Ошибка отправки');
+
+    document.getElementById('sync-status').textContent = '☁️ Сохранено в облако';
+    document.getElementById('sync-status').className = 'sync-status ok';
+  } catch (err) {
+    console.error(err);
+    document.getElementById('sync-status').textContent = '⚠️ Ошибка сохранения';
+    document.getElementById('sync-status').className = 'sync-status err';
+  } finally {
+    isSyncing = false;
+  }
+}
+
+function triggerSync() {
+  if (syncConfig.binId && syncConfig.apiKey) {
+    if (syncTimeout) clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(() => pushToCloud(), 2000);
+  }
+}
+
+function loadLocalData() {
+  try {
+    const savedProfiles = localStorage.getItem(CHARTS_KEY);
+    if (savedProfiles) profiles = JSON.parse(savedProfiles);
+    if (Object.keys(profiles).length === 0) profiles['База (TAG)'] = JSON.parse(JSON.stringify(DEFAULT_CHARTS));
+    if (!profiles[activeProfileName]) activeProfileName = Object.keys(profiles)[0];
+
+    const savedStats = localStorage.getItem(STATS_KEY);
+    if (savedStats) stats = Object.assign(stats, JSON.parse(savedStats));
+    ensureRangeBuilderStats();
+
+    const savedMistakes = localStorage.getItem(MISTAKES_KEY);
+    if (savedMistakes) mistakes = JSON.parse(savedMistakes);
+
+    const savedHistory = localStorage.getItem(HISTORY_KEY);
+    if (savedHistory) sessionHistory = JSON.parse(savedHistory);
+  } catch(e) {}
+  renderProfileSelector();
+}
+
+function saveLocally() {
+  localStorage.setItem(CHARTS_KEY, JSON.stringify(profiles));
+  localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+  localStorage.setItem(MISTAKES_KEY, JSON.stringify(mistakes));
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(sessionHistory));
+  triggerSync();
+}
+
+const ranks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+
+function expandRange(rangeStr) {
+  const hands = new Set();
+  if (!rangeStr) return hands;
+  rangeStr.split(',').forEach(part => {
+    part = part.trim();
+    if (!part) return;
+    if (part.includes('-') && !part.includes('+')) {
+      const [from, to] = part.split('-').map(s => s.trim());
+      expandDash(from, to, hands);
+      return;
+    }
+    const plus = part.endsWith('+');
+    const base = plus ? part.slice(0, -1) : part;
+    const match = base.match(/^([AKQJT98765432])([AKQJT98765432])([so]?)$/);
+    if (!match) return;
+    const [, r1, r2, suit] = match;
+    const i1 = ranks.indexOf(r1), i2 = ranks.indexOf(r2);
+    if (r1 === r2) {
+      if (plus) { for (let i = i1; i >= 0; i--) hands.add(ranks[i] + ranks[i]); }
+      else { hands.add(r1 + r2); }
+    } else {
+      if (plus) {
+        if (suit === 's' || suit === 'o') { for (let i = i2; i > i1; i--) hands.add(r1 + ranks[i] + suit); }
+        else { for (let i = i2; i > i1; i--) { hands.add(r1 + ranks[i] + 's'); hands.add(r1 + ranks[i] + 'o'); } }
+      } else {
+        if (suit === 's' || suit === 'o') { hands.add(r1 + r2 + suit); }
+        else { hands.add(r1 + r2 + 's'); hands.add(r1 + r2 + 'o'); }
+      }
+    }
+  });
+  return hands;
+}
+
+function expandDash(from, to, hands) {
+  const mf = from.match(/^([AKQJT98765432])([AKQJT98765432])([so]?)$/);
+  const mt = to.match(/^([AKQJT98765432])([AKQJT98765432])([so]?)$/);
+  if (!mf || !mt) return;
+  if (mf[1] === mf[2] && mt[1] === mt[2]) {
+    const i1 = ranks.indexOf(mf[1]), i2 = ranks.indexOf(mt[1]);
+    const start = Math.max(i1, i2), end = Math.min(i1, i2);
+    for (let i = end; i <= start; i++) hands.add(ranks[i] + ranks[i]);
+    return;
+  }
+  if (mf[1] === mt[1] && mf[3] === mt[3]) {
+    const i1 = ranks.indexOf(mf[2]), i2 = ranks.indexOf(mt[2]);
+    const start = Math.max(i1, i2), end = Math.min(i1, i2);
+    for (let i = end; i <= start; i++) { if (i !== ranks.indexOf(mf[1])) hands.add(mf[1] + ranks[i] + mf[3]); }
+  }
+}
+
+const ALL_HANDS = [];
+ranks.forEach((r1, i) => {
+  ranks.forEach((r2, j) => {
+    if (i === j) ALL_HANDS.push(r1 + r2);
+    else if (i < j) ALL_HANDS.push(r1 + r2 + 's');
+    else ALL_HANDS.push(r2 + r1 + 'o');
+  });
+});
+
+const BB_TRASH_HANDS = expandRange('32o, 42o, 52o, 62o, 72o, 82o, 92o, 43o, 53o, 63o, 73o, 83o, 93o');
+
+function computeBBCall(threeset) {
+  const callset = new Set();
+  ALL_HANDS.forEach(h => { if (!threeset.has(h) && !BB_TRASH_HANDS.has(h)) callset.add(h); });
+  return callset;
+}
+
+function setsEqual(a, b) {
+  if (a.size !== b.size) return false;
+  for (const x of a) if (!b.has(x)) return false;
+  return true;
+}
+
+let RFI_RANGES = {}, THREEBET_IP_RANGES = {}, THREEBET_OOP_RANGES = {}, BB_RANGES = {}, currentRFI = {}, current3BET_IP = {}, current3BET_OOP = {}, currentBB = {};
+
+function initRanges() {
+  const p = profiles[activeProfileName];
+  currentRFI = p.rfi || {}; 
+  current3BET_IP = (p['3bet_ip'] && Object.keys(p['3bet_ip']).length > 0) ? p['3bet_ip'] : DEFAULT_CHARTS['3bet_ip']; 
+  current3BET_OOP = (p['3bet_oop'] && Object.keys(p['3bet_oop']).length > 0) ? p['3bet_oop'] : DEFAULT_CHARTS['3bet_oop']; 
+  currentBB = p.bb || {};
+
+  RFI_RANGES = {}; Object.keys(currentRFI).forEach(pos => RFI_RANGES[pos] = expandRange(currentRFI[pos]));
+  THREEBET_IP_RANGES = {}; Object.keys(current3BET_IP).forEach(pos => THREEBET_IP_RANGES[pos] = expandRange(current3BET_IP[pos]));
+  THREEBET_OOP_RANGES = {}; Object.keys(current3BET_OOP).forEach(pos => THREEBET_OOP_RANGES[pos] = expandRange(current3BET_OOP[pos]));
+
+  BB_RANGES = {};
+  Object.keys(currentBB).forEach(pos => {
+    const def = currentBB[pos];
+    const threeset = expandRange(def['3bet']);
+    let callset;
+    if (def['call'] === '__COMPUTED__') {
+      callset = computeBBCall(threeset);
+    } else { callset = expandRange(def['call']); }
+    BB_RANGES[pos] = { '3bet': threeset, 'call': callset };
+  });
+}
+
+let sessionLength = 20;
+let speedInterval = 60;
+let sessionEnded = false;
+let mode = 'rfi', spotFilter = 'all', hardMode = false, srsMode = true, speedMode = false;
+let currentQ = null, answered = false, currentSessionMistakes = [];
+let session = { questions: [] };
+let speedTimer = null, speedTimeLeft = 60;
+
+function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function updateSpotFilter() {
+  const sel = document.getElementById('spot-filter');
+  sel.innerHTML = '<option value="all">Все позиции</option>';
+  if (mode === 'rfi' || mode === 'mix') Object.keys(currentRFI).forEach(pos => sel.innerHTML += `<option value="rfi_${pos}">RFI: ${pos}</option>`);
+  if (mode === '3bet_ip' || mode === 'mix') Object.keys(current3BET_IP).forEach(pos => sel.innerHTML += `<option value="3bet_ip_${pos}">3-Bet IP: ${pos}</option>`);
+  if (mode === '3bet_oop' || mode === 'mix') Object.keys(current3BET_OOP).forEach(pos => sel.innerHTML += `<option value="3bet_oop_${pos}">3-Bet OOP: ${pos}</option>`);
+  if (mode === 'bb' || mode === 'mix') Object.keys(currentBB).forEach(pos => sel.innerHTML += `<option value="bb_${pos}">BB Def: ${pos}</option>`);
+  sel.value = 'all'; spotFilter = 'all';
+}
+
+function startSpeedTimer() {
+  if (speedTimer) clearInterval(speedTimer);
+  speedTimeLeft = speedInterval;
+  const display = document.getElementById('timer-display');
+  display.classList.add('active');
+  display.textContent = `⏱ ${speedTimeLeft}s`;
+  speedTimer = setInterval(() => {
+    speedTimeLeft--;
+    display.textContent = `⏱ ${speedTimeLeft}s`;
+    if (speedTimeLeft <= 0) {
+      clearInterval(speedTimer);
+      speedTimer = null;
+      display.classList.remove('active');
+      showSessionSummary(true);
+    }
+  }, 1000);
+}
+
+const posOrder = ['EP', 'MP', 'CO', 'BTN', 'SB', 'BB'];
+
+function renderTableSeats(heroPos, openerPos) {
+  const container = document.getElementById('opponents-container');
+  container.innerHTML = '';
+  const heroIdx = posOrder.indexOf(heroPos);
+  const rx = 46;
+  const ry = 42;
+
+  for (let i = 1; i <= 5; i++) {
+    const oppPos = posOrder[(heroIdx + i) % 6];
+    const angleDeg = 90 + (i * 60);
+    const angleRad = angleDeg * Math.PI / 180;
+    const x = 50 + rx * Math.cos(angleRad);
+    const y = 50 + ry * Math.sin(angleRad);
+
+    const seat = document.createElement('div');
+    seat.className = 'seat';
+    seat.textContent = oppPos;
+    seat.style.left = x + '%';
+    seat.style.top = y + '%';
+
+    if (oppPos === openerPos) {
+      seat.classList.add('opener');
+    }
+
+    if (oppPos === 'BTN') {
+      const chip = document.createElement('div');
+      chip.className = 'dealer-chip';
+      chip.textContent = 'D';
+      seat.appendChild(chip);
+    }
+    container.appendChild(seat);
+  }
+}
+
+function nextQuestion() {
+  answered = false;
+  sessionEnded = false;
+  document.getElementById('feedback').classList.add('hidden');
+  document.getElementById('answer-nav').classList.add('hidden');
+  document.getElementById('grid-wrap').style.display = 'none';
+  document.getElementById('range-hint').textContent = '';
+  document.getElementById('btn-skip').disabled = false;
+  document.getElementById('btn-hint').disabled = false;
+  document.getElementById('btn-hint').textContent = 'Подсказка';
+
+  const rangesBtn = document.getElementById('btn-ranges-view');
+  if (rangesBtn) {
+    rangesBtn.classList.remove('active');
+    rangesBtn.textContent = '📖 Ranges';
+  }
+
+  ['btn-fold', 'btn-call', 'btn-raise', 'btn-3bet'].forEach(id => {
+    document.getElementById(id).disabled = false;
+    document.getElementById(id).style.display = 'none';
+  });
+
+  if (session.questions.length === 0 && speedMode) startSpeedTimer();
+  if (!speedMode && speedTimer) { clearInterval(speedTimer); speedTimer = null; document.getElementById('timer-display').classList.remove('active'); }
+
+  let type = mode === 'mix' ? pickRandom(['rfi', '3bet_ip', '3bet_oop', 'bb']) : mode;
+  let position = '';
+
+  if (spotFilter !== 'all') {
+    const SPOT_TYPES = ['3bet_ip', '3bet_oop', 'rfi', 'bb'];
+    type = SPOT_TYPES.find(t => spotFilter.startsWith(t + '_')) || 'rfi';
+    position = spotFilter.slice(type.length + 1);
+  }
+
+  let rangeSet;
+  if (type === 'rfi') {
+    if (!position) position = pickRandom(Object.keys(RFI_RANGES));
+    rangeSet = RFI_RANGES[position];
+  } else if (type === '3bet_ip') {
+    if (!position) position = pickRandom(Object.keys(THREEBET_IP_RANGES));
+    rangeSet = THREEBET_IP_RANGES[position];
+  } else if (type === '3bet_oop') {
+    if (!position) position = pickRandom(Object.keys(THREEBET_OOP_RANGES));
+    rangeSet = THREEBET_OOP_RANGES[position];
+  } else {
+    if (!position) position = pickRandom(Object.keys(BB_RANGES));
+    rangeSet = new Set([...BB_RANGES[position]['3bet'], ...BB_RANGES[position]['call']]);
+  }
+
+  let hand;
+  const mistakeKeyPrefix = `${type}_${position}_`;
+  const pool = Object.keys(mistakes).filter(k => k.startsWith(mistakeKeyPrefix) && mistakes[k] > 0);
+
+  if (srsMode && pool.length > 0 && Math.random() < 0.4) {
+    const pickedKey = pickRandom(pool);
+    hand = pickedKey.replace(mistakeKeyPrefix, '');
+  } else if (hardMode) {
+    const boundary = getBoundaryHands(rangeSet);
+    if (boundary.length > 0 && Math.random() < 0.65) {
+      hand = pickRandom(boundary);
+    } else {
+      hand = pickRandom(ALL_HANDS);
+    }
+  } else {
+    hand = pickRandom(ALL_HANDS);
+  }
+
+  let heroPos = position;
+  let openerPos = null;
+
+  if (type === 'rfi') {
+    const isRaise = rangeSet.has(hand);
+    currentQ = { type, position, hand, isRaise };
+    document.getElementById('btn-fold').style.display = '';
+    document.getElementById('btn-raise').style.display = '';
+  } else if (type === 'bb') {
+    const is3bet = BB_RANGES[position]['3bet'].has(hand);
+    const isCall = BB_RANGES[position]['call'].has(hand);
+    currentQ = { type, position, hand, is3bet, isCall };
+    document.getElementById('btn-fold').style.display = '';
+    document.getElementById('btn-call').style.display = '';
+    document.getElementById('btn-3bet').style.display = '';
+    heroPos = 'BB';
+    openerPos = position.replace('vs ', '');
+  } else {
+    // 3-Bet IP or OOP
+    const is3bet = rangeSet.has(hand);
+    currentQ = { type, position, hand, is3bet };
+    document.getElementById('btn-fold').style.display = '';
+    document.getElementById('btn-3bet').style.display = '';
+    
+    const parts = position.split(' vs ');
+    heroPos = parts[0];
+    openerPos = parts[1];
+  }
+
+  document.getElementById('hero-pos-text').textContent = heroPos;
+  document.getElementById('hero-cards').innerHTML = displayHand(hand);
+
+  if (heroPos === 'BTN') {
+    document.getElementById('hero-dealer-chip').style.display = 'flex';
+  } else {
+    document.getElementById('hero-dealer-chip').style.display = 'none';
+  }
+
+  renderTableSeats(heroPos, openerPos);
+}
+
+function displayHand(handStr) {
+  const m = handStr.match(/^([AKQJT98765432])([AKQJT98765432])([so]?)$/);
+  if (!m) return `<span>${handStr}</span>`;
+  const [, r1, r2, suit] = m;
+
+  const suits = ['♠','♥','♦','♣'];
+  const suitClasses = ['card-spade', 'card-heart', 'card-diamond', 'card-club'];
+
+  const makeMiniCard = (r, sIdx) => {
+    return `<div class="mini-card ${suitClasses[sIdx]}">${r}<span class="suit-icon">${suits[sIdx]}</span></div>`;
+  };
+
+  if (r1 === r2) {
+    const s1 = Math.floor(Math.random() * 4); let s2 = Math.floor(Math.random() * 4);
+    while (s2 === s1) s2 = Math.floor(Math.random() * 4);
+    return makeMiniCard(r1, s1) + makeMiniCard(r2, s2);
+  }
+  if (suit === 's') {
+    const s = Math.floor(Math.random() * 4);
+    return makeMiniCard(r1, s) + makeMiniCard(r2, s);
+  }
+  const s1 = Math.floor(Math.random() * 4); let s2 = Math.floor(Math.random() * 4);
+  while (s2 === s1) s2 = Math.floor(Math.random() * 4);
+  return makeMiniCard(r1, s1) + makeMiniCard(r2, s2);
+}
+
+function getCorrectAction(q) {
+  if (q.type === 'rfi') return q.isRaise ? 'RAISE' : 'FOLD';
+  if (q.type === '3bet') return q.is3bet ? '3-BET' : 'FOLD';
+  return q.is3bet ? '3-BET' : (q.isCall ? 'CALL' : 'FOLD');
+}
+
+function buildRangeHintText(q, includeAnswer) {
+  let chartText = '';
+  if (q.type === 'rfi') chartText = 'Чарт RFI ' + q.position + ': ' + currentRFI[q.position];
+  else if (q.type === '3bet_ip') chartText = 'Чарт 3-Bet IP ' + q.position + ': ' + current3BET_IP[q.position];
+  else if (q.type === '3bet_oop') chartText = 'Чарт 3-Bet OOP ' + q.position + ': ' + current3BET_OOP[q.position];
+  else chartText = 'BB ' + q.position + ' — 3bet: ' + currentBB[q.position]['3bet'] + ' | call: ' + (currentBB[q.position]['call'] === '__COMPUTED__' ? 'всё остальное' : currentBB[q.position]['call']);
+
+  if (includeAnswer) return 'Правильно: ' + getCorrectAction(q) + ' | ' + chartText;
+  return chartText;
+}
+
+function showHint() {
+  if (answered) return;
+  const wrap = document.getElementById('grid-wrap');
+  if (wrap.style.display === 'none') {
+    renderGrid(currentQ);
+    document.getElementById('range-hint').textContent = '';
+    wrap.style.display = '';
+    document.getElementById('btn-hint').textContent = 'Скрыть';
+  } else {
+    wrap.style.display = 'none';
+    document.getElementById('btn-hint').textContent = 'Подсказка';
+  }
+}
+
+function toggleAnswerRanges() {
+  const wrap = document.getElementById('grid-wrap');
+  const btn = document.getElementById('btn-ranges-view');
+  if (wrap.style.display === 'none') {
+    renderGrid(currentQ);
+    document.getElementById('range-hint').textContent = buildRangeHintText(currentQ, true);
+    wrap.style.display = '';
+    btn.classList.add('active');
+    btn.textContent = '📖 Скрыть';
+  } else {
+    wrap.style.display = 'none';
+    btn.classList.remove('active');
+    btn.textContent = '📖 Ranges';
+  }
+}
+
+function handleAnswerNext() {
+  if (session.questions.length >= sessionLength) {
+    showSessionSummary();
+  } else {
+    nextQuestion();
+  }
+}
+
+function answer(action) {
+  if (answered) return;
+  answered = true;
+  document.getElementById('btn-skip').disabled = true;
+  document.getElementById('btn-hint').disabled = true;
+  document.getElementById('btn-hint').textContent = 'Подсказка';
+
+  let correct = false, correctAction = '';
+  if (currentQ.type === 'rfi') {
+    correct = (action === 'raise') === currentQ.isRaise;
+    correctAction = currentQ.isRaise ? 'RAISE' : 'FOLD';
+  } else if (currentQ.type === '3bet') {
+    correct = (action === '3bet') === currentQ.is3bet;
+    correctAction = currentQ.is3bet ? '3-BET' : 'FOLD';
+  } else {
+    if (currentQ.is3bet) { correct = action === '3bet'; correctAction = '3-BET'; }
+    else if (currentQ.isCall) { correct = action === 'call'; correctAction = 'CALL'; }
+    else { correct = action === 'fold'; correctAction = 'FOLD'; }
+  }
+
+  const mistakeKey = `${currentQ.type}_${currentQ.position}_${currentQ.hand}`;
+  if (correct) {
+    stats.correct++; stats.streak++;
+    if (stats.streak > stats.bestStreak) stats.bestStreak = stats.streak;
+    if (mistakes[mistakeKey]) {
+      mistakes[mistakeKey] = Math.max(0, mistakes[mistakeKey] - 1);
+      if (mistakes[mistakeKey] === 0) delete mistakes[mistakeKey];
+    }
+  } else {
+    stats.streak = 0;
+    mistakes[mistakeKey] = (mistakes[mistakeKey] || 0) + 1;
+    currentSessionMistakes.push(currentQ.hand);
+  }
+  stats.total++;
+
+  if (!stats.byMode[currentQ.type]) stats.byMode[currentQ.type] = { t: 0, c: 0 };
+  stats.byMode[currentQ.type].t++; if (correct) stats.byMode[currentQ.type].c++;
+  const key = currentQ.type + '_' + currentQ.position;
+  if (!stats.byKey[key]) stats.byKey[key] = { t: 0, c: 0 };
+  stats.byKey[key].t++; if (correct) stats.byKey[key].c++;
+  saveLocally();
+
+  const fb = document.getElementById('feedback');
+  fb.classList.remove('hidden');
+  fb.className = correct ? 'feedback correct' : 'feedback wrong';
+  fb.textContent = correct ? `✅ Верно! Правильно: ${correctAction}` : `❌ Ошибка. Правильно: ${correctAction}`;
+
+  ['btn-fold', 'btn-call', 'btn-raise', 'btn-3bet'].forEach(id => document.getElementById(id).disabled = true);
+
+  session.questions.push({ type: currentQ.type, position: currentQ.position, hand: currentQ.hand, correct });
+  updateScoreDisplay();
+
+  const gridWrap = document.getElementById('grid-wrap');
+  const rangesBtn = document.getElementById('btn-ranges-view');
+  if (gridWrap.style.display !== 'none') {
+    gridWrap.style.display = 'none';
+  }
+  rangesBtn.classList.remove('active');
+  rangesBtn.textContent = '📖 Ranges';
+
+  const nextBtn = document.getElementById('btn-next');
+  if (session.questions.length >= sessionLength) {
+    nextBtn.textContent = '🏁 Завершить';
+  } else {
+    nextBtn.textContent = 'Далее →';
+  }
+  document.getElementById('answer-nav').classList.remove('hidden');
+}
+
+function skip() {
+  if (answered) return;
+  answered = true;
+  document.getElementById('btn-skip').disabled = true;
+  document.getElementById('btn-hint').disabled = true;
+  document.getElementById('btn-hint').textContent = 'Подсказка';
+
+  const fb = document.getElementById('feedback');
+  fb.classList.remove('hidden');
+  fb.className = 'feedback skip';
+  fb.textContent = '⏭ Пропущено.';
+
+  stats.total++;
+  stats.streak = 0;
+  const skipKey = `${currentQ.type}_${currentQ.position}_${currentQ.hand}`;
+  mistakes[skipKey] = (mistakes[skipKey] || 0) + 1;
+  currentSessionMistakes.push(currentQ.hand);
+  if (!stats.byMode[currentQ.type]) stats.byMode[currentQ.type] = { t: 0, c: 0 };
+  stats.byMode[currentQ.type].t++;
+  const skipByKey = currentQ.type + '_' + currentQ.position;
+  if (!stats.byKey[skipByKey]) stats.byKey[skipByKey] = { t: 0, c: 0 };
+  stats.byKey[skipByKey].t++;
+  saveLocally();
+
+  session.questions.push({ type: currentQ.type, position: currentQ.position, hand: currentQ.hand, correct: false, skipped: true });
+  updateScoreDisplay();
+
+  ['btn-fold', 'btn-call', 'btn-raise', 'btn-3bet'].forEach(id => document.getElementById(id).disabled = true);
+
+  const gridWrap = document.getElementById('grid-wrap');
+  const rangesBtn = document.getElementById('btn-ranges-view');
+  if (gridWrap.style.display !== 'none') {
+    gridWrap.style.display = 'none';
+  }
+  rangesBtn.classList.remove('active');
+  rangesBtn.textContent = '📖 Ranges';
+
+  const nextBtn = document.getElementById('btn-next');
+  if (session.questions.length >= sessionLength) {
+    nextBtn.textContent = '🏁 Завершить';
+  } else {
+    nextBtn.textContent = 'Далее →';
+  }
+  document.getElementById('answer-nav').classList.remove('hidden');
+}
+
+function renderGrid(q) {
+  const wrap = document.getElementById('grid-wrap'), grid = document.getElementById('grid'), legend = document.getElementById('grid-legend');
+  grid.innerHTML = ''; legend.innerHTML = '';
+  let raiseSet, callSet, raiseLabel;
+  if (q.type === 'rfi') { raiseSet = RFI_RANGES[q.position]; callSet = new Set(); raiseLabel = 'Рейз'; }
+  else if (q.type === '3bet_ip') { raiseSet = THREEBET_IP_RANGES[q.position]; callSet = new Set(); raiseLabel = '3-Бет IP'; }
+  else if (q.type === '3bet_oop') { raiseSet = THREEBET_OOP_RANGES[q.position]; callSet = new Set(); raiseLabel = '3-Бет OOP'; }
+  else { raiseSet = BB_RANGES[q.position]['3bet']; callSet = BB_RANGES[q.position]['call']; raiseLabel = '3-Бет'; }
+
+  for (let i = 0; i < 13; i++) {
+    for (let j = 0; j < 13; j++) {
+      const r1 = ranks[i], r2 = ranks[j];
+      let handStr, cls;
+      if (i === j) { handStr = r1 + r2; cls = 'pair'; }
+      else if (i < j) { handStr = r1 + r2 + 's'; cls = 'suited'; }
+      else { handStr = r2 + r1 + 'o'; cls = 'offsuit'; }
+      let actionCls = '';
+      if (raiseSet.has(handStr)) actionCls = q.type === 'bb' ? 'in-3bet' : 'in-raise';
+      else if (callSet.has(handStr)) actionCls = 'in-call';
+      const cell = document.createElement('div');
+      cell.className = `grid-cell ${cls} ${actionCls} ${handStr === q.hand ? 'current' : ''}`;
+      cell.textContent = handStr;
+      grid.appendChild(cell);
+    }
+  }
+  legend.innerHTML = `
+    <span><span class="dot" style="background:#${q.type === 'bb' ? '8b5cf6' : '10b981'}"></span>${raiseLabel}</span>
+    ${q.type === 'bb' ? '<span><span class="dot" style="background:#f59e0b"></span>Колл</span>' : ''}
+    <span><span class="dot" style="background:#334155"></span>Фолд</span>
+    <span><span class="dot" style="background:#f1f5f9"></span>Твоя рука</span>
+  `;
+  wrap.style.display = '';
+}
+
+function updateScoreDisplay() {
+  const acc = stats.total > 0 ? Math.round(stats.correct / stats.total * 100) : 0;
+  document.getElementById('accuracy').textContent = stats.total > 0 ? acc + '%' : '—';
+  document.getElementById('streak').textContent = stats.streak;
+  document.getElementById('best-streak').textContent = stats.bestStreak;
+  document.getElementById('session-progress').textContent = session.questions.length + '/' + sessionLength;
+}
+
+function showSessionSummary(isSpeed = false) {
+  if (sessionEnded) return;
+  sessionEnded = true;
+  if (speedTimer) { clearInterval(speedTimer); speedTimer = null; document.getElementById('timer-display').classList.remove('active'); }
+
+  const correct = session.questions.filter(q => q.correct).length;
+  const total = session.questions.length;
+  const acc = total > 0 ? Math.round(correct / total * 100) : 0;
+
+  if (total > 0) {
+    sessionHistory.push({ date: new Date().toISOString(), acc, total });
+    if (sessionHistory.length > 10) sessionHistory.shift();
+    saveLocally();
+  }
+
+  let html = `<div class="stat-row"><span class="label">Точность</span><span class="val ${acc >= 80 ? 'good' : acc >= 60 ? 'mid' : 'bad'}">${acc}%</span></div>`;
+  if (isSpeed) html = `<div class="stat-row"><span class="label">Режим Speed Drill</span><span class="val">${speedInterval} секунд</span></div>` + html;
+  html += `<div class="stat-row"><span class="label">Правильно</span><span class="val">${correct} / ${total}</span></div>`;
+
+  if (currentSessionMistakes.length > 0) {
+    html += `<div class="stat-row"><span class="label">Руки на повторение (SRS)</span><span class="val bad">${currentSessionMistakes.join(', ')}</span></div>`;
+  }
+
+  document.getElementById('session-summary').innerHTML = html;
+  document.getElementById('session-modal').classList.add('open');
+  document.getElementById('answer-nav').classList.add('hidden');
+}
+
+function closeSession() { document.getElementById('session-modal').classList.remove('open'); session = { questions: [] }; currentSessionMistakes = []; updateScoreDisplay(); nextQuestion(); }
+function newSession() { document.getElementById('session-modal').classList.remove('open'); session = { questions: [] }; currentSessionMistakes = []; updateScoreDisplay(); nextQuestion(); }
+
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function showStats() {
+  const acc = stats.total > 0 ? Math.round(stats.correct / stats.total * 100) : 0;
+  const typeNames = { rfi: 'RFI', '3bet_ip': '3-Bet IP', '3bet_oop': '3-Bet OOP', bb: 'BB Defense' };
+  const sortedKeys = Object.keys(stats.byKey).filter(k => stats.byKey[k].t >= 5).sort((a,b) => {
+    const accA = stats.byKey[a].c / stats.byKey[a].t;
+    const accB = stats.byKey[b].c / stats.byKey[b].t;
+    return accA - accB;
+  });
+  let weakestHtml = '';
+  sortedKeys.slice(0, 3).forEach(k => {
+    const s = stats.byKey[k];
+    const a = Math.round(s.c / s.t * 100);
+    const kTypes = ['3bet_ip', '3bet_oop', 'rfi', 'bb'];
+    const kType = kTypes.find(t => k.startsWith(t + '_')) || k.split('_')[0];
+    const kPos = k.slice(kType.length + 1);
+    weakestHtml += `<div class="stat-row"><span class="label">${escapeHtml(typeNames[kType] || kType)} ${escapeHtml(kPos)}</span><span class="val bad">${s.c} / ${s.t} (${a}%)</span></div>`;
+  });
+  if (!weakestHtml) weakestHtml = '<div class="stat-row"><span class="label">Мало данных</span></div>';
+
+  let html = `
+    <div class="stat-row"><span class="label">Всего вопросов</span><span class="val">${stats.total}</span></div>
+    <div class="stat-row"><span class="label">Точность общая</span><span class="val ${acc >= 80 ? 'good' : acc >= 60 ? 'mid' : 'bad'}">${acc}%</span></div>
+    <h3>Твои слабые места (мин. 5 попыток)</h3>
+    ${weakestHtml}
+    <h3>График прогресса</h3>
+    <div class="chart-container"><canvas id="progress-chart"></canvas></div>
+    <h3>По режимам</h3>
+  `;
+
+  ['rfi', '3bet_ip', '3bet_oop', 'bb'].forEach(m => {
+    const s = stats.byMode[m] || { t: 0, c: 0 };
+    const a = s.t > 0 ? Math.round(s.c / s.t * 100) : 0;
+    html += `<div class="stat-row"><span class="label">${typeNames[m]}</span><span class="val ${s.t === 0 ? '' : a >= 80 ? 'good' : a >= 60 ? 'mid' : 'bad'}">${s.c} / ${s.t} ${s.t > 0 ? '(' + a + '%)' : ''}</span></div>`;
+  });
+
+  const rb = stats.rangeBuilder || { totalRanges: 0, totalAccuracySum: 0, byRange: {}, byGroup: {}, srs: {} };
+  if (rb.totalRanges > 0) {
+    const avgAcc = Math.round((rb.totalAccuracySum / rb.totalRanges) * 100);
+    html += `<h3>Сборка ренджей (13×13)</h3>`;
+    html += `<div class="stat-row"><span class="label">Всего ренджей</span><span class="val">${rb.totalRanges}</span></div>`;
+    html += `<div class="stat-row"><span class="label">Средняя точность</span><span class="val ${avgAcc >= 80 ? 'good' : avgAcc >= 60 ? 'mid' : 'bad'}">${avgAcc}%</span></div>`;
+    const groupNames = { rfi: 'RFI', threeBet: '3-Bet', bbDef: 'BB Defense' };
+    Object.keys(groupNames).forEach(g => {
+      const gs = rb.byGroup && rb.byGroup[g];
+      if (gs && gs.attempts > 0) {
+        const a = Math.round((gs.accuracySum / gs.attempts) * 100);
+        html += `<div class="stat-row"><span class="label">${groupNames[g]}</span><span class="val ${a >= 80 ? 'good' : a >= 60 ? 'mid' : 'bad'}">${a}% (${gs.attempts})</span></div>`;
+      }
+    });
+    const worst = Object.keys(rb.byRange || {})
+      .filter(k => rb.byRange[k].attempts >= 1)
+      .sort((a, b) => (rb.byRange[a].accuracySum / rb.byRange[a].attempts) - (rb.byRange[b].accuracySum / rb.byRange[b].attempts))
+      .slice(0, 3);
+    if (worst.length > 0) {
+      html += `<h3>Худшие ренджи</h3>`;
+      worst.forEach(k => {
+        const r = rb.byRange[k];
+        const a = Math.round((r.accuracySum / r.attempts) * 100);
+        const rangeInfo = (typeof rbAvailableRanges !== 'undefined' ? rbAvailableRanges : []).find(rr => rr.key === k);
+        const label = rangeInfo ? rangeInfo.label : k;
+        html += `<div class="stat-row"><span class="label">${escapeHtml(label)}</span><span class="val bad">${a}% (${r.attempts})</span></div>`;
+      });
+    }
+  }
+
+  document.getElementById('stats-content').innerHTML = html;
+  document.getElementById('stats-modal').classList.add('open');
+  setTimeout(drawChart, 50);
+}
+
+function drawChart() {
+  const canvas = document.getElementById('progress-chart');
+  if (!canvas) return;
+  const container = canvas.parentElement;
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = Math.max(200, container.clientWidth || 300);
+  const cssH = 130;
+  canvas.style.width = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+  canvas.width = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const w = cssW, h = cssH;
+  ctx.clearRect(0, 0, w, h);
+
+  const data = sessionHistory.slice(-7);
+  if (data.length < 2) {
+    ctx.fillStyle = '#64748b';
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Нужно сыграть минимум 2 сессии', w / 2, h / 2);
+    return;
+  }
+
+  const padding = 24;
+  const graphW = w - padding * 2;
+  const graphH = h - padding * 2;
+  const stepX = graphW / (data.length - 1);
+
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padding, padding); ctx.lineTo(padding, h - padding); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(padding, h - padding); ctx.lineTo(w - padding, h - padding); ctx.stroke();
+
+  ctx.strokeStyle = '#10b981';
+  ctx.lineWidth = 3;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  data.forEach((d, i) => {
+    const x = padding + i * stepX;
+    const y = h - padding - (d.acc / 100) * graphH;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  data.forEach((d, i) => {
+    const x = padding + i * stepX;
+    const y = h - padding - (d.acc / 100) * graphH;
+    ctx.fillStyle = '#10b981';
+    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#f1f5f9';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(d.acc + '%', x, y - 10);
+  });
+}
+
+window.addEventListener('resize', () => {
+  if (document.getElementById('stats-modal').classList.contains('open')) drawChart();
+});
+
+let editorData = {}, currentEditorTab = 'rfi', currentEditorPos = '', currentBrush = 'raise', editorOriginalName = '';
+
+function openEditor(isNew = false) {
+  if (isNew) {
+    editorData = { rfi: {}, '3bet_ip': {}, '3bet_oop': {}, bb: {} };
+    Object.keys(DEFAULT_CHARTS.rfi).forEach(pos => editorData.rfi[pos] = new Set());
+    Object.keys(DEFAULT_CHARTS['3bet_ip']).forEach(pos => editorData['3bet_ip'][pos] = new Set());
+    Object.keys(DEFAULT_CHARTS['3bet_oop']).forEach(pos => editorData['3bet_oop'][pos] = new Set());
+    Object.keys(DEFAULT_CHARTS.bb).forEach(pos => editorData.bb[pos] = { '3bet': new Set(), 'call': new Set() });
+    document.getElementById('editor-profile-name').value = 'Новый профиль';
+    editorOriginalName = '';
+  } else {
+    editorOriginalName = activeProfileName;
+    editorData = { rfi: {}, '3bet_ip': {}, '3bet_oop': {}, bb: {} };
+    const p = profiles[activeProfileName];
+    Object.keys(p.rfi || {}).forEach(pos => editorData.rfi[pos] = expandRange(p.rfi[pos]));
+    
+    // Фоллбэк для 3bet_ip: если в старом профиле нет этих данных, берем дефолтные
+    let ipData = p['3bet_ip'];
+    if (!ipData || Object.keys(ipData).length === 0) ipData = DEFAULT_CHARTS['3bet_ip'];
+    Object.keys(ipData || {}).forEach(pos => editorData['3bet_ip'][pos] = expandRange(ipData[pos]));
+
+    // Фоллбэк для 3bet_oop
+    let oopData = p['3bet_oop'];
+    if (!oopData || Object.keys(oopData).length === 0) oopData = DEFAULT_CHARTS['3bet_oop'];
+    Object.keys(oopData || {}).forEach(pos => editorData['3bet_oop'][pos] = expandRange(oopData[pos]));
+    Object.keys(p.bb || {}).forEach(pos => {
+      const def = p.bb[pos];
+      const threeset = expandRange(def['3bet']);
+      let callset;
+      if (def['call'] === '__COMPUTED__') {
+        callset = computeBBCall(threeset);
+      } else { callset = expandRange(def['call']); }
+      editorData.bb[pos] = { '3bet': threeset, 'call': callset };
+    });
+    document.getElementById('editor-profile-name').value = activeProfileName;
+  }
+  switchEditorTab('rfi', document.querySelector('.editor-tabs button'));
+  document.getElementById('editor-modal').classList.add('open');
+}
+
+function clearEditorGrid() {
+  if (!confirm('Очистить всё для текущей позиции?')) return;
+  if (currentEditorTab === 'bb') {
+    editorData.bb[currentEditorPos]['3bet'].clear();
+    editorData.bb[currentEditorPos]['call'].clear();
+  } else {
+    editorData[currentEditorTab][currentEditorPos].clear();
+  }
+  renderEditorGrid();
+}
+
+function applyImportedRange() {
+  const text = document.getElementById('import-range-text').value;
+  if (!text) return;
+  const newSet = expandRange(text);
+  if (currentEditorTab === 'bb') {
+    if (currentBrush === '3bet') editorData.bb[currentEditorPos]['3bet'] = newSet;
+    else if (currentBrush === 'call') editorData.bb[currentEditorPos]['call'] = newSet;
+    else alert('Выберите кисть 3-Бет или Колл для BB Defense');
+  } else {
+    editorData[currentEditorTab][currentEditorPos] = newSet;
+  }
+  document.getElementById('import-range-text').value = '';
+  renderEditorGrid();
+}
+
+function duplicateEditorProfile() {
+  document.getElementById('editor-profile-name').value += ' (копия)';
+  editorOriginalName = '';
+}
+
+function switchEditorTab(tab, btn) {
+  currentEditorTab = tab;
+  document.querySelectorAll('.editor-tabs button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const posSelect = document.getElementById('editor-pos-select');
+  posSelect.innerHTML = '';
+  let positions;
+  if (tab === 'rfi') positions = Object.keys(editorData.rfi);
+  else if (tab === '3bet_ip') positions = Object.keys(editorData['3bet_ip']);
+  else if (tab === '3bet_oop') positions = Object.keys(editorData['3bet_oop']);
+  else positions = Object.keys(editorData.bb);
+  positions.forEach(pos => { const opt = document.createElement('option'); opt.value = pos; opt.textContent = pos; posSelect.appendChild(opt); });
+  currentEditorPos = positions[0];
+  posSelect.value = currentEditorPos;
+  updateBrushes();
+  renderEditorGrid();
+}
+
+function changeEditorPosition(pos) { currentEditorPos = pos; renderEditorGrid(); }
+
+function updateBrushes() {
+  const brushWrap = document.getElementById('editor-brushes');
+  brushWrap.innerHTML = '';
+  if (currentEditorTab === 'rfi') {
+    brushWrap.innerHTML = `<button class="brush-btn active" data-action="raise" onclick="setBrush('raise', this)">Рейз</button><button class="brush-btn" data-action="fold" onclick="setBrush('fold', this)">Фолд</button>`;
+    currentBrush = 'raise';
+  } else if (currentEditorTab === '3bet_ip' || currentEditorTab === '3bet_oop') {
+    brushWrap.innerHTML = `<button class="brush-btn active" data-action="3bet" onclick="setBrush('3bet', this)">3-Бет</button><button class="brush-btn" data-action="fold" onclick="setBrush('fold', this)">Фолд</button>`;
+    currentBrush = '3bet';
+  } else {
+    brushWrap.innerHTML = `<button class="brush-btn active" data-action="3bet" onclick="setBrush('3bet', this)">3-Бет</button><button class="brush-btn" data-action="call" onclick="setBrush('call', this)">Колл</button><button class="brush-btn" data-action="fold" onclick="setBrush('fold', this)">Фолд</button>`;
+    currentBrush = '3bet';
+  }
+}
+
+function setBrush(brush, btn) {
+  currentBrush = brush;
+  document.querySelectorAll('.brush-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+let isDrawing = false;
+window.addEventListener('pointerup', () => { isDrawing = false; });
+window.addEventListener('pointercancel', () => { isDrawing = false; });
+
+function renderEditorGrid() {
+  const grid = document.getElementById('editor-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 13; i++) {
+    for (let j = 0; j < 13; j++) {
+      const r1 = ranks[i], r2 = ranks[j];
+      let handStr, cls;
+      if (i === j) { handStr = r1 + r2; cls = 'pair'; }
+      else if (i < j) { handStr = r1 + r2 + 's'; cls = 'suited'; }
+      else { handStr = r2 + r1 + 'o'; cls = 'offsuit'; }
+      let actionCls = '';
+      if (currentEditorTab === 'rfi') { if (editorData.rfi[currentEditorPos].has(handStr)) actionCls = 'in-raise'; }
+      else if (currentEditorTab === '3bet_ip') { if (editorData['3bet_ip'][currentEditorPos].has(handStr)) actionCls = 'in-3bet'; }
+      else if (currentEditorTab === '3bet_oop') { if (editorData['3bet_oop'][currentEditorPos].has(handStr)) actionCls = 'in-3bet'; }
+      else {
+        if (editorData.bb[currentEditorPos]['3bet'].has(handStr)) actionCls = 'in-3bet';
+        else if (editorData.bb[currentEditorPos]['call'].has(handStr)) actionCls = 'in-call';
+      }
+      const cell = document.createElement('div');
+      cell.className = `editor-cell ${cls} ${actionCls}`;
+      cell.textContent = handStr;
+      cell.onpointerdown = (e) => { e.preventDefault(); isDrawing = true; toggleEditorCell(handStr); };
+      cell.onpointerenter = (e) => { if (isDrawing) toggleEditorCell(handStr); };
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function toggleEditorCell(handStr) {
+  if (currentEditorTab === 'rfi') {
+    const set = editorData.rfi[currentEditorPos];
+    if (currentBrush === 'raise') set.has(handStr) ? set.delete(handStr) : set.add(handStr);
+    else if (currentBrush === 'fold') set.delete(handStr);
+  } else if (currentEditorTab === '3bet_ip' || currentEditorTab === '3bet_oop') {
+    const set = editorData[currentEditorTab][currentEditorPos];
+    if (currentBrush === '3bet') set.has(handStr) ? set.delete(handStr) : set.add(handStr);
+    else if (currentBrush === 'fold') set.delete(handStr);
+  } else {
+    const data = editorData.bb[currentEditorPos];
+    if (currentBrush === '3bet') { data['3bet'].has(handStr) ? data['3bet'].delete(handStr) : (data['3bet'].add(handStr), data['call'].delete(handStr)); }
+    else if (currentBrush === 'call') { data['call'].has(handStr) ? data['call'].delete(handStr) : (data['call'].add(handStr), data['3bet'].delete(handStr)); }
+    else if (currentBrush === 'fold') { data['3bet'].delete(handStr); data['call'].delete(handStr); }
+  }
+  const idx = Array.from(document.getElementById('editor-grid').children).findIndex(c => c.textContent === handStr);
+  if (idx !== -1) {
+    const cell = document.getElementById('editor-grid').children[idx];
+    let actionCls = '';
+    if (currentEditorTab === 'rfi') { if (editorData.rfi[currentEditorPos].has(handStr)) actionCls = 'in-raise'; }
+    else if (currentEditorTab === '3bet') { if (editorData['3bet'][currentEditorPos].has(handStr)) actionCls = 'in-3bet'; }
+    else {
+      if (editorData.bb[currentEditorPos]['3bet'].has(handStr)) actionCls = 'in-3bet';
+      else if (editorData.bb[currentEditorPos]['call'].has(handStr)) actionCls = 'in-call';
+    }
+    const r1 = handStr[0], r2 = handStr[1];
+    let cls = (r1 === r2) ? 'pair' : (handStr.endsWith('s') ? 'suited' : 'offsuit');
+    cell.className = `editor-cell ${cls} ${actionCls}`;
+  }
+}
+
+function saveProfile() {
+  const newName = document.getElementById('editor-profile-name').value.trim();
+  if (!newName) return alert('Введите название профиля');
+  if (profiles[newName] && newName !== editorOriginalName) { if (!confirm(`База "${newName}" существует. Перезаписать?`)) return; }
+
+  const newProfile = { rfi: {}, '3bet_ip': {}, '3bet_oop': {}, bb: {} };
+  Object.keys(editorData.rfi).forEach(pos => newProfile.rfi[pos] = Array.from(editorData.rfi[pos]).join(', '));
+  Object.keys(editorData['3bet_ip']).forEach(pos => newProfile['3bet_ip'][pos] = Array.from(editorData['3bet_ip'][pos]).join(', '));
+  Object.keys(editorData['3bet_oop']).forEach(pos => newProfile['3bet_oop'][pos] = Array.from(editorData['3bet_oop'][pos]).join(', '));
+  Object.keys(editorData.bb).forEach(pos => {
+    const data = editorData.bb[pos];
+    const expected = computeBBCall(data['3bet']);
+    const callVal = setsEqual(data['call'], expected) ? '__COMPUTED__' : Array.from(data['call']).join(', ');
+    newProfile.bb[pos] = { '3bet': Array.from(data['3bet']).join(', '), 'call': callVal };
+  });
+
+  if (editorOriginalName && newName !== editorOriginalName) delete profiles[editorOriginalName];
+  profiles[newName] = newProfile; activeProfileName = newName; editorOriginalName = newName;
+
+  saveLocally(); renderProfileSelector(); initRanges(); rbInit(); updateSpotFilter();
+  document.getElementById('editor-modal').classList.remove('open');
+  session = { questions: [] }; updateScoreDisplay(); nextQuestion();
+}
+
+function deleteProfile() {
+  if (Object.keys(profiles).length <= 1) return alert('Нельзя удалить единственную базу.');
+  if (confirm('Удалить текущую базу?')) {
+    delete profiles[activeProfileName];
+    activeProfileName = Object.keys(profiles)[0];
+    saveLocally(); renderProfileSelector(); initRanges(); rbInit(); updateSpotFilter();
+    document.getElementById('editor-modal').classList.remove('open');
+    session = { questions: [] }; updateScoreDisplay(); nextQuestion();
+  }
+}
+
+function exportAll() {
+  const payload = { app: 'chart-trainer', version: 'v9.1', schemaVersion: APP_SCHEMA_VERSION, exportedAt: new Date().toISOString(), profiles, activeProfileName, stats, mistakes, sessionHistory };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob); const d = new Date(); const pad = n => String(n).padStart(2, '0');
+  const a = document.createElement('a'); a.href = url; a.download = `trainer_backup_${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function importAll(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (parsed.profiles) {
+        profiles = parsed.profiles; activeProfileName = parsed.activeProfileName || Object.keys(profiles)[0];
+        if (parsed.stats) stats = Object.assign(stats, parsed.stats);
+        ensureRangeBuilderStats();
+        if (parsed.mistakes) mistakes = parsed.mistakes;
+        if (parsed.sessionHistory) sessionHistory = parsed.sessionHistory;
+        saveLocally(); renderProfileSelector(); initRanges(); rbInit(); updateSpotFilter();
+        session = { questions: [] }; updateScoreDisplay(); nextQuestion();
+        alert('Данные успешно импортированы.');
+      } else throw new Error('Неверный формат');
+    } catch (err) { alert('Ошибка импорта: ' + err.message); }
+    finally { event.target.value = ''; }
+  };
+  reader.readAsText(file);
+}
+
+function renderProfileSelector() {
+  const sel = document.getElementById('profile-selector');
+  sel.innerHTML = '';
+  Object.keys(profiles).forEach(name => {
+    const opt = document.createElement('option'); opt.value = name; opt.textContent = name;
+    if (name === activeProfileName) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  const badge = document.getElementById('profile-badge');
+  if (badge) badge.textContent = '📁 ' + activeProfileName;
+}
+
+function changeProfile(name) {
+  activeProfileName = name; saveLocally(); initRanges(); rbInit(); updateSpotFilter();
+  session = { questions: [] }; updateScoreDisplay(); nextQuestion();
+}
+
+function loadUIPrefs() {
+  try {
+    const p = JSON.parse(localStorage.getItem(UI_PREFS_KEY) || '{}');
+    hardMode = !!p.hardMode;
+    srsMode = p.srsMode !== false;
+    speedMode = !!p.speedMode;
+    if (p.sessionLength) sessionLength = p.sessionLength;
+    if (p.speedInterval) speedInterval = p.speedInterval;
+    if (p.settingsOpen) {
+      document.getElementById('settings-panel').classList.add('open');
+      document.getElementById('settings-toggle').classList.add('open');
+      document.getElementById('settings-toggle-label').textContent = '⚙️ Скрыть настройки';
+    }
+  } catch(e) {}
+  document.getElementById('hard-mode').checked = hardMode;
+  document.getElementById('srs-mode').checked = srsMode;
+  document.getElementById('speed-mode').checked = speedMode;
+  document.getElementById('session-length').value = sessionLength;
+  document.getElementById('speed-interval').value = speedInterval;
+  document.getElementById('speed-interval').style.display = speedMode ? '' : 'none';
+}
+
+function saveUIPrefs() {
+  try {
+    const prefs = JSON.parse(localStorage.getItem(UI_PREFS_KEY) || '{}');
+    prefs.hardMode = hardMode;
+    prefs.srsMode = srsMode;
+    prefs.speedMode = speedMode;
+    prefs.sessionLength = sessionLength;
+    prefs.speedInterval = speedInterval;
+    localStorage.setItem(UI_PREFS_KEY, JSON.stringify(prefs));
+  } catch(e) {}
+}
+
+document.querySelectorAll('.modes button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.modes button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); mode = btn.dataset.mode;
+    updateSpotFilter(); session = { questions: [] }; updateScoreDisplay(); nextQuestion();
+  });
+});
+
+document.getElementById('spot-filter').addEventListener('change', (e) => { spotFilter = e.target.value; session = { questions: [] }; updateScoreDisplay(); nextQuestion(); });
+document.getElementById('hard-mode').addEventListener('change', (e) => { hardMode = e.target.checked; saveUIPrefs(); nextQuestion(); });
+document.getElementById('srs-mode').addEventListener('change', (e) => { srsMode = e.target.checked; saveUIPrefs(); nextQuestion(); });
+
+document.getElementById('speed-mode').addEventListener('change', (e) => {
+  speedMode = e.target.checked;
+  saveUIPrefs();
+  document.getElementById('speed-interval').style.display = speedMode ? '' : 'none';
+  session = { questions: [] };
+  updateScoreDisplay();
+  nextQuestion();
+});
+
+document.getElementById('session-length').addEventListener('change', (e) => {
+  sessionLength = parseInt(e.target.value, 10) || 20;
+  saveUIPrefs();
+  session = { questions: [] };
+  updateScoreDisplay();
+  nextQuestion();
+});
+
+document.getElementById('speed-interval').addEventListener('change', (e) => {
+  speedInterval = parseInt(e.target.value, 10) || 60;
+  saveUIPrefs();
+  session = { questions: [] };
+  updateScoreDisplay();
+  nextQuestion();
+});
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed:', err));
+}
+
+function getBoundaryHands(rangeSet) {
+  const boundaries = new Set();
+  for (let i = 0; i < 13; i++) {
+    for (let j = 0; j < 13; j++) {
+      const r1 = ranks[i], r2 = ranks[j];
+      let handStr;
+      if (i === j) handStr = r1 + r2;
+      else if (i < j) handStr = r1 + r2 + 's';
+      else handStr = r2 + r1 + 'o';
+
+      const inRange = rangeSet.has(handStr);
+      let weaker = null, stronger = null;
+
+      if (i === j) {
+        if (i + 1 < 13) weaker = ranks[i+1] + ranks[i+1];
+        if (i - 1 >= 0) stronger = ranks[i-1] + ranks[i-1];
+      } else if (i < j) {
+        if (j + 1 < 13) weaker = r1 + ranks[j+1] + 's';
+        if (j - 1 > i) stronger = r1 + ranks[j-1] + 's';
+      } else {
+        if (i + 1 < 13) weaker = r2 + ranks[i+1] + 'o';
+        if (i - 1 > j) stronger = r2 + ranks[i-1] + 'o';
+      }
+
+      if (inRange && weaker && !rangeSet.has(weaker)) boundaries.add(handStr);
+      if (!inRange && stronger && rangeSet.has(stronger)) boundaries.add(handStr);
+    }
+  }
+  return Array.from(boundaries);
+}
+
+// ============ RANGE BUILDER (13×13) ============
+const RB_SRS_THRESHOLD = 0.8;
+const RB_SRS_PICK_PROB = 0.4;
+
+let rbView = 'game';
+let rbAvailableRanges = [];
+let rbSelectedKeys = [];
+let rbCurrentKey = '__MIX__';
+let rbCurrentRange = null;
+let rbAnswer = { '3bet': new Set(), call: new Set() };
+let rbBrush = '3bet';
+let rbChecked = false;
+let rbResult = null;
+let rbIsDrawing = false;
+let rbDrawState = '3bet';
+
+function toggleRbPanel() {
+  const panel = document.getElementById('rb-panel');
+  const btn = document.getElementById('rb-toggle');
+  const label = document.getElementById('rb-toggle-label');
+  const isOpen = panel.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+  label.textContent = isOpen ? '⚙️ Скрыть выбор ренджей' : '⚙️ Выбор ренджей';
+}
+
+function rbSwitchView(view) {
+  rbView = view;
+  const app = document.getElementById('app');
+  if (view === 'range') {
+    app.classList.add('view-range');
+    document.getElementById('game-view').style.display = 'none';
+    document.getElementById('range-view').style.display = '';
+  } else {
+    app.classList.remove('view-range');
+    document.getElementById('game-view').style.display = '';
+    document.getElementById('range-view').style.display = 'none';
+  }
+  document.querySelectorAll('.mode-switch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === view);
+  });
+}
+
+function rbBuildAvailableRanges() {
+  rbAvailableRanges = [];
+  Object.keys(RFI_RANGES).forEach(pos => {
+    rbAvailableRanges.push({
+      key: 'rfi_' + pos,
+      group: 'rfi',
+      label: 'RFI: ' + pos,
+      hands3bet: RFI_RANGES[pos],
+      handsCall: new Set()
+    });
+  });
+  Object.keys(THREEBET_IP_RANGES).forEach(pos => {
+    rbAvailableRanges.push({
+      key: '3bet_ip_' + pos,
+      group: 'threeBet',
+      label: '3-Bet IP: ' + pos,
+      hands3bet: THREEBET_IP_RANGES[pos],
+      handsCall: new Set()
+    });
+  });
+  Object.keys(THREEBET_OOP_RANGES).forEach(pos => {
+    rbAvailableRanges.push({
+      key: '3bet_oop_' + pos,
+      group: 'threeBet',
+      label: '3-Bet OOP: ' + pos,
+      hands3bet: THREEBET_OOP_RANGES[pos],
+      handsCall: new Set()
+    });
+  });
+  Object.keys(BB_RANGES).forEach(pos => {
+    rbAvailableRanges.push({
+      key: 'bb_' + pos,
+      group: 'bbDef',
+      label: 'BB Def: ' + pos,
+      hands3bet: BB_RANGES[pos]['3bet'],
+      handsCall: BB_RANGES[pos]['call']
+    });
+  });
+}
+
+function rbInit() {
+  ensureRangeBuilderStats();
+  rbBuildAvailableRanges();
+
+  let prefs = {};
+  try { prefs = JSON.parse(localStorage.getItem(UI_PREFS_KEY) || '{}'); } catch(e) {}
+  if (prefs.rbSelectedKeys && Array.isArray(prefs.rbSelectedKeys)) {
+    rbSelectedKeys = prefs.rbSelectedKeys.filter(k => rbAvailableRanges.some(r => r.key === k));
+  }
+  if (rbSelectedKeys.length === 0) {
+    rbSelectedKeys = rbAvailableRanges.map(r => r.key);
+  }
+
+  rbRenderCheckboxes();
+  rbRenderDropdown();
+
+  if (rbCurrentKey !== '__MIX__' && !rbSelectedKeys.includes(rbCurrentKey)) {
+    rbCurrentKey = '__MIX__';
+  }
+  rbNewQuestion();
+}
+
+function rbRenderCheckboxes() {
+  const groups = { rfi: 'rb-checks-rfi', threeBet: 'rb-checks-3bet', bbDef: 'rb-checks-bb' };
+  Object.keys(groups).forEach(g => {
+    const el = document.getElementById(groups[g]);
+    if (!el) return;
+    el.innerHTML = '';
+    rbAvailableRanges.filter(r => r.group === g).forEach(r => {
+      const checked = rbSelectedKeys.includes(r.key);
+      const lbl = document.createElement('label');
+      lbl.className = 'rb-check';
+      const inp = document.createElement('input');
+      inp.type = 'checkbox';
+      inp.dataset.key = r.key;
+      inp.checked = checked;
+      inp.addEventListener('change', rbToggleCheck);
+      const span = document.createElement('span');
+      span.textContent = r.label;
+      lbl.appendChild(inp); lbl.appendChild(span);
+      el.appendChild(lbl);
+    });
+  });
+}
+
+function rbToggleCheck(e) {
+  const key = e.target.dataset.key;
+  if (e.target.checked) {
+    if (!rbSelectedKeys.includes(key)) rbSelectedKeys.push(key);
+  } else {
+    if (rbSelectedKeys.length <= 1) {
+      e.target.checked = true;
+      return;
+    }
+    rbSelectedKeys = rbSelectedKeys.filter(k => k !== key);
+  }
+  rbSaveSelectedKeys();
+  rbRenderDropdown();
+  if (rbCurrentKey !== '__MIX__' && !rbSelectedKeys.includes(rbCurrentKey)) {
+    rbCurrentKey = '__MIX__';
+    rbNewQuestion();
+  }
+}
+
+function rbSaveSelectedKeys() {
+  try {
+    const prefs = JSON.parse(localStorage.getItem(UI_PREFS_KEY) || '{}');
+    prefs.rbSelectedKeys = rbSelectedKeys;
+    localStorage.setItem(UI_PREFS_KEY, JSON.stringify(prefs));
+  } catch(e) {}
+}
+
+function rbRenderDropdown() {
+  const sel = document.getElementById('rb-range-select');
+  if (!sel) return;
+  sel.innerHTML = '';
+  const mixOpt = document.createElement('option');
+  mixOpt.value = '__MIX__';
+  mixOpt.textContent = 'Микс (случайный)';
+  sel.appendChild(mixOpt);
+  rbAvailableRanges.filter(r => rbSelectedKeys.includes(r.key)).forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.key;
+    opt.textContent = r.label;
+    sel.appendChild(opt);
+  });
+  if (rbCurrentKey !== '__MIX__' && rbSelectedKeys.includes(rbCurrentKey)) {
+    sel.value = rbCurrentKey;
+  } else {
+    sel.value = '__MIX__';
+  }
+}
+
+function rbChangeRange() {
+  const val = document.getElementById('rb-range-select').value;
+  rbCurrentKey = val;
+  rbNewQuestion();
+}
+
+function rbPickRange() {
+  if (rbCurrentKey && rbCurrentKey !== '__MIX__' && rbSelectedKeys.includes(rbCurrentKey)) {
+    const found = rbAvailableRanges.find(r => r.key === rbCurrentKey);
+    if (found) return found;
+  }
+  const srs = (stats.rangeBuilder && stats.rangeBuilder.srs) || {};
+  const srsKeys = Object.keys(srs).filter(k => rbSelectedKeys.includes(k) && srs[k] > 0);
+  if (srsKeys.length > 0 && Math.random() < RB_SRS_PICK_PROB) {
+    const total = srsKeys.reduce((s, k) => s + srs[k], 0);
+    let r = Math.random() * total;
+    for (const k of srsKeys) {
+      r -= srs[k];
+      if (r <= 0) return rbAvailableRanges.find(rr => rr.key === k);
+    }
+    return rbAvailableRanges.find(rr => rr.key === srsKeys[0]);
+  }
+  const candidates = rbAvailableRanges.filter(r => rbSelectedKeys.includes(r.key));
+  if (candidates.length === 0) return null;
+  return pickRandom(candidates);
+}
+
+function rbNewQuestion() {
+  const range = rbPickRange();
+  rbAnswer = { '3bet': new Set(), call: new Set() };
+  rbChecked = false;
+  rbResult = null;
+
+  const nameEl = document.getElementById('rb-range-name');
+  const gridEl = document.getElementById('rb-grid');
+  const resultEl = document.getElementById('rb-result');
+  const nextWrap = document.getElementById('rb-next-wrap');
+  const checkBtn = document.getElementById('rb-check-btn');
+  const clearBtn = document.getElementById('rb-clear-btn');
+
+  if (!range) {
+    rbCurrentRange = null;
+    if (nameEl) nameEl.textContent = 'Нет доступных ренджей';
+    if (gridEl) gridEl.innerHTML = '';
+    if (resultEl) resultEl.classList.add('hidden');
+    if (nextWrap) nextWrap.style.display = 'none';
+    if (checkBtn) checkBtn.disabled = true;
+    if (clearBtn) clearBtn.disabled = true;
+    return;
+  }
+
+  rbCurrentRange = range;
+  if (nameEl) nameEl.textContent = range.label;
+  if (resultEl) resultEl.classList.add('hidden');
+  if (nextWrap) nextWrap.style.display = 'none';
+  if (checkBtn) checkBtn.disabled = false;
+  if (clearBtn) clearBtn.disabled = false;
+
+  const sel = document.getElementById('rb-range-select');
+  if (sel) {
+    if (rbCurrentKey !== '__MIX__' && rbSelectedKeys.includes(rbCurrentKey)) {
+      sel.value = rbCurrentKey;
+    } else {
+      sel.value = '__MIX__';
+    }
+  }
+
+  updateRbBrushes();
+  rbRenderGrid();
+}
+
+function updateRbBrushes() {
+  const brushWrap = document.getElementById('rb-brushes');
+  if (!brushWrap) return;
+  brushWrap.innerHTML = '';
+  const group = rbCurrentRange ? rbCurrentRange.group : 'rfi';
+  if (group === 'rfi') {
+    brushWrap.innerHTML = `
+      <button class="rb-brush-btn active" data-action="3bet" onclick="setRbBrush('3bet', this)">Рейз</button>
+      <button class="rb-brush-btn" data-action="fold" onclick="setRbBrush('fold', this)">Фолд</button>
+    `;
+    rbBrush = '3bet';
+  } else if (group === 'threeBet') {
+    brushWrap.innerHTML = `
+      <button class="rb-brush-btn active" data-action="3bet" onclick="setRbBrush('3bet', this)">3-Бет</button>
+      <button class="rb-brush-btn" data-action="fold" onclick="setRbBrush('fold', this)">Фолд</button>
+    `;
+    rbBrush = '3bet';
+  } else {
+    brushWrap.innerHTML = `
+      <button class="rb-brush-btn active" data-action="3bet" onclick="setRbBrush('3bet', this)">3-Бет</button>
+      <button class="rb-brush-btn" data-action="call" onclick="setRbBrush('call', this)">Колл</button>
+      <button class="rb-brush-btn" data-action="fold" onclick="setRbBrush('fold', this)">Фолд</button>
+    `;
+    rbBrush = '3bet';
+  }
+}
+
+function setRbBrush(brush, btn) {
+  rbBrush = brush;
+  document.querySelectorAll('.rb-brush-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function rbRenderGrid() {
+  const grid = document.getElementById('rb-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  for (let i = 0; i < 13; i++) {
+    for (let j = 0; j < 13; j++) {
+      const r1 = ranks[i], r2 = ranks[j];
+      let handStr, cls;
+      if (i === j) { handStr = r1 + r2; cls = 'pair'; }
+      else if (i < j) { handStr = r1 + r2 + 's'; cls = 'suited'; }
+      else { handStr = r2 + r1 + 'o'; cls = 'offsuit'; }
+      const cell = document.createElement('div');
+      cell.className = 'rb-cell ' + cls;
+      cell.dataset.hand = handStr;
+      cell.textContent = handStr;
+      if (!rbChecked) {
+        if (rbAnswer['3bet'].has(handStr)) cell.classList.add('marked-3bet');
+        else if (rbAnswer['call'].has(handStr)) cell.classList.add('marked-call');
+      } else if (rbResult) {
+        if (rbResult.green.has(handStr)) cell.classList.add('correct');
+        else if (rbResult.red.has(handStr)) cell.classList.add('extra');
+        else if (rbResult.yellow.has(handStr)) cell.classList.add('missing');
+      }
+      cell.addEventListener('pointerdown', (e) => rbCellDown(e, handStr));
+      cell.addEventListener('pointerenter', () => rbCellEnter(handStr));
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function rbCellDown(e, handStr) {
+  if (rbChecked) return;
+  e.preventDefault();
+  rbIsDrawing = true;
+  const isSameBrush = (rbBrush === '3bet' && rbAnswer['3bet'].has(handStr))
+                   || (rbBrush === 'call' && rbAnswer['call'].has(handStr));
+  rbDrawState = isSameBrush ? 'erase' : rbBrush;
+  rbApplyCell(handStr, rbDrawState);
+}
+
+function rbCellEnter(handStr) {
+  if (!rbIsDrawing || rbChecked) return;
+  rbApplyCell(handStr, rbDrawState);
+}
+
+function rbApplyCell(handStr, state) {
+  if (state === 'erase' || state === 'fold') {
+    rbAnswer['3bet'].delete(handStr);
+    rbAnswer['call'].delete(handStr);
+  } else if (state === '3bet') {
+    rbAnswer['3bet'].add(handStr);
+    rbAnswer['call'].delete(handStr);
+  } else if (state === 'call') {
+    rbAnswer['call'].add(handStr);
+    rbAnswer['3bet'].delete(handStr);
+  }
+  const cell = document.querySelector(`.rb-cell[data-hand="${handStr}"]`);
+  if (cell) {
+    cell.classList.remove('marked-3bet', 'marked-call');
+    if (rbAnswer['3bet'].has(handStr)) cell.classList.add('marked-3bet');
+    else if (rbAnswer['call'].has(handStr)) cell.classList.add('marked-call');
+  }
+}
+
+document.addEventListener('pointerup', () => { rbIsDrawing = false; });
+document.addEventListener('pointercancel', () => { rbIsDrawing = false; });
+
+function rbClearAll() {
+  if (rbChecked) return;
+  rbAnswer['3bet'].clear();
+  rbAnswer['call'].clear();
+  rbRenderGrid();
+}
+
+function rbCheck() {
+  if (rbChecked || !rbCurrentRange) return;
+  rbChecked = true;
+
+  // --- ИСПРАВЛЕНИЕ: Жесткая привязка эталона к типу ренджа ---
+  let correct3bet, correctCall;
+  if (rbCurrentRange.group === 'rfi') {
+    const pos = rbCurrentRange.label.replace('RFI: ', '');
+    correct3bet = RFI_RANGES[pos];
+    correctCall = new Set();
+  } else if (rbCurrentRange.group === 'threeBet') {
+    if (rbCurrentRange.label.startsWith('3-Bet IP: ')) {
+      correct3bet = THREEBET_IP_RANGES[rbCurrentRange.label.replace('3-Bet IP: ', '')];
+    } else {
+      correct3bet = THREEBET_OOP_RANGES[rbCurrentRange.label.replace('3-Bet OOP: ', '')];
+    }
+    correctCall = new Set();
+  } else {
+    const pos = rbCurrentRange.label.replace('BB Def: ', '');
+    correct3bet = BB_RANGES[pos]['3bet'];
+    correctCall = BB_RANGES[pos]['call'];
+  }
+  // -----------------------------------------------------------
+
+  const user3bet = rbAnswer['3bet'];
+  const userCall = rbAnswer['call'];
+
+  const green = new Set();
+  const red = new Set();
+  const yellow = new Set();
+
+  user3bet.forEach(h => { if (correct3bet.has(h)) green.add(h); else red.add(h); });
+  userCall.forEach(h => { if (correctCall.has(h)) green.add(h); else red.add(h); });
+  correct3bet.forEach(h => { if (!user3bet.has(h) && !userCall.has(h)) yellow.add(h); });
+  correctCall.forEach(h => { if (!user3bet.has(h) && !userCall.has(h)) yellow.add(h); });
+
+  const unionSet = new Set([...user3bet, ...userCall, ...correct3bet, ...correctCall]);
+  const unionSize = unionSet.size;
+  const accuracy = unionSize === 0 ? 1 : green.size / unionSize;
+  rbResult = { green, red, yellow, accuracy, unionSize };
+
+  rbRecordStats(rbCurrentRange, accuracy);
+  rbRenderGrid();
+
+  const resultEl = document.getElementById('rb-result');
+  const pct = Math.round(accuracy * 100);
+  const colorCls = accuracy >= RB_SRS_THRESHOLD ? 'good' : accuracy >= 0.6 ? 'mid' : 'bad';
+  resultEl.innerHTML = `
+    <div class="rb-score ${colorCls}">Совпало: ${green.size}/${unionSize} (${pct}%)</div>
+    <div class="rb-details">лишних: ${red.size} · пропущено: ${yellow.size}</div>
+    <div class="rb-legend">
+      <span><span class="dot" style="background:#10b981"></span>верно</span>
+      <span><span class="dot" style="background:#ef4444"></span>лишняя</span>
+      <span><span class="dot" style="background:#f59e0b"></span>пропущена</span>
+    </div>
+  `;
+  resultEl.classList.remove('hidden');
+  document.getElementById('rb-check-btn').disabled = true;
+  document.getElementById('rb-clear-btn').disabled = true;
+  document.getElementById('rb-next-wrap').style.display = '';
+}
+
+function rbRecordStats(range, accuracy) {
+  ensureRangeBuilderStats();
+  const rb = stats.rangeBuilder;
+  rb.totalRanges++;
+  rb.totalAccuracySum += accuracy;
+
+  if (!rb.byRange[range.key]) rb.byRange[range.key] = { attempts: 0, accuracySum: 0, lastAccuracy: 0, bestAccuracy: 0 };
+  const br = rb.byRange[range.key];
+  br.attempts++;
+  br.accuracySum += accuracy;
+  br.lastAccuracy = accuracy;
+  if (accuracy > br.bestAccuracy) br.bestAccuracy = accuracy;
+
+  if (!rb.byGroup[range.group]) rb.byGroup[range.group] = { attempts: 0, accuracySum: 0 };
+  rb.byGroup[range.group].attempts++;
+  rb.byGroup[range.group].accuracySum += accuracy;
+
+  if (accuracy < RB_SRS_THRESHOLD) {
+    rb.srs[range.key] = (rb.srs[range.key] || 0) + 1;
+  } else {
+    if (rb.srs[range.key]) {
+      rb.srs[range.key]--;
+      if (rb.srs[range.key] <= 0) delete rb.srs[range.key];
+    }
+  }
+
+  saveLocally();
+}
+
+function rbNext() {
+  rbNewQuestion();
+}
+
+loadLocalData(); loadUIPrefs(); initSync(); initRanges(); rbInit(); updateSpotFilter(); updateScoreDisplay(); nextQuestion();
+
+/* Счётчик рук в редакторе: видно, что реально загружено в диапазон. */
+function updateEditorCounts() {
+  const box = document.getElementById('editor-counts');
+  if (!box) return;
+  let text = '';
+  if (currentEditorTab === 'bb') {
+    const d = editorData.bb[currentEditorPos] || {};
+    const three = d['3bet'] ? d['3bet'].size : 0;
+    const call = d['call'] ? d['call'].size : 0;
+    text = '3-бет: ' + three + ' · колл: ' + call + ' · фолд: ' + (169 - three - call);
+  } else if (editorData[currentEditorTab] && editorData[currentEditorTab][currentEditorPos]) {
+    text = 'в диапазоне: ' + editorData[currentEditorTab][currentEditorPos].size + ' рук';
+  }
+  box.textContent = text;
+}
+(function () {
+  const original = renderEditorGrid;
+  renderEditorGrid = function () {
+    const r = original.apply(this, arguments);
+    updateEditorCounts();
+    return r;
+  };
+})();
+</script>
+</body>
+</html>
