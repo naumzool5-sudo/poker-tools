@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Анализатор GG-логов</title>
+<style>
+  :root { --bg:#0f172a; --panel:#16203a; --line:#24304d; --text:#e2e8f0; --muted:#8b98ad; --accent:#3b82f6; --good:#10b981; --bad:#ef4444; --warn:#f59e0b; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.5 -apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
+  .wrap { max-width:1100px; margin:0 auto; padding:18px 14px 60px; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:12px; margin-bottom:16px; }
+  .drop { border:2px dashed var(--line); border-radius:12px; padding:22px; text-align:center; color:var(--muted); cursor:pointer; background:var(--panel); }
+  .drop.hover { border-color:var(--accent); color:var(--text); }
+  .drop b { color:var(--text); }
+  .row { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }
+  button { padding:8px 14px; border-radius:8px; border:1px solid var(--line); background:#131c31; color:var(--text); font-weight:600; cursor:pointer; font-size:13px; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:16px 0; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; }
+  .card .k { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.04em; }
+  .card .v { font-size:20px; font-weight:700; margin-top:3px; }
+  .card .v.pos { color:var(--good); } .card .v.neg { color:var(--bad); }
+  table { width:100%; border-collapse:collapse; font-size:13px; margin:8px 0 18px; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
+  th { color:var(--muted); font-weight:600; font-size:12px; }
+  td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  h2 { font-size:15px; margin:22px 0 6px; }
+  .tag { display:inline-block; padding:1px 7px; border-radius:99px; font-size:11px; border:1px solid var(--line); color:var(--muted); }
+  .tag.bad { color:var(--bad); border-color:#7f1d1d; } .tag.warn { color:var(--warn); border-color:#78350f; } .tag.ok { color:var(--good); border-color:#065f46; }
+  .muted { color:var(--muted); font-size:12px; }
+  .c-s { color:#e2e8f0; } .c-h { color:#ef4444; } .c-d { color:#3b82f6; } .c-c { color:#10b981; }
+  pre { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:10px; overflow:auto; font-size:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Анализатор GG-логов</h1>
+  <div class="sub">Перетащи сюда .txt с раздачами (можно несколько сразу) — отчёт считается в браузере, никуда не уходит.</div>
+
+  <div class="drop" id="drop">
+    <b>Перетащи файлы сюда</b><br>или нажми, чтобы выбрать
+    <input type="file" id="file" accept=".txt" multiple hidden>
+  </div>
+
+  <div class="row">
+    <button class="primary" id="btnDemo">Показать пример</button>
+    <button id="btnClear">Очистить</button>
+    <button id="btnCopy">Скопировать отчёт</button>
+    <button id="btnJournal">📓 Для журнала</button>
+  </div>
+
+  <div id="out"></div>
+</div>
+
+<script>
+/*CORE-BEGIN*/
+const RANKS = "AKQJT98765432";
+
+function splitHands(text) {
+  return text.split(/(?=Poker Hand #)/).filter(s => s.startsWith("Poker Hand #"));
+}
+
+function parseHand(raw) {
+  const idm = raw.match(/Poker Hand #(\w+)/);
+  const tm = raw.match(/- (\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+  const hand = { id: idm ? idm[1] : "?", time: tm ? `${tm[3]}.${tm[2]} ${tm[4]}:${tm[5]}` : "", net: 0, rake: 0, invested: 0, collected: 0, cashout: 0, position: "", hole: "", board: [], bets: [], minRaises: [], limped: false, allin: false, shown: false, posts: 0 };
+
+  const hm = raw.match(/Dealt to Hero \[([^\]]+)\]/);
+  hand.hole = hm ? hm[1] : "";
+
+  const seats = [];
+  const seatRe = /Seat (\d+): (\w+) \(\$([\d.]+) in chips\)/g;
+  let s;
+  while ((s = seatRe.exec(raw))) seats.push({ n: +s[1], name: s[2], stack: +s[3] });
+  const btnM = raw.match(/Seat #(\d+) is the button/);
+  const btn = btnM ? +btnM[1] : 0;
+
+  let heroPos = "";
+  if (seats.length && btn) {
+    const maxSeat = Math.max(...seats.map(x => x.n));
+    const order = [];
+    for (let k = 1; k <= maxSeat; k++) {
+      const n = ((btn - 1 + k) % maxSeat) + 1;
+      const seat = seats.find(x => x.n === n);
+      if (seat) order.push(seat.name);
+    }
+    const labels = order.length === 6 ? ["SB", "BB", "UTG", "MP", "CO", "BTN"]
+      : order.length === 5 ? ["SB", "BB", "UTG", "CO", "BTN"]
+      : order.length === 4 ? ["SB", "BB", "CO", "BTN"]
+      : order.length === 3 ? ["SB", "BB", "BTN"]
+      : order.length === 2 ? ["SB", "BB"]
+      : order.map((_, i) => "P" + i);
+    const hi = order.indexOf("Hero");
+    heroPos = hi >= 0 ? labels[hi] : "";
+  }
+  hand.position = heroPos;
+
+  let totalPot = 0;
+  const rm = raw.match(/Total pot \$([\d.]+) \| Rake \$([\d.]+) \| Jackpot \$([\d.]+)/);
+  if (rm) { totalPot = +rm[1]; hand.rake = +rm[2] + +rm[3]; }
+
+  let street = "PRE", curBoard = [];
+  const lines = raw.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const L = lines[i];
+    const st = L.match(/^\*\*\* (?:FIRST |SECOND )?(FLOP|TURN|RIVER|SHOWDOWN|SUMMARY|HOLE CARDS) \*\*\*(.*)$/);
+    if (st) {
+      const kind = st[1];
+      if (kind === "FLOP" || kind === "TURN" || kind === "RIVER") {
+        street = kind;
+        const b = st[2].match(/\[([^\]]*)\]/);
+        curBoard = b ? b[1].split(" ") : curBoard.slice();
+        if (kind === "FLOP" && b) hand.board = b[1].split(" ");
+      }
+      continue;
+    }
+
+    if (street !== "PRE") {
+      const bet = L.match(/^Hero: bets \$([\d.]+)/);
+      if (bet) hand.bets.push({ street, board: curBoard.join(" "), amt: +bet[1], kind: "bet" });
+      const rz = L.match(/^Hero: raises \$([\d.]+) to \$([\d.]+)/);
+      if (rz) {
+        const inc = +rz[1], to = +rz[2];
+        hand.bets.push({ street, board: curBoard.join(" "), amt: to, kind: "raise" });
+        if (inc <= to / 2 || inc <= 0.02) hand.minRaises.push({ street, board: curBoard.join(" "), inc, to });
+      }
+    }
+    if (L.startsWith("Hero: calls $") && street === "PRE") {
+      const amt = +L.match(/\$([\d.]+)/)[1];
+      const before = lines.slice(0, i).join("\n");
+      if (amt <= 0.02 && !/raises/.test(before)) hand.limped = true;
+    }
+    if (L.includes("Hero") && L.includes("is all-in")) hand.allin = true;
+    if (L.startsWith("Hero: shows")) hand.shown = true;
+  }
+
+  let inv = 0, col = 0, cash = 0, posts = 0;
+  let streetInv = 0, stCur = "PRE";
+  for (const L of lines) {
+    const stm = L.match(/^\*\*\* (?:FIRST |SECOND )?(FLOP|TURN|RIVER|SHOWDOWN|SUMMARY)/);
+    if (stm && stm[1] !== stCur) {
+      inv += streetInv;
+      streetInv = 0;
+      stCur = stm[1];
+      continue;
+    }
+    const p = L.match(/^Hero: posts (?:small|big) blind \$([\d.]+)/);
+    if (p) { posts += +p[1]; streetInv = Math.max(streetInv, +p[1]); continue; }
+    const c = L.match(/^Hero: calls \$([\d.]+)/);
+    if (c) { streetInv += +c[1]; continue; }
+    const b = L.match(/^Hero: bets \$([\d.]+)/);
+    if (b) { streetInv += +b[1]; continue; }
+    const r = L.match(/^Hero: raises \$([\d.]+) to \$([\d.]+)/);
+    if (r) { streetInv = Math.max(streetInv, +r[2]); continue; }
+    const back = L.match(/Uncalled bet \(\$([\d.]+)\) returned to Hero/);
+    if (back) { streetInv -= +back[1]; continue; }
+    const cm = L.match(/^Hero collected \$([\d.]+) from pot/);
+    if (cm) { col += +cm[1]; continue; }
+    const risk = L.match(/^Hero: Pays Cashout Risk \(\$([\d.]+)\)/);
+    if (risk) { cash -= +risk[1]; continue; }
+    const recv = L.match(/^Hero: Receives Cashout \(\$([\d.]+)\)/);
+    if (recv) { cash += +recv[1]; continue; }
+  }
+  inv += streetInv;
+  hand.posts = +posts.toFixed(2);
+  hand.invested = +inv.toFixed(2);
+  hand.collected = +col.toFixed(2);
+  hand.cashout = +cash.toFixed(2);
+  hand.net = col + cash - inv;
+  hand.realRake = totalPot > 0 ? hand.rake * Math.min(1, inv / totalPot) : 0;
+  hand.rakePaid = totalPot > 0 && col > 0 ? hand.rake * Math.min(1, col / totalPot) : 0;
+  return hand;
+}
+
+function analyze(texts) {
+  const seenIds = new Map();
+  for (const t of texts) {
+    for (const raw of splitHands(t)) {
+      const h = parseHand(raw);
+      if (!seenIds.has(h.id)) seenIds.set(h.id, h);
+    }
+  }
+  const hands = [...seenIds.values()];
+  const n = hands.length;
+  const net = hands.reduce((a, h) => a + h.net, 0);
+  const rake = hands.reduce((a, h) => a + h.rake, 0);
+  const bb = 0.02;
+  const pos = {};
+  for (const h of hands) {
+    if (!h.position) continue;
+    pos[h.position] = pos[h.position] || { hands: 0, net: 0 };
+    pos[h.position].hands++;
+    pos[h.position].net += h.net;
+  }
+  const bets = [];
+  for (const h of hands) for (const b of h.bets) bets.push({ id: h.id, time: h.time, hole: h.hole, ...b });
+  const minRaises = hands.flatMap(h => h.minRaises.map(m => ({ id: h.id, time: h.time, hole: h.hole, ...m })));
+  return {
+    hands: n,
+    firstTime: hands.length ? hands.map(h => h.time).filter(Boolean).sort()[0] : "",
+    lastTime: hands.length ? hands.map(h => h.time).filter(Boolean).sort().slice(-1)[0] : "",
+    net: +net.toFixed(2),
+    rake: +rake.toFixed(2),
+    rakeMine: +hands.reduce((a, h) => a + (h.realRake || 0), 0).toFixed(2),
+    rakePaid: +hands.reduce((a, h) => a + (h.rakePaid || 0), 0).toFixed(2),
+    preRake: +(net + (hands.reduce((a, h) => a + (h.rakePaid || 0), 0))).toFixed(2),
+    bb100: n ? +((net / (bb * n)) * 100).toFixed(1) : 0,
+    bb100pre: n ? +(((net + hands.reduce((a, h) => a + (h.rakePaid || 0), 0)) / (bb * n)) * 100).toFixed(1) : 0,
+    pos,
+    bets,
+    minRaises,
+    limps: hands.filter(h => h.limped).length,
+    allins: hands.filter(h => h.allin).length,
+    cashouts: hands.filter(h => h.cashout !== 0).length,
+    topLoss: hands.slice().sort((a, b) => a.net - b.net).slice(0, 5),
+    topWin: hands.slice().sort((a, b) => b.net - a.net).slice(0, 5),
+    all: hands
+  };
+}
+/*CORE-END*/
+
+const SUIT_SYM = { s: "♠", h: "♥", d: "♦", c: "♣" };
+
+function fmtCards(str) {
+  if (!str) return "";
+  return String(str).replace(/\b([2-9TJQKA])([shdc])\b/g, (m, r, suit) =>
+    `<span class="c-${suit}">${r}${SUIT_SYM[suit]}</span>`);
+}
+
+function money(v) { return (v >= 0 ? "+$" : "−$") + Math.abs(v).toFixed(2); }
+function cls(v) { return v > 0 ? "pos" : v < 0 ? "neg" : ""; }
+
+function render(r) {
+  const out = document.getElementById("out");
+  const posRows = Object.entries(r.pos)
+    .sort((a, b) => b[1].hands - a[1].hands)
+    .map(([p, d]) => `<tr><td>${p}</td><td class="num">${d.hands}</td><td class="num">${money(d.net)}</td><td class="num">${((d.net / (0.02 * d.hands)) * 100).toFixed(0)}</td></tr>`).join("");
+
+  const betRows = r.bets.map(b => `<tr><td>${b.id}</td><td>${b.time}</td><td>${b.street}</td><td>${b.kind}</td><td>${fmtCards(b.board)}</td><td>${fmtCards(b.hole)}</td><td class="num">$${b.amt.toFixed(2)}</td></tr>`).join("");
+
+  const listRows = arr => arr.map(h => `<tr><td>${h.id}</td><td>${h.time}</td><td>${h.position}</td><td>${fmtCards(h.hole)}</td><td class="num">${money(h.net)}</td></tr>`).join("");
+
+  out.innerHTML = `
+    <div class="cards">
+      <div class="card"><div class="k">Руки</div><div class="v">${r.hands}</div><div class="muted">${r.firstTime || "?"} — ${r.lastTime || "?"}</div></div>
+      <div class="card"><div class="k">Результат</div><div class="v ${cls(r.net)}">${money(r.net)}</div></div>
+      <div class="card"><div class="k">Мой рейк (честный)</div><div class="v">$${r.rakePaid.toFixed(2)}</div><div class="muted">из выигранных банков · доля по вложениям $${r.rakeMine.toFixed(2)} · стол $${r.rake.toFixed(2)}</div></div>
+      <div class="card"><div class="k">До рейка</div><div class="v ${cls(r.preRake)}">${money(r.preRake)}</div><div class="muted">честный рейк</div></div>
+      <div class="card"><div class="k">bb/100</div><div class="v ${cls(r.bb100)}">${r.bb100}</div></div>
+      <div class="card"><div class="k">bb/100 до рейка</div><div class="v ${cls(r.bb100pre)}">${r.bb100pre}</div></div>
+    </div>
+
+    <h2>По позициям</h2>
+    <table><tr><th>Позиция</th><th class="num">Рук</th><th class="num">Net</th><th class="num">bb/100</th></tr>${posRows}</table>
+
+    <h2>Проверки</h2>
+    <table>
+      <tr><td>Лимпы</td><td class="num">${r.limps}</td></tr>
+      <tr><td>Мин-рейзы</td><td class="num">${r.minRaises.length}</td></tr>
+      <tr><td>Олл-ины Hero</td><td class="num">${r.allins}</td></tr>
+      <tr><td>Кашауты Hero</td><td class="num">${r.cashouts}</td></tr>
+      <tr><td>Мой рейк: честный / доля / стол</td><td class="num">$${r.rakePaid.toFixed(2)} / $${r.rakeMine.toFixed(2)} / $${r.rake.toFixed(2)}</td></tr>
+      <tr><td>Постфлоп-ставок</td><td class="num">${r.bets.length}</td></tr>
+    </table>
+
+    ${r.minRaises.length ? `<h2>Мин-рейзы</h2><table><tr><th>Рука</th><th>Время</th><th>Улица</th><th>Доска</th><th>Рука</th><th class="num">Размер</th></tr>${r.minRaises.map(m => `<tr><td>${m.id}</td><td>${m.time}</td><td>${m.street}</td><td>${fmtCards(m.board)}</td><td>${fmtCards(m.hole)}</td><td class="num">${m.inc.toFixed(2)} → ${m.to.toFixed(2)}</td></tr>`).join("")}</table>` : ""}
+
+    <h2>Постфлоп-ставки (${r.bets.length})</h2>
+    <table><tr><th>Рука</th><th>Время</th><th>Улица</th><th>Действие</th><th>Доска</th><th>Карты</th><th class="num">Размер</th></tr>${betRows}</table>
+
+    <h2>Крупнейшие проигрыши</h2>
+    <table><tr><th>Рука</th><th>Время</th><th>Поз</th><th>Карты</th><th class="num">Net</th></tr>${listRows(r.topLoss)}</table>
+
+    <h2>Крупнейшие выигрыши</h2>
+    <table><tr><th>Рука</th><th>Время</th><th>Поз</th><th>Карты</th><th class="num">Net</th></tr>${listRows(r.topWin)}</table>
+  `;
+  window.__lastReport = r;
+}
+
+function readFiles(files) {
+  const texts = [];
+  let left = files.length;
+  if (!left) return;
+  for (const f of files) {
+    const fr = new FileReader();
+    fr.onload = () => {
+      texts.push(fr.result);
+      if (--left === 0) render(analyze(texts));
+    };
+    fr.readAsText(f);
+  }
+}
+
+const drop = document.getElementById("drop");
+const fileInput = document.getElementById("file");
+drop.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", e => readFiles(e.target.files));
+drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("hover"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("hover"));
+drop.addEventListener("drop", e => {
+  e.preventDefault(); drop.classList.remove("hover");
+  readFiles(e.dataTransfer.files);
+});
+
+/* documentDragGuard: перехват файлов, сброшенных в любом месте окна */
+(function () {
+  const isFileDrag = e => e.dataTransfer && Array.from(e.dataTransfer.types || []).includes("Files");
+  window.addEventListener("dragover", e => { if (isFileDrag(e)) { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; } });
+  window.addEventListener("drop", e => {
+    if (!isFileDrag(e)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    drop.classList.remove("hover");
+    if (e.dataTransfer.files && e.dataTransfer.files.length) readFiles(e.dataTransfer.files);
+  });
+})();
+
+document.getElementById("btnClear").addEventListener("click", () => { document.getElementById("out").innerHTML = ""; });
+document.getElementById("btnCopy").addEventListener("click", async () => {
+  const r = window.__lastReport;
+  if (!r) return alert("Сначала загрузи логи");
+  const lines = [
+    "Руки: " + r.hands,
+    "Результат: " + money(r.net),
+    "Мой рейк: $" + r.rakePaid.toFixed(2) + " честный (доля $" + r.rakeMine.toFixed(2) + ", стол $" + r.rake.toFixed(2) + ")",
+    "До рейка: " + money(r.preRake),
+    "bb/100: " + r.bb100 + " | до рейка: " + r.bb100pre,
+    "Лимпы: " + r.limps + " | мин-рейзы: " + r.minRaises.length + " | олл-ины: " + r.allins + " | кашауты: " + r.cashouts,
+    "Постфлоп-ставок: " + r.bets.length
+  ];
+  try { await navigator.clipboard.writeText(lines.join("\n")); alert("Отчёт скопирован"); }
+  catch (e) { alert("Не удалось скопировать"); }
+});
+
+
+document.getElementById("btnJournal").addEventListener("click", async () => {
+  const r = window.__lastReport;
+  if (!r) return alert("Сначала загрузи логи");
+  const payload = {
+    date: new Date().toLocaleDateString("ru-RU"),
+    hands: r.hands,
+    net: +r.net.toFixed(2),
+    rake: +r.rakePaid.toFixed(2),
+    preRake: +r.preRake.toFixed(2),
+    bets: r.bets.length,
+    minRaises: r.minRaises.length,
+    limps: r.limps,
+    allins: r.allins,
+    cashouts: r.cashouts
+  };
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(payload));
+    alert("Скопировано. Вставь в Хабе → вкладка «Журнал».");
+  } catch (e) {
+    alert("Не удалось скопировать. Данные: " + JSON.stringify(payload));
+  }
+});
+
+document.getElementById("btnDemo").addEventListener("click", () => {
+  const demo = `Poker Hand #DEMO1: Hold'em No Limit ($0.01/$0.02) - 2026/11/26 09:00:00
+Table 'DEMO' 6-max Seat #6 is the button
+Seat 1: aaaa ($2.00 in chips)
+Seat 2: Hero ($2.00 in chips)
+Seat 3: cccc ($2.00 in chips)
+Seat 4: dddd ($2.00 in chips)
+Seat 5: eeee ($2.00 in chips)
+Seat 6: ffff ($2.00 in chips)
+aaaa: posts small blind $0.01
+Hero: posts big blind $0.02
+*** HOLE CARDS ***
+Dealt to Hero [Ah Kh]
+cccc: folds
+dddd: folds
+eeee: folds
+ffff: folds
+aaaa: raises $0.04 to $0.06
+Hero: calls $0.04
+*** FLOP *** [As 7d 2c]
+Hero: bets $0.06
+aaaa: calls $0.06
+*** TURN *** [As 7d 2c] [Qh]
+Hero: bets $0.20
+aaaa: folds
+Uncalled bet ($0.20) returned to Hero
+*** SHOWDOWN ***
+Hero collected $0.24 from pot
+*** SUMMARY ***
+Total pot $0.26 | Rake $0.01 | Jackpot $0.01 | Bingo $0 | Fortune $0 | Tax $0
+`;
+  render(analyze([demo]));
+});
+</script>
+</body>
+</html>
