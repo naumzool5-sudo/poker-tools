@@ -214,6 +214,7 @@ function analyze(texts) {
     limps: hands.filter(h => h.limped).length,
     allins: hands.filter(h => h.allin).length,
     cashouts: hands.filter(h => h.cashout !== 0).length,
+    cashoutSum: +hands.reduce((a, h) => a + (h.cashout || 0), 0).toFixed(2),
     topLoss: hands.slice().sort((a, b) => a.net - b.net).slice(0, 5),
     topWin: hands.slice().sort((a, b) => b.net - a.net).slice(0, 5),
     all: hands
@@ -260,7 +261,7 @@ function render(r) {
       <tr><td>Лимпы</td><td class="num">${r.limps}</td></tr>
       <tr><td>Мин-рейзы</td><td class="num">${r.minRaises.length}</td></tr>
       <tr><td>Олл-ины Hero</td><td class="num">${r.allins}</td></tr>
-      <tr><td>Кашауты Hero</td><td class="num">${r.cashouts}</td></tr>
+      <tr><td>Кашауты Hero</td><td class="num">${r.cashouts}${r.cashouts ? ' (итог $' + r.cashoutSum.toFixed(2) + ')' : ''}</td></tr>
       <tr><td>Мой рейк: честный / доля / стол</td><td class="num">$${r.rakePaid.toFixed(2)} / $${r.rakeMine.toFixed(2)} / $${r.rake.toFixed(2)}</td></tr>
       <tr><td>Постфлоп-ставок</td><td class="num">${r.bets.length}</td></tr>
     </table>
