@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>NLH Preflop Charts (6-max)</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f7f7f7;
+    margin: 0;
+    color: #222;
+    line-height: 1.4;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+  /* Навигация */
+  nav.toc {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  nav.toc a {
+    color: #1a4d8f;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 6px 10px;
+    border-radius: 4px;
+  }
+  nav.toc a:hover { background: #eef4fb; }
+
+  /* Секции */
+  section.chapter {
+    margin-bottom: 40px;
+  }
+  .chapter-header {
+    background: #1a4d8f;
+    color: white;
+    padding: 14px 20px;
+    border-radius: 8px 8px 0 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .chapter-body {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    padding: 20px;
+  }
+
+  h2.section-title {
+    font-size: 16px;
+    margin: 24px 0 10px;
+    color: #333;
+    border-left: 4px solid #1a4d8f;
+    padding-left: 10px;
+  }
+  h2.section-title:first-child { margin-top: 0; }
+
+  /* Сетки */
+  table.grid {
+    border-collapse: collapse;
+    margin-bottom: 14px;
+    font-size: 10.5px;
+    page-break-inside: avoid;
+  }
+  table.grid td, table.grid th {
+    width: 40px;
+    height: 26px;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #bbb;
+    font-weight: 600;
+    font-family: "Consolas", "Menlo", monospace;
+  }
+  table.grid th {
+    background: #eaeaea;
+    font-weight: 700;
+  }
+
+  /* Цвета */
+  .R { background: #b7e1b7; color: #1a4d1a; }
+  .T { background: #f4a6a6; color: #6b0f0f; }
+  .C { background: #f5e6a3; color: #6b5400; }
+  .F { background: #f4f4f4; color: #999; }
+
+  /* Легенда */
+  .legend {
+    margin: 0 0 20px;
+    padding: 10px 14px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    display: inline-block;
+  }
+  .legend span {
+    display: inline-block;
+    padding: 4px 10px;
+    margin-right: 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* Range box */
+  .range {
+    font-family: "Consolas", monospace;
+    background: #fafafa;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    margin: 0 0 20px;
+    font-size: 12px;
+    display: block;
+    color: #444;
+  }
+
+  /* Разделитель между секциями */
+  .divider {
+    height: 1px;
+    background: #e0e0e0;
+    margin: 30px 0;
+  }
+
+  @media print {
+    body { background: white; margin: 0; }
+    nav.toc { display: none; }
+    .container { padding: 0; max-width: 100%; }
+    section.chapter { page-break-before: always; }
+    section.chapter:first-child { page-break-before: auto; }
+    .chapter-header { border-radius: 0; }
+    .chapter-body { border: 1px solid #ddd; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1 style="margin:0 0 10px;">NLH Preflop Charts — 6-max</h1>
+  <p style="margin:0 0 20px;color:#666;font-size:14px;">Микролимиты. Стиль TAG. Упрощённые чарты без смешанных частот.</p>
+
+  <nav class="toc">
+    <a href="#open">① Опен-рейзы</a>
+    <a href="#defense">② Защита BB</a>
+    <a href="#threebet">③ 3-беты</a>
+  </nav>
+
+  <div class="legend">
+    <span class="R">R = Raise</span>
+    <span class="T">3 = 3-Bet</span>
+    <span class="C">C = Call</span>
+    <span class="F">F = Fold</span>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- РАЗДЕЛ 1: ОПЕН-РЕЙЗЫ                                          -->
+  <!-- ============================================================ -->
+  <section class="chapter" id="open">
+    <div class="chapter-header">① ОПЕН-РЕЙЗЫ</div>
+    <div class="chapter-body">
+
+      <h2 class="section-title">EP — ранняя позиция</h2>
+      <table class="grid">
+        <tr><th></th><th>A</th><th>K</th><th>Q</th><th>J</th><th>T</th><th>9</th><th>8</th><th>7</th><th>6</th><th>5</th><th>4</th><th>3</th><th>2</th></tr>
+        <tr><th>A</th><td class="R">AA</td><td class="R">AKs</td><td class="R">AQs</td><td class="R">AJs</td><td class="R">ATs</td><td class="F">A9s</td><td class="F">A8s</td><td class="F">A7s</td><td class="F">A6s</td><td class="F">A5s</td><td class="F">A4s</td><td class="F">A3s</td><td class="F">A2s</td></tr>
+        <tr><th>K</th><td class="R">AKo</td><td class="R">KK</td><td class="R">KQs</td><td class="R">KJs</td><td class="R">KTs</td><td class="F">K9s</td><td class="F">K8s</td><td class="F">K7s</td><td class="F">K6s</td><td class="F">K5s</td><td class="F">K4s</td><td class="F">K3s</td><td class="F">K2s</td></tr>
+        <tr><th>Q</th><td class="R">AQo</td><td class="R">KQo</td><td class="R">QQ</td><td class="R">QJs</td><td class="R">QTs</td><td class="F">Q9s</td><td class="F">Q8s</td><td class="F">Q7s</td><td class="F">Q6s</td><td class="F">Q5s</td><td class="F">Q4s</td><td class="F">Q3s</td><td class="F">Q2s</td></tr>
+        <tr><th>J</th><td class="R">AJo</td><td class="R">KJo</td><td class="F">QJo</td><td class="R">JJ</td><td class="R">JTs</td><td class="F">J9s</td><td class="F">J8s</td><td class="F">J7s</td><td class="F">J6s</td><td class="F">J5s</td><td class="F">J4s</td><td class="F">J3s</td><td class="F">J2s</td></tr>
+        <tr><th>T</th><td class="R">ATo</td><td class="F">KTo</td><td class="F">QTo</td><td class="F">JTo</td><td class="R">TT</td><td class="F">T9s</td><td class="F">T8s</td><td class="F">T7s</td><td class="F">T6s</td><td class="F">T5s</td><td class="F">T4s</td><td class="F">T3s</td><td class="F">T2s</td></tr>
+        <tr><th>9</th><td class="F">A9o</td><td class="F">K9o</td><td class="F">Q9o</td><td class="F">J9o</td><td class="F">T9o</td><td class="R">99</td><td class="F">98s</td><td class="F">97s</td><td class="F">96s</td><td class="F">95s</td><td class="F">94s</td><td class="F">93s</td><td class="F">92s</td></tr>
+        <tr><th>8</th><td class="F">A8o</td><td class="F">K8o</td><td class="F">Q8o</td><td class="F">J8o</td><td class="F">T8o</td><td class="F">98o</td><td class="R">88</td><td class="F">87s</td><td class="F">86s</td><td class="F">85s</td><td class="F">84s</td><td class="F">83s</td><td class="F">82s</td></tr>
+        <tr><th>7</th><td class="F">A7o</td><td class="F">K7o</td><td class="F">Q7o</td><td class="F">J7o</td><td class="F">T7o</td><td class="F">97o</td><td class="F">87o</td><td class="R">77</td><td class="F">76s</td><td class="F">75s</td><td class="F">74s</td><td class="F">73s</td><td class="F">72s</td></tr>
+        <tr><th>6</th><td class="F">A6o</td><td class="F">K6o</td><td class="F">Q6o</td><td class="F">J6o</td><td class="F">T6o</td><td class="F">96o</td><td class="F">86o</td><td class="F">76o</td><td class="F">66</td><td class="F">65s</td><td class="F">64s</td><td class="F">63s</td><td class="F">62s</td></tr>
+        <tr><th>5</th><td class="F">A5o</td><td class="F">K5o</td><td class="F">Q5o</td><td class="F">J5o</td><td class="F">T5o</td><td class="F">95o</td><td class="F">85o</td><td class="F">75o</td><td class="F">65o</td><td class="F">55</td><td class="F">54s</td><td class="F">53s</td><td class="F">52s</td></tr>
+        <tr><th>4</th><td class="F">A4o</td><td class="F">K4o</td><td class="F">Q4o</td><td class="F">J4o</td><td class="F">T4o</td><td class="F">94o</td><td class="F">84o</td><td class="F">74o</td><td class="F">64o</td><td class="F">54o</td><td class="F">44</td><td class="F">43s</td><td class="F">42s</td></tr>
+        <tr><th>3</th><td class="F">A3o</td><td class="F">K3o</td><td class="F">Q3o</td><td class="F">J3o</td><td class="F">T3o</td><td class="F">93o</td><td class="F">83o</td><td class="F">73o</td><td class="F">63o</td><td class="F">53o</td><td class="F">43o</td><td class="F">33</td><td class="F">32s</td></tr>
+        <tr><th>2</th><td class="F">A2o</td><td class="F">K2o</td><td class="F">Q2o</td><td class="F">J2o</td><td class="F">T2o</td><td class="F">92o</td><td class="F">82o</td><td class="F">72o</td><td class="F">62o</td><td class="F">52o</td><td class="F">42o</td><td class="F">32o</td><td class="F">22</td></tr>
+      </table>
+      <div class="range">Flopzilla: 77+, ATs+, KTs+, QTs+, JTs, ATo+, KJo+</div>
+
+      <div class="divider"></div>
+
+      <h2 class="section-title">MP — средняя позиция</h2>
+      <table class="grid">
+        <tr><th></th><th>A</th><th>K</th><th>Q</th><th>J</th><th>T</th><th>9</th><th>8</th><th>7</th><th>6</th><th>5</th><th>4</th><th>3</th><th>2</th></tr>
+        <tr><th>A</th><td class="R">AA</td><td class="R">AKs</td><td class="R">AQs</td><td class="R">AJs</td><td class="R">ATs</td><td class="R">A9s</td><td class="F">A8s</td><td class="F">A7s</td><td class="F">A6s</td><td class="F">A5s</td><td class="F">A4s</td><td class="F">A3s</td><td class="F">A2s</td></tr>
+        <tr><th>K</th><td class="R">AKo</td><td class="R">KK</td><td class="R">KQs</td><td class="R">KJs</td><td class="R">KTs</td><td class="R">K9s</td><td class="F">K8s</td><td class="F">K7s</td><td class="F">K6s</td><td class="F">K5s</td><td class="F">K4s</td><td class="F">K3s</td><td class="F">K2s</td></tr>
+        <tr><th>Q</th><td class="R">AQo</td><td class="R">KQo</td><td class="R">QQ</td><td class="R">QJs</td><td class="R">QTs</td><td class="R">Q9s</td><td class="F">Q8s</td><td class="F">Q7s</td><td class="F">Q6s</td><td class="F">Q5s</td><td class="F">Q4s</td><td class="F">Q3s</td><td class="F">Q2s</td></tr>
+        <tr><th>J</th><td class="R">AJo</td><td class="R">KJo</td><td class="R">QJo</td><td class="R">JJ</td><td class="R">JTs</td><td class="R">J9s</td><td class="F">J8s</td><td class="F">J7s</td><td class="F">J6s</td><td class="F">J5s</td><td class="F">J4s</td><td class="F">J3s</td><td class="F">J2s</td></tr>
+        <tr><th>T</th><td class="R">ATo</td><td class="F">KTo</td><td class="F">QTo</td><td class="F">JTo</td><td class="R">TT</td><td class="R">T9s</td><td class="F">T8s</td><td class="F">T7s</td><td class="F">T6s</td><td class="F">T5s</td><td class="F">T4s</td><td class="F">T3s</td><td class="F">T2s</td></tr>
+        <tr><th>9</th><td class="F">A9o</td><td class="F">K9o</td><td class="F">Q9o</td><td class="F">J9o</td><td class="F">T9o</td><td class="R">99</td><td class="R">98s</td><td class="F">97s</td><td class="F">96s</td><td class="F">95s</td><td class="F">94s</td><td class="F">93s</td><td class="F">92s</td></tr>
+        <tr><th>8</th><td class="F">A8o</td><td class="F">K8o</td><td class="F">Q8o</td><td class="F">J8o</td><td class="F">T8o</td><td class="F">98o</td><td class="R">88</td><td class="R">87s</td><td class="F">86s</td><td class="F">85s</td><td class="F">84s</td><td class="F">83s</td><td class="F">82s</td></tr>
+        <tr><th>7</th><td class="F">A7o</td><td class="F">K7o</td><td class="F">Q7o</td><td class="F">J7o</td><td class="F">T7o</td><td class="F">97o</td><td class="F">87o</td><td class="R">77</td><td class="R">76s</td><td class="F">75s</td><td class="F">74s</td><td class="F">73s</td><td class="F">72s</td></tr>
+        <tr><th>6</th><td class="F">A6o</td><td class="F">K6o</td><td class="F">Q6o</td><td class="F">J6o</td><td class="F">T6o</td><td class="F">96o</td><td class="F">86o</td><td class="F">76o</td><td class="R">66</td><td class="R">65s</td><td class="F">64s</td><td class="F">63s</td><td class="F">62s</td></tr>
+        <tr><th>5</th><td class="F">A5o</td><td class="F">K5o</td><td class="F">Q5o</td><td class="F">J5o</td><td class="F">T5o</td><td class="F">95o</td><td class="F">85o</td><td class="F">75o</td><td class="F">65o</td><td class="R">55</td><td class="F">54s</td><td class="F">53s</td><td class="F">52s</td></tr>
+        <tr><th>4</th><td class="F">A4o</td><td class="F">K4o</td><td class="F">Q4o</td><td class="F">J4o</td><td class="F">T4o</td><td class="F">94o</td><td class="F">84o</td><td class="F">74o</td><td class="F">64o</td><td class="F">54o</td><td class="F">44</td><td class="F">43s</td><td class="F">42s</td></tr>
+        <tr><th>3</th><td class="F">A3o</td><td class="F">K3o</td><td class="F">Q3o</td><td class="F">J3o</td><td class="F">T3o</td><td class="F">93o</td><td class="F">83o</td><td class="F">73o</td><td class="F">63o</td><td class="F">53o</td><td class="F">43o</td><td class="F">33</td><td class="F">32s</td></tr>
+        <tr><th>2</th><td class="F">A2o</td><td class="F">K2o</td><td class="F">Q2o</td><td class="F">J2o</td><td class="F">T2o</td><td class="F">92o</td><td class="F">82o</td><td class="F">72o</td><td class="F">62o</td><td class="F">52o</td><td class="F">42o</td><td class="F">32o</td><td class="F">22</td></tr>
+      </table>
+      <div class="range">Flopzilla: 55+, A9s+, K9s+, Q9s+, J9s+, T9s, 98s, 87s, 76s, 65s, ATo+, KJo+, QJo</div>
+
+      <div class="divider"></div>
+
+      <h2 class="section-title">CO — катофф</h2>
+      <table class="grid">
+        <tr><th></th><th>A</th><th>K</th><th>Q</th><th>J</th><th>T</th><th>9</th><th>8</th><th>7</th><th>6</th><th>5</th><th>4</th><th>3</th><th>2</th></tr>
+        <tr><th>A</th><td class="R">AA</td><td class="R">AKs</td><td class="R">AQs</td><td class="R">AJs</td><td class="R">ATs</td><td class="R">A9s</td><td class="R">A8s</td><td class="R">A7s</td><td class="R">A6s</td><td class="R">A5s</td><td class="R">A4s</td><td class="R">A3s</td><td class="R">A2s</td></tr>
+        <tr><th>K</th><td class="R">AKo</td><td class="R">KK</td><td class="R">KQs</td><td class="R">KJs</td><td class="R">KTs</td><td class="R">K9s</td><td class="F">K8s</td><td class="F">K7s</td><td class="F">K6s</td><td class="F">K5s</td><td class="F">K4s</td><td class="F">K3s</td><td class="F">K2s</td></tr>
+        <tr><th>Q</th><td class="R">AQo</td><td class="R">KQo</td><td class="R">QQ</td><td class="R">QJs</td><td class="R">QTs</td><td class="R">Q9s</td><td class="F">Q8s</td><td class="F">Q7s</td><td class="F">Q6s</td><td class="F">Q5s</td><td class="F">Q4s</td><td class="F">Q3s</td><td class="F">Q2s</td></tr>
+        <tr><th>J</th><td class="R">AJo</td><td class="R">KJo</td><td class="R">QJo</td><td class="R">JJ</td><td class="R">JTs</td><td class="R">J9s</td><td class="F">J8s</td><td class="F">J7s</td><td class="F">J6s</td><td class="F">J5s</td><td class="F">J4s</td><td class="F">J3s</td><td class="F">J2s</td></tr>
+        <tr><th>T</th><td class="R">ATo</td><td class="R">KTo</td><td class="R">QTo</td><td class="R">JTo</td><td class="R">TT</td><td class="R">T9s</td><td class="F">T8s</td><td class="F">T7s</td><td class="F">T6s</td><td class="F">T5s</td><td class="F">T4s</td><td class="F">T3s</td><td class="F">T2s</td></tr>
+        <tr><th>9</th><td class="R">A9o</td><td class="F">K9o</td><td class="F">Q9o</td><td class="F">J9o</td><td class="F">T9o</td><td class="R">99</td><td class="R">98s</td><td class="F">97s</td><td class="F">96s</td><td class="F">95s</td><td class="F">94s</td><td class="F">93s</td><td class="F">92s</td></tr>
+        <tr><th>8</th><td class="F">A8o</td><td class="F">K8o</td><td class="F">Q8o</td><td class="F">J8o</td><td class="F">T8o</td><td class="F">98o</td><td class="R">88</td><td class="R">87s</td><td class="F">86s</td><td class="F">85s</td><td class="F">84s</td><td class="F">83s</td><td class="F">82s</td></tr>
+        <tr><th>7</th><td class="F">A7o</td><td class="F">K7o</td><td class="F">Q7o</td><td class="F">J7o</td><td class="F">T7o</td><td class="F">97o</td><td class="F">87o</td><td class="R">77</td><td class="R">76s</td><td class="F">75s</td><td class="F">74s</td><td class="F">73s</td><td class="F">72s</td></tr>
+        <tr><th>6</th><td class="F">A6o</td><td class="F">K6o</td><td class="F">Q6o</td><td class="F">J6o</td><td class="F">T6o</td><td class="F">96o</td><td class="F">86o</td><td class="F">76o</td><td class="R">66</td><td class="R">65s</td><td class="F">64s</td><td class="F">63s</td><td class="F">62s</td></tr>
+        <tr><th>5</th><td class="F">A5o</td><td class="F">K5o</td><td class="F">Q5o</td><td class="F">J5o</td><td class="F">T5o</td><td class="F">95o</td><td class="F">85o</td><td class="F">75o</td><td class="F">65o</td><td class="R">55</td><td class="R">54s</td><td class="F">53s</td><td class="F">52s</td></tr>
+        <tr><th>4</th><td class="F">A4o</td><td class="F">K4o</td><td class="F">Q4o</td><td class="F">J4o</td><td class="F">T4o</td><td class="F">94o</td><td class="F">84o</td><td class="F">74o</td><td class="F">64o</td><td class="F">54o</td><td class="R">44</td><td class="F">43s</td><td class="F">42s</td></tr>
+        <tr><th>3</th><td class="F">A3o</td><td class="F">K3o</td><td class="F">Q3o</td><td class="F">J3o</td><td class="F">T3o</td><td class="F">93o</td><td class="F">83o</td><td class="F">73o</td><td class="F">63o</td><td class="F">53o</td><td class="F">43o</td><td class="R">33</td><td class="F">32s</td></tr>
+        <tr><th>2</th><td class="F">A2o</td><td class="F">K2o</td><td class="F">Q2o</td><td class="F">J2o</td><td class="F">T2o</td><td class="F">92o</td><td class="F">82o</td><td class="F">72o</td><td class="F">62o</td><td class="F">52o</td><td class="F">42o</td><td class="F">32o</td><td class="R">22</td></tr>
+      </table>
+      <div class="range">Flopzilla: 22+, A2s+, K9s+, Q9s+, J9s+, T9s, 98s, 87s, 76s, 65s, 54s, A9o+, KTo+, QTo+, JTo</div>
+
+      <div class="divider"></div>
+
+      <h2 class="section-title">BTN — баттон</h2>
+      <table class="grid">
+        <tr><th></th><th>A</th><th>K</th><th>Q</th><th>J</th><th>T</th><th>9</th><th>8</th><th>7</th><th>6</th><th>5</th><th>4</th><th>3</th><th>2</th></tr>
+        <tr><th>A</th><td class="R">AA</td><td class="R">AKs</td><td class="R">AQs</td><td class="R">AJs</td><td class="R">ATs</td><td class="R">A9s</td><td class="R">A8s</td><td class="R">A7s</td><td class="R">A6s</td><td class="R">A5s</td><td class="R">A4s</td><td class="R">A3s</td><td class="R">A2s</td></tr>
+        <tr><th>K</th><td class="R">AKo</td><td class="R">KK</td><td class="R">KQs</td><td class="R">KJs</td><td class="R">KTs</td><td class="R">K9s</td><td class="R">K8s</td><td class="R">K7s</td><td class="R">K6s</td><td class="R">K5s</td><td class="R">K4s</td><td class="R">K3s</td><td class="R">K2s</td></tr>
+        <tr><th>Q</th><td class="R">AQo</td><td class="R">KQo</td><td class="R">QQ</td><td class="R">QJs</td><td class="R">QTs</td><td class="R">Q9s</td><td class="R">Q8s</td><td class="R">Q7s</td><td class="R">Q6s</td><td class="R">Q5s</td><td class="F">Q4s</td><td class="F">Q3s</td><td class="F">Q2s</td></tr>
+        <tr><th>J</th><td class="R">AJo</td><td class="R">KJo</td><td class="R">QJo</td><td class="R">JJ</td><td class="R">JTs</td><td class="R">J9s</td><td class="R">J8s</td><td class="R">J7s</td><td class="F">J6s</td><td class="F">J5s</td><td class="F">J4s</td><td class="F">J3s</td><td class="F">J2s</td></tr>
+        <tr><th>T</th><td class="R">ATo</td><td class="R">KTo</td><td class="R">QTo</td><td class="R">JTo</td><td class="R">TT</td><td class="R">T9s</td><td class="R">T8s</td><td class="R">T7s</td><td class="F">T6s</td><td class="F">T5s</td><td class="F">T4s</td><td class="F">T3s</td><td class="F">T2s</td></tr>
+        <tr><th>9</th><td class="R">A9o</td><td class="R">K9o</td><td class="R">Q9o</td><td class="R">J9o</td><td class="R">T9o</td><td class="R">99</td><td class="R">98s</td><td class="R">97s</td><td class="R">96s</td><td class="F">95s</td><td class="F">94s</td><td class="F">93s</td><td class="F">92s</td></tr>
+        <tr><th>8</th><td class="R">A8o</td><td class="F">K8o</td><td class="F">Q8o</td><td class="F">J8o</td><td class="F">T8o</td><td class="F">98o</td><td class="R">88</td><td class="R">87s</td><td class="R">86s</td><td class="R">85s</td><td class="F">84s</td><td class="F">83s</td><td class="F">82s</td></tr>
+        <tr><th>7</th><td class="R">A7o</td><td class="F">K7o</td><td class="F">Q7o</td><td class="F">J7o</td><td class="F">T7o</td><td class="F">97o</td><td class="R">87o</td><td class="R">77</td><td class="R">76s</td><td class="R">75s</td><td class="R">74s</td><td class="F">73s</td><td class="F">72s</td></tr>
+        <tr><th>6</th><td class="R">A6o</td><td class="F">K6o</td><td class="F">Q6o</td><td class="F">J6o</td><td class="F">T6o</td><td class="F">96o</td><td class="F">86o</td><td class="F">76o</td><td class="R">66</td><td class="R">65s</td><td class="R">64s</td><td class="R">63s</td><td class="F">62s</td></tr>
+        <tr><th>5</th><td class="R">A5o</td><td class="F">K5o</td><td class="F">Q5o</td><td class="F">J5o</td><td class="F">T5o</td><td class="F">95o</td><td class="F">85o</td><td class="F">75o</td><td class="F">65o</td><td class="R">55</td><td class="R">54s</td><td class="R">53s</td><td class="F">52s</td></tr>
+        <tr><th>4</th><td class="R">A4o</td><td class="F">K4o</td><td class="F">Q4o</td><td class="F">J4o</td><td class="F">T4o</td><td class="F">94o</td><td class="F">84o</td><td class="F">74o</td><td class="F">64o</td><td class="F">54o</td><td class="R">44</td><td class="R">43s</td><td class="F">42s</td></tr>
+        <tr><th>3</th><td class="R">A3o</td><td class="F">K3o</td><td class="F">Q3o</td><td class="F">J3o</td><td class="F">T3o</td><td class="F">93o</td><td class="F">83o</td><td class="F">73o</td><td class="F">63o</td><td class="F">53o</td><td class="F">43o</td><td class="R">33</td><td class="R">32s</td></tr>
+        <tr><th>2</th><td class="R">A2o</td><td class="F">K2o</td><td class="F">Q2o</td><td class="F">J2o</td><td class="F">T2o</td><td class="F">92o</td><td class="F">82o</td><td class="F">72o</td><td class="F">62o</td><td class="F">52o</td><td class="F">42o</td><td class="F">32o</td><td class="R">22</td></tr>
+      </table>
+      <div class="range">Flopzilla: 22+, A2s+, K2s+, Q5s+, J7s+, T7s+, 96s+, 86s+, 75s+, 64s+, 54s, A2o+, K9o+, Q9o+, J9o+, T9o</div>
+
+      <div class="divider"></div>
+
+      <h2 class="section-title">SB — малый блайнд (open)</h2>
+      <table class="grid">
+        <tr><th></th><th>A</th><th>K</th><th>Q</th><th>J</th><th>T</th><th>9</th><th>8</th><th>7</th><th>6</th><th>5</th><th>4</th><th>3</th><th>2</th></tr>
+        <tr><th>A</th><td class="R">AA</td><td class="R">AKs</td><td class="R">AQs</td><td class="R">AJs</td><td class="R">ATs</td><td class="R">A9s</td><td class="R">A8s</td><td class="R">A7s</td><td class="R">A6s</td><td class="R">A5s</td><td class="R">A4s</td><td class="R">A3s</td><td class="R">A2s</td></tr>
+        <tr><th>K</th><td class="R">AKo</td><td class="R">KK</td><td class="R">KQs</td><td class="R">KJs</td><td class="R">KTs</td><td class="R">K9s</td><td class="R">K8s</td><td class="R">K7s</td><td class="F">K6s</td><td class="F">K5s</td><td class="F">K4s</td><td class="F">K3s</td><td class="F">K2s</td></tr>
+        <tr><th>Q</th><td class="R">AQo</td><td class="R">KQo</td><td class="R">QQ</td><td class="R">QJs</td><td class="R">QTs</td><td class="R">Q9s</td><td class="R">Q8s</td><td class="F">Q7s</td><td class="F">Q6s</td><td class="F">Q5s</td><td class="F">Q4s</td><td class="F">Q3s</td><td class="F">Q2s</td></tr>
+        <tr><th>J</th><td class="R">AJo</td><td class="R">KJo</td><td class="R">QJo</td><td class="R">JJ</td><td class="R">JTs</td><td class="R">J9s</td><td class="R">J8s</td><td class="F">J7s</td><td class="F">J6s</td><td class="F">J5s</td><td class="F">J4s</td><td class="F">J3s</td><td class="F">J2s</td></tr>
+        <tr><th>T</th><td class="R">ATo</td><td class="R">KTo</td><td class="R">QTo</td><td class="R">JTo</td><td class="R">TT</td><td class="R">T9s</td><td class="R">T8s</td><td class="R">T7s</td><td class="F">T6s</td><td class="F">T5s</td><td class="F">T4s</td><td class="F">T3s</td><td class="F">T2s</td></tr>
+        <tr><th>9</th><td class="R">A9o</td><td class="R">K9o</td><td class="F">Q9o</td><td class="F">J9o</td><td class="F">T9o</td><td class="R">99</td><td class="R">98s</td><td class="R">97s</td><td class="R">96s</td><td class="F">95s</td><td class="F">94s</td><td class="F">93s</td><td class="F">92s</td></tr>
+        <tr><th>8</th><td class="F">A8o</td><td class="F">K8o</td><td class="F">Q8o</td><td class="F">J8o</td><td class="F">T8o</td><td class="F">98o</td><td class="R">88</td><td class="R">87s</td><td class="R">86s</td><td class="R">85s</td><td class="F">84s</td><td class="F">83s</td><td class="F">82s</td></tr>
+        <tr><th>7</th><td class="F">A7o</td><td class="F">K7o</td><td class="F">Q7o</td><td class="F">J7o</td><td class="F">T7o</td><td class="F">97o</td><td class="F">87o</td><td class="R">77</td><td class="R">76s</td><td class="R">75s</td><td class="R">74s</td><td class="F">73s</td><td class="F">72s</td></tr>
+        <tr><th>6</th><td class="F">A6o</td><td class="F">K6o</td><td class="F">Q6o</td><td class="F">J6o</td><td class="F">T6o</td><td class="F">96o</td><td class="F">86o</td><td class="F">76o</td><td class="R">66</td><td class="R">65s</td><td class="R">64s</td><td class="R">63s</td><td class="F">62s</td></tr>
+        <tr><th>5</th><td class="F">A5o</td><td class="F">K5o</td><td class="F">Q5o</td><td class="F">J5o</td><td class="F">T5o</td><td class="F">95o</td><td class="F">85o</td><td class="F">75o</td><td class="F">65o</td><td class="R">55</td><td class="R">54s</td><td class="R">53s</td><td class="F">52s</td></tr>
+        <tr><th>4</th><td class="F">A4o</td><td class="F">K4o</td><td class="F">Q4o</td><td class="F">J4o</td><td class="F">T4o</td><td class="F">94o</td><td class="F">84o</td><td class="F">74o</td><td class="F">64o</td><td class="F">54o</td><td class="R">44</td><td class="R">43s</td><td class="F">42s</td></tr>
+        <tr><th>3</th><td class="F">A3o</td><td class="F">K3o</td><td class="F">Q3o</td><td class="F">J3o</td><td class="F">T3o</td><td class="F">93o</td><td class="F">83o</td><td class="F">73o</td><td class="F">63o</td><td class="F">53o</td><td class="F">43o</td><td class="R">33</td><td class="R">32s</td></tr>
+        <tr><th>2</th><td class="F">A2o</td><td class="F">K2o</td><td class="F">Q2o</td><td class="F">J2o</td><td class="F">T2o</td><td class="F">92o</td><td class="F">82o</td><td class="F">72o</td><td class="F">62o</td><td class="F">52o</td><td class="F">42o</td><td class="F">32o</td><td class="R">22</td></tr>
+      </table><p class="note" style="margin:8px 0 4px;font-size:12px;color:#8b98ad;line-height:1.5;">Это опен первым в банке, когда до тебя все сбросили. <b>Против чужого опена с SB — только 3-бет или фолд, коллов нет.</b></p>
+      <div class="range">Flopzilla: 22+, A2s+, K7s+, Q8s+, J8s+, T7s+, 96s+, 86s+, 75s+, 64s+, 54s, A9o+, KTo+, QTo+, JTo</div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- РАЗДЕЛ 2: ЗАЩИТА BB                                           -->
+  <!-- ============================================================ -->
+  <section class="chapter" id="defense">
+    <div class="chapter-header">② ЗАЩИТА BB (когда опенер — не ты)</div>
+    <div class="chapter-body">
+
+      <p style="font-size:13px;color:#555;margin:0 0 20px;">
+        Ситуация: все сбросили до одного игрока, он открылся рейзом, ты на BB. Действие: <strong>3-бет</strong> 🟥, <strong>колл</strong> 🟨, <strong>фолд</strong> ⬜.
+      </p>
+
+      <h2 class="section-title">BB vs EP open</h2>
+      <table class="grid">
+        <tr><th></th><th>A</th><th>K</th><th>Q</th><th>J</th><th>T</th><th>9</th><th>8</th><th>7</th><th>6</th><th>5</th><th>4</th><th>3</th><th>2</th></tr>
+        <tr><th>A</th><td class="T">AA</td><td class="T">AKs</td><td class="C">AQs</td><td class="C">AJs</td><td class="C">ATs</td><td class="F">A9s</td><td class="F">A8s</td><td class="F">A7s</td><td class="F">A6s</td><td class="F">A5s</td><td class="F">A4s</td><td class="F">A3s</td><td class="F">A2s</td></tr>
+        <tr><th>K</th><td class="T">AKo</td><td class="T">KK</td><td class="C">KQs</td><td class="C">KJs</td><td class="F">KTs</td><td class="F">K9s</td><td class="F">K8s</td><td class="F">K7s</td><td class="F">K6s</td><td class="F">K5s</td><td class="F">K4s</td><td class="F">K3s</td><td class="F">K2s</td></tr>
+        <tr><th>Q</th><td class="C">AQo</td><td class="C">KQo</td><td class="T">QQ</td><td class="C">QJs</td><td class="F">QTs</td><td class="F">Q9s</td><td class="F">Q8s</td><td class="F">Q7s</td><td class="F">Q6s</td><td class="F">Q5s</td><td class="F">Q4s</td><td class="F">Q3s</td><td class="F">Q2s</td></tr>
+        <tr><th>J</th><td class="C">AJo</td><td class="F">KJo</td><td class="F">QJo</td><td class="T">JJ</td><td class="C">JTs</td><td class="F">J9s</td><td class="F">J8s</td><td class="F">J7s</td><td class="F">J6s</td><td class="F">J5s</td><td class="F">J4s</td><td class="F">J3s</td><td class="F">J2s</td></tr>
+        <tr><th>T</th><td class="F">ATo</td><td class="F">KTo</td><td class="F">QTo</td><td class="F">JTo</td><td class="T">TT</td><td class="F">T9s</td><td class="F">T8s</td><td class="F">T7s</td><td class="F">T6s</td><td class="F">T5s</td><td class="F">T4s</td><td class="F">T3s</td><td class="F">T2s</td></tr>
+        <tr><th>9</th><td class="F">A9o</td><td class="F">K9o</td><td class="F">Q9o</td><td class="F">J9o</td><td class="F">T9o</td><td class="C">99</td><td class="F">98s</td><td class="F">97s</td><td class="F">96s</td><td class="F">95s</td><td class="F">94s</td><td class="F">93s</td><td class="F">92s</td></tr>
+        <tr><th>8</th><td class="F">A8o</td><td class="F">K8o</td><td class="F">Q8o</td><td class="F">J8o</td><td class="F">T8o</td><td class="F">98o</td><td class="C">88</td><td class="F">87s</td><td class="F">86s</td><td class="F">85s</td><td class="F">84s</td><td class="F">83s</td><td class="F">82s</td></tr>
+        <tr><th>7</th><td class="F">A7o</td><td class="F">K7o</td><td class="F">Q7o</td><td class="F">J7o</td><td class="F">T7o</td><td class="F">97o</td><td class="F">87o</td><td class="C">77</td><td class="F">76s</td><td class="F">75s</td><td class="F">74s</td><td class="F">73s</td><td class="F">72s</td></tr>
+        <tr><th>6</th><td class="F">A6o</td><td class="F">K6o</td><td class="F">Q6o</td><td class="F">J6o</td><td class="F">T6o</td><td class="F">96o</td><td class="F">86o</td><td class="F">76o</td><td class="C">66</td><td class="F">65s</td><td class="F">64s</td><td class="F">63s</td><td class="F">62s</td></tr>
+        <tr><th>5</th><td class="F">A5o</td><td class="F">K5o</td><td class="F">Q5o</td><td class="F">J5o</td><td class="F">T5o</td><td class="F">95o</td><td class="F">85o</td><td class="F">75o</td><td class="F">65o</td><td class="C">55</td><td class="F">54s</td><td class="F">53s</td><td class="F">52s</td></tr>
+        <tr><th>4</th><td class="F">A4o</td><td class="F">K4o</td><td class="F">Q4o</td><td class="F">J4o</td><td class="F">T4o</td><td class="F">94o</td><td class="F">84o</td><td class="F">74o</td><td class="F">64o</td><td class="F">54o</td><td class="C">44</td><td class="F">43s</td><td class="F">42s</td></tr>
+        <tr><th>3</th><td class="F">A3o</td><td class="F">K3o</td><td class="F">Q3o</td><td class="F">J3o</td><td class="F">T3o</td><td class="F">93o</td><td class="F">83o</td><td class="F">73o</td><td class="F">63o</td><td class="F">53o</td><td class="F">43o</td><td class="C">33</td><td class="F">32s</td></tr>
+        <tr><th>2</th><td class="F">A2o</td><td class="F">K2o</td><td class="F">Q2o</td><td class="F">J2o</td><td class="F">T2o</td><td class="F">92o</td><td class="F">82o</td><td class="F">72o</td><td class="F">62o</td><td class="F">52o</td><td class="F">42o</td><td class="F">32o</td><td class="C">22</td></tr>
+      </table>
+      <div class="range">3-bet: QQ+, AK &nbsp;|&nbsp; Call: 22-99, AQs-ATs, KQs, KJs, QJs, JTs, AQo, AJo, KQo</div>
+
+      <div class="divider"></div>
+
+      <h2 class="section-title">BB vs MP open</h2>
+      <table class="grid">
+        <tr><th></th><th>A</th><th>K</th><th>Q</th><th>J</th><th>T</th><th>9</th><th>8</th><th>7</th><th>6</th><th>5</th><th>4</th><th>3</th><th>2</th></tr>
+        <tr><th>A</th><td class="T">AA</td><td class="T">AKs</td><td class="T">AQs</td><td class="C">AJs</td><td class="C">ATs</td><td class="C">A9s</td><td class="F">A8s</td><td class="F">A7s</td><td class="F">A6s</td><td class="F">A5s</td><td class="F">A4s</td><td class="F">A3s</td><td class="F">A2s</td></tr>
+        <tr><th>K</th><td class="T">AKo</td><td class="T">KK</td><td class="C">KQs</td><td class="C">KJs</td><td class="C">KTs</td><td class="C">K9s</td><td class="F">K8s</td><td class="F">K7s</td><td class="F">K6s</td><td class="F">K5s</td><td class="F">K4s</td><td class="F">K3s</td><td class="F">K2s</td></tr>
+        <tr><th>Q</th><td class="C">AQo</td><td class="C">KQo</td><td class="T">QQ</td><td class="C">QJs</td><td class="C">QTs</td><td class="C">Q9s</td><td class="F">Q8s</td><td class="F">Q7s</td><td class="F">Q6s</td><td class="F">Q5s</td><td class="F">Q4s</td><td class="F">Q3s</td><td class="F">Q2s</td></tr>
+        <tr><th>J</th><td class="C">AJo</td><td class="C">KJo</td><td class="C">QJo</td><td class="T">JJ</td><td class="C">JTs</td><td class="C">J9s</td><td class="F">J8s</td><td class="F">J7s</td><td class="F">J6s</td><td class="F">J5s</td><td class="F">J4s</td><td class="F">J3s</td><td class="F">J2s</td></tr>
+        <tr><th>T</th><td class="C">ATo</td><td class="C">KTo</td><td class="C">QTo</td><td class="C">JTo</td><td class="T">TT</td><td class="C">T9s</td><td class="F">T8s</td><td class="F">T7s</td><td class="F">T6s</td><td class="F">T5s</td><td class="F">T4s</td><td class="F">T3s</td><td class="F">T2s</td></tr>
+        <tr><th>9</th><td class="C">A9o</td><td class="F">K9o</td><td class="F">Q9o</td><td class="F">J9o</td><td class="F">T9o</td><td class="C">99</td><td class="C">98s</td><td class="F">97s</td><td class="F">96s</td><td class="F">95s</td><td class="F">94s</td><td class="F">93s</td><td class="F">92s</td></tr>
+        <tr><th>8</th><td class="F">A8o</td><td class="F">K8o</td><td class="F">Q8o</td><td class="F">J8o</td><td class="F">T8o</td><td class="F">98o</td><td class="C">88</td><td class="C">87s</td><td class="F">86s</td><td class="F">85s</td><td class="F">84s</td><td class="F">83s</td><td class="F">82s</td></tr>
+        <tr><th>7</th><td class="F">A7o</td><td class="F">K7o</td><td class="F">Q7o</td><td class="F">J7o</td><td class="F">T7o</td><td class="F">97o</td><td class="F">87o</td><td class="C">77</td><td class="C">76s</td><td class="F">75s</td><td class="F">74s</td><td class="F">73s</td><td class="F">72s</td></tr>
+        <tr><th>6</th><td class="F">A6o</td><td class="F">K6o</td><td class="F">Q6o</td><td class="F">J6o</td><td class="F">T6o</td><td class="F">96o</td><td class="F">86o</td><td class="F">76o</td><td class="C">66</td><td class="C">65s</td><td class="F">64s</td><td class="F">63s</td><td class="F">62s</td></tr>
+        <tr><th>5</th><td class="F">A5o</td><td class="F">K5o</td><td class="F">Q5o</td><td class="F">J5o</td><td class="F">T5o</td><td class="F">95o</td><td class="F">85o</td><td class="F">75o</td><td class="F">65o</td><td class="C">55</td><td class="F">54s</td><td class="F">53s</td><td class="F">52s</td></tr>
+        <tr><th>4</th><td class="F">A4o</td><td class="F">K4o</td><td class="F">Q4o</td><td class="F">J4o</td><td class="F">T4o</td><td class="F">94o</td><td class="F">84o</td><td class="F">74o</td><td class="F">64o</td><td class="F">54o</td><td class="C">44</td><td class="F">43s</td><td class="F">42s</td></tr>
+        <tr><th>3</th><td class="F">A3o</td><td class="F">K3o</td><td class="F">Q3o</td><td class="F">J3o</td><td class="F">T3o</td><td class="F">93o</td><td class="F">83o</td><td class="F">73o</td><td class="F">63o</td><td class="F">53o</td><td class="F">43o</td><td class="C">33</td><td class="F">32s</td></tr>
+        <tr><th>2</th><td class="F">A2o</td><td class="F">K2o</td><td class="F">Q2o</td><td class="F">J2o</td><td class="F">T2o</td><td class="F">92o</td><td class="F">82o</td><td class="F">72o</td><td class="F">62o</td><td class="F">52o</td><td class="F">42o</td><td class="F">32o</td><td class="C">22</td></tr>
+      </table>
+      <div class="range">3-bet: JJ+, AK, AQs &nbsp;|&nbsp; Call: 22-TT, A9s+, KTs+, QTs+, JTs, T9s, 98s, 87s, 76s, 65s, AQo, AJo, KQo, KJo, QJo</div>
+
+      <div class="divider"></div>
+
+      <h2 class="section-title">BB vs CO open</h2>
+      <table class="grid">
+        <tr><th></th><th>A</th><th>K</th><th>Q</th><th>J</th><th>T</th><th>9</th><th>8</th><th>7</th><th>6</th><th>5</th><th>4</th><th>3</th><th>2</th></tr>
+        <tr><th>A</th><td class="T">AA</td><td class="T">AKs</td><td class="T">AQs</td><td class="T">AJs</td><td class="C">ATs</td><td class="C">A9s</td><td class="C">A8s</td><td class="C">A7s</td><td class="C">A6s</td><td class="C">A5s</td><td class="C">A4s</td><td class="C">A3s</td><td class="C">A2s</td></tr>
+        <tr><th>K</th><td class="T">AKo</td><td class="T">KK</td><td class="C">KQs</td><td class="C">KJs</td><td class="C">KTs</td><td class="C">K9s</td><td class="F">K8s</td><td class="F">K7s</td><td class="F">K6s</td><td class="F">K5s</td><td class="F">K4s</td><td class="F">K3s</td><td class="F">K2s</td></tr>
+        <tr><th>Q</th><td class="C">AQo</td><td class="C">KQo</td><td class="T">QQ</td><td class="C">QJs</td><td class="C">QTs</td><td class="C">Q9s</td><td class="F">Q8s</td><td class="F">Q7s</td><td class="F">Q6s</td><td class="F">Q5s</td><td class="F">Q4s</td><td class="F">Q3s</td><td class="F">Q2s</td></tr>
+        <tr><th>J</th><td class="C">AJo</td><td class="C">KJo</td><td class="C">QJo</td><td class="T">JJ</td><td class="C">JTs</td><td class="C">J9s</td><td class="F">J8s</td><td class="F">J7s</td><td class="F">J6s</td><td class="F">J5s</td><td class="F">J4s</td><td class="F">J3s</td><td class="F">J2s</td></tr>
+        <tr><th>T</th><td class="C">ATo</td><td class="C">KTo</td><td class="C">QTo</td><td class="C">JTo</td><td class="T">TT</td><td class="C">T9s</td><td class="C">T8s</td><td class="F">T7s</td><td class="F">T6s</td><td class="F">T5s</td><td class="F">T4s</td><td class="F">T3s</td><td class="F">T2s</td></tr>
+        <tr><th>9</th><td class="C">A9o</td><td class="F">K9o</td><td class="F">Q9o</td><td class="F">J9o</td><td class="F">T9o</td><td class="C">99</td><td class="C">98s</td><td class="C">97s</td><td class="F">96s</td><td class="F">95s</td><td class="F">94s</td><td class="F">93s</td><td class="F">92s</td></tr>
+        <tr><th>8</th><td class="F">A8o</td><td class="F">K8o</td><td class="F">Q8o</td><td class="F">J8o</td><td class="F">T8o</td><td class="F">98o</td><td class="C">88</td><td class="C">87s</td><td class="C">86s</td><td class="F">85s</td><td class="F">84s</td><td class="F">83s</td><td class="F">82s</td></tr>
+        <tr><th>7</th><td class="F">A7o</td><td class="F">K7o</td><td class="F">Q7o</td><td class="F">J7o</td><td class="F">T7o</td><td class="F">97o</td><td class="F">87o</td><td class="C">77</td><td class="C">76s</td><td class="C">75s</td><td class="F">74s</td><td class="F">73s</td><td class="F">72s</td></tr>
+        <tr><th>6</th><td class="F">A6o</td><td class="F">K6o</td><td class="F">Q6o</td><td class="F">J6o</td><td class="F">T6o</td><td class="F">96o</td><td class="F">86o</td><td class="F">76o</td><td class="C">66</td><td class="C">65s</td><td class="F">64s</td><td class="F">63s</td><td class="F">62s</td></tr>
+        <tr><th>5</th><td class="F">A5o</td><td class="F">K5o</td><td class="F">Q5o</td><td class="F">J5o</td><td class="F">T5o</td><td class="F">95o</td><td class="F">85o</td><td class="F">75o</td><td class="F">65o</td><td class="C">55</td><td class="C">54s</td><td class="F">53s</td><td class="F">52s</td></tr>
+        <tr><th>4</th><td class="F">A4o</td><td class="F">K4o</td><td class="F">Q4o</td><td class="F">J4o</td><td class="F">T4o</td><td class="F">94o</td><td class="F">84o</td><td class="F">74o</td><td class="F">64o</td><td class="F">54o</td><td class="C">44</td><td class="F">43s</td><td class="F">42s</td></tr>
+        <tr><th>3</th><td class="F">A3o</td><td class="F">K3o</td><td class="F">Q3o</td><td class="F">J3o</td><td class="F">T3o</td><td class="F">93o</td><td class="F">83o</td><td class="F">73o</td><td class="F">63o</td><td class="F">53o</td><td class="F">43o</td><td class="C">33</td><td class="F">32s</td></tr>
+        <tr><th>2</th><td class="F">A2o</td><td class="F">K2o</td><td class="F">Q2o</td><td class="F">J2o</td><td class="F">T2o</td><td class="F">92o</td><td class="F">82o</td><td class="F">72o</td><td class="F">62o</td><td class="F">52o</td><td class="F">42o</td><td class="F">32o</td><td class="C">22</td></tr>
+      </table>
+      <div class="range">3-bet: TT+, AK, AQs, AJs &nbsp;|&nbsp; Call: 22-99, A2s-A9s, K9s+, Q9s+, J9s+, T8s+, 97s+, 86s+, 75s+, 65s, 54s, ATo+, KTo+, QTo+, JTo</div>
+
+      <div class="divider"></div>
+
+      <h2 class="section-title">BB vs BTN open</h2>
+      <table class="grid">
+        <tr><th></th><th>A</th><th>K</th><th>Q</th><th>J</th><th>T</th><th>9</th><th>8</th><th>7</th><th>6</th><th>5</th><th>4</th><th>3</th><th>2</th></tr>
+        <tr><th>A</th><td class="T">AA</td><td class="T">AKs</td><td class="T">AQs</td><td class="T">AJs</td><td class="C">ATs</td><td class="C">A9s</td><td class="C">A8s</td><td class="C">A7s</td><td class="C">A6s</td><td class="C">A5s</td><td class="C">A4s</td><td class="C">A3s</td><td class="C">A2s</td></tr>
+        <tr><th>K</th><td class="T">AKo</td><td class="T">KK</td><td class="T">KQs</td><td class="C">KJs</td><td class="C">KTs</td><td class="C">K9s</td><td class="C">K8s</td><td class="C">K7s</td><td class="C">K6s</td><td class="C">K5s</td><td class="F">K4s</td><td class="F">K3s</td><td class="F">K2s</td></tr>
+        <tr><th>Q</th><td class="C">AQo</td><td class="C">KQo</td><td class="C">QQ</td><td class="C">QJs</td><td class="C">QTs</td><td class="C">Q9s</td><td class="C">Q8s</td><td class="C">Q7s</td><td class="F">Q6s</td><td class="F">Q5s</td><td class="F">Q4s</td><td class="F">Q3s</td><td class="F">Q2s</td></tr>
+        <tr><th>J</th><td class="C">AJo</td><td class="C">KJo</td><td class="C">QJo</td><td class="C">JJ</td><td class="C">JTs</td><td class="C">J9s</td><td class="C">J8s</td><td class="C">J7s</td><td class="F">J6s</td><td class="F">J5s</td><td class="F">J4s</td><td class="F">J3s</td><td class="F">J2s</td></tr>
+        <tr><th>T</th><td class="C">ATo</td><td class="C">KTo</td><td class="C">QTo</td><td class="C">JTo</td><td class="C">TT</td><td class="C">T9s</td><td class="C">T8s</td><td class="C">T7s</td><td class="C">T6s</td><td class="F">T5s</td><td class="F">T4s</td><td class="F">T3s</td><td class="F">T2s</td></tr>
+        <tr><th>9</th><td class="C">A9o</td><td class="C">K9o</td><td class="C">Q9o</td><td class="C">J9o</td><td class="C">T9o</td><td class="C">99</td><td class="C">98s</td><td class="C">97s</td><td class="C">96s</td><td class="C">95s</td><td class="F">94s</td><td class="F">93s</td><td class="F">92s</td></tr>
+        <tr><th>8</th><td class="C">A8o</td><td class="C">K8o</td><td class="C">Q8o</td><td class="C">J8o</td><td class="C">T8o</td><td class="C">98o</td><td class="C">88</td><td class="C">87s</td><td class="C">86s</td><td class="C">85s</td><td class="C">84s</td><td class="F">83s</td><td class="F">82s</td></tr>
+        <tr><th>7</th><td class="C">A7o</td><td class="C">K7o</td><td class="F">Q7o</td><td class="F">J7o</td><td class="F">T7o</td><td class="C">97o</td><td class="C">87o</td><td class="C">77</td><td class="C">76s</td><td class="C">75s</td><td class="C">74s</td><td class="C">73s</td><td class="F">72s</td></tr>
+        <tr><th>6</th><td class="C">A6o</td><td class="F">K6o</td><td class="F">Q6o</td><td class="F">J6o</td><td class="F">T6o</td><td class="F">96o</td><td class="C">86o</td><td class="C">76o</td><td class="C">66</td><td class="C">65s</td><td class="C">64s</td><td class="C">63s</td><td class="C">62s</td></tr>
+        <tr><th>5</th><td class="C">A5o</td><td class="F">K5o</td><td class="F">Q5o</td><td class="F">J5o</td><td class="F">T5o</td><td class="F">95o</td><td class="F">85o</td><td class="C">75o</td><td class="C">65o</td><td class="C">55</td><td class="C">54s</td><td class="C">53s</td><td class="C">52s</td></tr>
+        <tr><th>4</th><td class="C">A4o</td><td class="F">K4o</td><td class="F">Q4o</td><td class="F">J4o</td><td class="F">T4o</td><td class="F">94o</td><td class="F">84o</td><td class="F">74o</td><td class="C">64o</td><td class="C">54o</td><td class="C">44</td><td class="C">43s</td><td class="C">42s</td></tr>
+        <tr><th>3</th><td class="C">A3o</td><td class="F">K3o</td><td class="F">Q3o</td><td class="F">J3o</td><td class="F">T3o</td><td class="F">93o</td><td class="F">83o</td><td class="F">73o</td><td class="F">63o</td><td class="C">53o</td><td class="C">43o</td><td class="C">33</td><td class="C">32s</td></tr>
+        <tr><th>2</th><td class="C">A2o</td><td class="F">K2o</td><td class="F">Q2o</td><td class="F">J2o</td><td class="F">T2o</td><td class="F">92o</td><td class="F">82o</td><td class="F">72o</td><td class="F">62o</td><td class="F">52o</td><td class="F">42o</td><td class="F">32o</td><td class="C">22</td></tr>
+      </table>
+      <div class="range">3-bet: 99+, AJs+, AQo+, KQs &nbsp;|&nbsp; Call: 22-88, A2s+, K5s+, Q7s+, J7s+, T7s+, 96s+, 85s+, 74s+, 64s+, 53s+, 43s, A2o+, K9o+, Q9o+, J9o+, T9o, 98o</div>
+
+      <div class="divider"></div>
+
+      <h2 class="section-title">BB vs SB open</h2>
+      <table class="grid">
+        <tr><th></th><th>A</th><th>K</th><th>Q</th><th>J</th><th>T</th><th>9</th><th>8</th><th>7</th><th>6</th><th>5</th><th>4</th><th>3</th><th>2</th></tr>
+        <tr><th>A</th><td class="T">AA</td><td class="T">AKs</td><td class="T">AQs</td><td class="T">AJs</td><td class="T">ATs</td><td class="C">A9s</td><td class="C">A8s</td><td class="C">A7s</td><td class="C">A6s</td><td class="C">A5s</td><td class="C">A4s</td><td class="C">A3s</td><td class="C">A2s</td></tr>
+        <tr><th>K</th><td class="T">AKo</td><td class="T">KK</td><td class="T">KQs</td><td class="C">KJs</td><td class="C">KTs</td><td class="C">K9s</td><td class="C">K8s</td><td class="C">K7s</td><td class="C">K6s</td><td class="C">K5s</td><td class="C">K4s</td><td class="C">K3s</td><td class="C">K2s</td></tr>
+        <tr><th>Q</th><td class="T">AQo</td><td class="T">KQo</td><td class="T">QQ</td><td class="C">QJs</td><td class="C">QTs</td><td class="C">Q9s</td><td class="C">Q8s</td><td class="C">Q7s</td><td class="C">Q6s</td><td class="C">Q5s</td><td class="C">Q4s</td><td class="C">Q3s</td><td class="C">Q2s</td></tr>
+        <tr><th>J</th><td class="C">AJo</td><td class="C">KJo</td><td class="C">QJo</td><td class="C">JJ</td><td class="C">JTs</td><td class="C">J9s</td><td class="C">J8s</td><td class="C">J7s</td><td class="C">J6s</td><td class="C">J5s</td><td class="C">J4s</td><td class="C">J3s</td><td class="C">J2s</td></tr>
+        <tr><th>T</th><td class="C">ATo</td><td class="C">KTo</td><td class="C">QTo</td><td class="C">JTo</td><td class="C">TT</td><td class="C">T9s</td><td class="C">T8s</td><td class="C">T7s</td><td class="C">T6s</td><td class="C">T5s</td><td class="C">T4s</td><td class="C">T3s</td><td class="C">T2s</td></tr>
+        <tr><th>9</th><td class="C">A9o</td><td class="C">K9o</td><td class="C">Q9o</td><td class="C">J9o</td><td class="C">T9o</td><td class="C">99</td><td class="C">98s</td><td class="C">97s</td><td class="C">96s</td><td class="C">95s</td><td class="C">94s</td><td class="C">93s</td><td class="C">92s</td></tr>
+        <tr><th>8</th><td class="C">A8o</td><td class="C">K8o</td><td class="C">Q8o</td><td class="C">J8o</td><td class="C">T8o</td><td class="C">98o</td><td class="C">88</td><td class="C">87s</td><td class="C">86s</td><td class="C">85s</td><td class="C">84s</td><td class="C">83s</td><td class="C">82s</td></tr>
+        <tr><th>7</th><td class="C">A7o</td><td class="C">K7o</td><td class="C">Q7o</td><td class="C">J7o</td><td class="C">T7o</td><td class="C">97o</td><td class="C">87o</td><td class="C">77</td><td class="C">76s</td><td class="C">75s</td><td class="C">74s</td><td class="C">73s</td><td class="C">72s</td></tr>
+        <tr><th>6</th><td class="T">A6o</td><td class="C">K6o</td><td class="C">Q6o</td><td class="C">J6o</td><td class="C">T6o</td><td class="C">96o</td><td class="C">86o</td><td class="C">76o</td><td class="C">66</td><td class="C">65s</td><td class="C">64s</td><td class="C">63s</td><td class="C">62s</td></tr>
+        <tr><th>5</th><td class="C">A5o</td><td class="C">K5o</td><td class="C">Q5o</td><td class="C">J5o</td><td class="C">T5o</td><td class="C">95o</td><td class="C">85o</td><td class="C">75o</td><td class="C">65o</td><td class="C">55</td><td class="C">54s</td><td class="C">53s</td><td class="C">52s</td></tr>
+        <tr><th>4</th><td class="C">A4o</td><td class="C">K4o</td><td class="C">Q4o</td><td class="C">J4o</td><td class="C">T4o</td><td class="C">94o</td><td class="C">84o</td><td class="C">74o</td><td class="C">64o</td><td class="C">54o</td><td class="C">44</td><td class="C">43s</td><td class="C">42s</td></tr>
+        <tr><th>3</th><td class="C">A3o</td><td class="C">K3o</td><td class="C">Q3o</td><td class="C">J3o</td><td class="C">T3o</td><td class="F">93o</td><td class="F">83o</td><td class="F">73o</td><td class="F">63o</td><td class="F">53o</td><td class="F">43o</td><td class="C">33</td><td class="C">32s</td></tr>
+        <tr><th>2</th><td class="C">A2o</td><td class="C">K2o</td><td class="C">Q2o</td><td class="C">J2o</td><td class="C">T2o</td><td class="F">92o</td><td class="F">82o</td><td class="F">72o</td><td class="F">62o</td><td class="F">52o</td><td class="F">42o</td><td class="F">32o</td><td class="C">22</td></tr>
+      </table>
+      <div class="range">3-bet: 66+, A8s+, ATo+, KTs+, KJo+, QTs+, QJo &nbsp;|&nbsp; Call: почти всё остальное (у SB слабый диапазон + скидка 1 BB)</div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- РАЗДЕЛ 3: 3-БЕТЫ                                              -->
+  <!-- ============================================================ -->
+  <section class="chapter" id="threebet">
+    <div class="chapter-header">③ 3-БЕТЫ (когда опенер — не ты)</div>
+    <div class="chapter-body">
+
+      <p style="font-size:13px;color:#555;margin:0 0 20px;">
+        Ситуация: кто-то открылся рейзом, ты делаешь ререйз. Действие: <strong>3-бет</strong> 🟥, <strong>фолд</strong> ⬜ (без коллов — только 3-бет или фолд).
+      </p>
+
+      <h2 class="section-title">3-bet vs EP open</h2>
+      <table class="grid">
+        <tr><th></th><th>A</th><th>K</th><th>Q</th><th>J</th><th>T</th><th>9</th><th>8</th><th>7</th><th>6</th><th>5</th><th>4</th><th>3</th><th>2</th></tr>
+        <tr><th>A</th><td class="T">AA</td><td class="T">AKs</td><td class="F">AQs</td><td class="F">AJs</td><td class="F">ATs</td><td class="F">A9s</td><td class="F">A8s</td><td class="F">A7s</td><td class="F">A6s</td><td class="F">A5s</td><td class="F">A4s</td><td class="F">A3s</td><td class="F">A2s</td></tr>
+        <tr><th>K</th><td class="T">AKo</td><td class="T">KK</td><td class="F">KQs</td><td class="F">KJs</td><td class="F">KTs</td><td class="F">K9s</td><td class="F">K8s</td><td class="F">K7s</td><td class="F">K6s</td><td class="F">K5s</td><td class="F">K4s</td><td class="F">K3s</td><td class="F">K2s</td></tr>
+        <tr><th>Q</th><td class="F">AQo</td><td class="F">KQo</td><td class="T">QQ</td><td class="F">QJs</td><td class="F">QTs</td><td class="F">Q9s</td><td class="F">Q8s</td><td class="F">Q7s</td><td class="F">Q6s</td><td class="F">Q5s</td><td class="F">Q4s</td><td class="F">Q3s</td><td class="F">Q2s</td></tr>
+        <tr><th>J</th><td class="F">AJo</td><td class="F">KJo</td><td class="F">QJo</td><td class="F">JJ</td><td class="F">JTs</td><td class="F">J9s</td><td class="F">J8s</td><td class="F">J7s</td><td class="F">J6s</td><td class="F">J5s</td><td class="F">J4s</td><td class="F">J3s</td><td class="F">J2s</td></tr>
+        <tr><th>T</th><td class="F">ATo</td><td class="F">KTo</td><td class="F">QTo</td><td class="F">JTo</td><td class="F">TT</td><td class="F">T9s</td><td class="F">T8s</td><td class="F">T7s</td><td class="F">T6s</td><td class="F">T5s</td><td class="F">T4s</td><td class="F">T3s</td><td class="F">T2s</td></tr>
+        <tr><th>9</th><td class="F">A9o</td><td class="F">K9o</td><td class="F">Q9o</td><td class="F">J9o</td><td class="F">T9o</td><td class="F">99</td><td class="F">98s</td><td class="F">97s</td><td class="F">96s</td><td class="F">95s</td><td class="F">94s</td><td class="F">93s</td><td class="F">92s</td></tr>
+        <tr><th>8</th><td class="F">A8o</td><td class="F">K8o</td><td class="F">Q8o</td><td class="F">J8o</td><td class="F">T8o</td><td class="F">98o</td><td class="F">88</td><td class="F">87s</td><td class="F">86s</td><td class="F">85s</td><td class="F">84s</td><td class="F">83s</td><td class="F">82s</td></tr>
+        <tr><th>7</th><td class="F">A7o</td><td class="F">K7o</td><td class="F">Q7o</td><td class="F">J7o</td><td class="F">T7o</td><td class="F">97o</td><td class="F">87o</td><td class="F">77</td><td class="F">76s</td><td class="F">75s</td><td class="F">74s</td><td class="F">73s</td><td class="F">72s</td></tr>
+        <tr><th>6</th><td class="F">A6o</td><td class="F">K6o</td><td class="F">Q6o</td><td class="F">J6o</td><td class="F">T6o</td><td class="F">96o</td><td class="F">86o</td><td class="F">76o</td><td class="F">66</td><td class="F">65s</td><td class="F">64s</td><td class="F">63s</td><td class="F">62s</td></tr>
+        <tr><th>5</th><td class="F">A5o</td><td class="F">K5o</td><td class="F">Q5o</td><td class="F">J5o</td><td class="F">T5o</td><td class="F">95o</td><td class="F">85o</td><td class="F">75o</td><td class="F">65o</td><td class="F">55</td><td class="F">54s</td><td class="F">53s</td><td class="F">52s</td></tr>
+        <tr><th>4</th><td class="F">A4o</td><td class="F">K4o</td><td class="F">Q4o</td><td class="F">J4o</td><td class="F">T4o</td><td class="F">94o</td><td class="F">84o</td><td class="F">74o</td><td class="F">64o</td><td class="F">54o</td><td class="F">44</td><td class="F">43s</td><td class="F">42s</td></tr>
+        <tr><th>3</th><td class="F">A3o</td><td class="F">K3o</td><td class="F">Q3o</td><td class="F">J3o</td><td class="F">T3o</td><td class="F">93o</td><td class="F">83o</td><td class="F">73o</td><td class="F">63o</td><td class="F">53o</td><td class="F">43o</td><td class="F">33</td><td class="F">32s</td></tr>
+        <tr><th>2</th><td class="F">A2o</td><td class="F">K2o</td><td class="F">Q2o</td><td class="F">J2o</td><td class="F">T2o</td><td class="F">92o</td><td class="F">82o</td><td class="F">72o</td><td class="F">62o</td><td class="F">52o</td><td class="F">42o</td><td class="F">32o</td><td class="F">22</td></tr>
+      </table>
+      <div class="range">Flopzilla: QQ+, AK</div>
+
+      <div class="divider"></div>
+
+      <h2 class="section-title">3-bet vs MP open</h2>
+      <table class="grid">
+        <tr><th></th><th>A</th><th>K</th><th>Q</th><th>J</th><th>T</th><th>9</th><th>8</th><th>7</th><th>6</th><th>5</th><th>4</th><th>3</th><th>2</th></tr>
+        <tr><th>A</th><td class="T">AA</td><td class="T">AKs</td><td class="T">AQs</td><td class="F">AJs</td><td class="F">ATs</td><td class="F">A9s</td><td class="F">A8s</td><td class="F">A7s</td><td class="F">A6s</td><td class="F">A5s</td><td class="F">A4s</td><td class="F">A3s</td><td class="F">A2s</td></tr>
+        <tr><th>K</th><td class="T">AKo</td><td class="T">KK</td><td class="F">KQs</td><td class="F">KJs</td><td class="F">KTs</td><td class="F">K9s</td><td class="F">K8s</td><td class="F">K7s</td><td class="F">K6s</td><td class="F">K5s</td><td class="F">K4s</td><td class="F">K3s</td><td class="F">K2s</td></tr>
+        <tr><th>Q</th><td class="F">AQo</td><td class="F">KQo</td><td class="T">QQ</td><td class="F">QJs</td><td class="F">QTs</td><td class="F">Q9s</td><td class="F">Q8s</td><td class="F">Q7s</td><td class="F">Q6s</td><td class="F">Q5s</td><td class="F">Q4s</td><td class="F">Q3s</td><td class="F">Q2s</td></tr>
+        <tr><th>J</th><td class="F">AJo</td><td class="F">KJo</td><td class="F">QJo</td><td class="T">JJ</td><td class="F">JTs</td><td class="F">J9s</td><td class="F">J8s</td><td class="F">J7s</td><td class="F">J6s</td><td class="F">J5s</td><td class="F">J4s</td><td class="F">J3s</td><td class="F">J2s</td></tr>
+        <tr><th>T</th><td class="F">ATo</td><td class="F">KTo</td><td class="F">QTo</td><td class="F">JTo</td><td class="F">TT</td><td class="F">T9s</td><td class="F">T8s</td><td class="F">T7s</td><td class="F">T6s</td><td class="F">T5s</td><td class="F">T4s</td><td class="F">T3s</td><td class="F">T2s</td></tr>
+        <tr><th>9</th><td class="F">A9o</td><td class="F">K9o</td><td class="F">Q9o</td><td class="F">J9o</td><td class="F">T9o</td><td class="F">99</td><td class="F">98s</td><td class="F">97s</td><td class="F">96s</td><td class="F">95s</td><td class="F">94s</td><td class="F">93s</td><td class="F">92s</td></tr>
+        <tr><th>8</th><td class="F">A8o</td><td class="F">K8o</td><td class="F">Q8o</td><td class="F">J8o</td><td class="F">T8o</td><td class="F">98o</td><td class="F">88</td><td class="F">87s</td><td class="F">86s</td><td class="F">85s</td><td class="F">84s</td><td class="F">83s</td><td class="F">82s</td></tr>
+        <tr><th>7</th><td class="F">A7o</td><td class="F">K7o</td><td class="F">Q7o</td><td class="F">J7o</td><td class="F">T7o</td><td class="F">97o</td><td class="F">87o</td><td class="F">77</td><td class="F">76s</td><td class="F">75s</td><td class="F">74s</td><td class="F">73s</td><td class="F">72s</td></tr>
+        <tr><th>6</th><td class="F">A6o</td><td class="F">K6o</td><td class="F">Q6o</td><td class="F">J6o</td><td class="F">T6o</td><td class="F">96o</td><td class="F">86o</td><td class="F">76o</td><td class="F">66</td><td class="F">65s</td><td class="F">64s</td><td class="F">63s</td><td class="F">62s</td></tr>
+        <tr><th>5</th><td class="F">A5o</td><td class="F">K5o</td><td class="F">Q5o</td><td class="F">J5o</td><td class="F">T5o</td><td class="F">95o</td><td class="F">85o</td><td class="F">75o</td><td class="F">65o</td><td class="F">55</td><td class="F">54s</td><td class="F">53s</td><td class="F">52s</td></tr>
+        <tr><th>4</th><td class="F">A4o</td><td class="F">K4o</td><td class="F">Q4o</td><td class="F">J4o</td><td class="F">T4o</td><td class="F">94o</td><td class="F">84o</td><td class="F">74o</td><td class="F">64o</td><td class="F">54o</td><td class="F">44</td><td class="F">43s</td><td class="F">42s</td></tr>
+        <tr><th>3</th><td class="F">A3o</td><td class="F">K3o</td><td class="F">Q3o</td><td class="F">J3o</td><td class="F">T3o</td><td class="F">93o</td><td class="F">83o</td><td class="F">73o</td><td class="F">63o</td><td class="F">53o</td><td class="F">43o</td><td class="F">33</td><td class="F">32s</td></tr>
+        <tr><th>2</th><td class="F">A2o</td><td class="F">K2o</td><td class="F">Q2o</td><td class="F">J2o</td><td class="F">T2o</td><td class="F">92o</td><td class="F">82o</td><td class="F">72o</td><td class="F">62o</td><td class="F">52o</td><td class="F">42o</td><td class="F">32o</td><td class="F">22</td></tr>
+      </table>
+      <div class="range">Flopzilla: JJ+, AK, AQs</div>
+
+      <div class="divider"></div>
+
+      <h2 class="section-title">3-bet vs CO open</h2>
+      <table class="grid">
+        <tr><th></th><th>A</th><th>K</th><th>Q</th><th>J</th><th>T</th><th>9</th><th>8</th><th>7</th><th>6</th><th>5</th><th>4</th><th>3</th><th>2</th></tr>
+        <tr><th>A</th><td class="T">AA</td><td class="T">AKs</td><td class="T">AQs</td><td class="T">AJs</td><td class="F">ATs</td><td class="F">A9s</td><td class="F">A8s</td><td class="F">A7s</td><td class="F">A6s</td><td class="F">A5s</td><td class="F">A4s</td><td class="F">A3s</td><td class="F">A2s</td></tr>
+        <tr><th>K</th><td class="T">AKo</td><td class="T">KK</td><td class="F">KQs</td><td class="F">KJs</td><td class="F">KTs</td><td class="F">K9s</td><td class="F">K8s</td><td class="F">K7s</td><td class="F">K6s</td><td class="F">K5s</td><td class="F">K4s</td><td class="F">K3s</td><td class="F">K2s</td></tr>
+        <tr><th>Q</th><td class="F">AQo</td><td class="F">KQo</td><td class="T">QQ</td><td class="F">QJs</td><td class="F">QTs</td><td class="F">Q9s</td><td class="F">Q8s</td><td class="F">Q7s</td><td class="F">Q6s</td><td class="F">Q5s</td><td class="F">Q4s</td><td class="F">Q3s</td><td class="F">Q2s</td></tr>
+        <tr><th>J</th><td class="F">AJo</td><td class="F">KJo</td><td class="F">QJo</td><td class="T">JJ</td><td class="F">JTs</td><td class="F">J9s</td><td class="F">J8s</td><td class="F">J7s</td><td class="F">J6s</td><td class="F">J5s</td><td class="F">J4s</td><td class="F">J3s</td><td class="F">J2s</td></tr>
+        <tr><th>T</th><td class="F">ATo</td><td class="F">KTo</td><td class="F">QTo</td><td class="F">JTo</td><td class="T">TT</td><td class="F">T9s</td><td class="F">T8s</td><td class="F">T7s</td><td class="F">T6s</td><td class="F">T5s</td><td class="F">T4s</td><td class="F">T3s</td><td class="F">T2s</td></tr>
+        <tr><th>9</th><td class="F">A9o</td><td class="F">K9o</td><td class="F">Q9o</td><td class="F">J9o</td><td class="F">T9o</td><td class="F">99</td><td class="F">98s</td><td class="F">97s</td><td class="F">96s</td><td class="F">95s</td><td class="F">94s</td><td class="F">93s</td><td class="F">92s</td></tr>
+        <tr><th>8</th><td class="F">A8o</td><td class="F">K8o</td><td class="F">Q8o</td><td class="F">J8o</td><td class="F">T8o</td><td class="F">98o</td><td class="F">88</td><td class="F">87s</td><td class="F">86s</td><td class="F">85s</td><td class="F">84s</td><td class="F">83s</td><td class="F">82s</td></tr>
+        <tr><th>7</th><td class="F">A7o</td><td class="F">K7o</td><td class="F">Q7o</td><td class="F">J7o</td><td class="F">T7o</td><td class="F">97o</td><td class="F">87o</td><td class="F">77</td><td class="F">76s</td><td class="F">75s</td><td class="F">74s</td><td class="F">73s</td><td class="F">72s</td></tr>
+        <tr><th>6</th><td class="F">A6o</td><td class="F">K6o</td><td class="F">Q6o</td><td class="F">J6o</td><td class="F">T6o</td><td class="F">96o</td><td class="F">86o</td><td class="F">76o</td><td class="F">66</td><td class="F">65s</td><td class="F">64s</td><td class="F">63s</td><td class="F">62s</td></tr>
+        <tr><th>5</th><td class="F">A5o</td><td class="F">K5o</td><td class="F">Q5o</td><td class="F">J5o</td><td class="F">T5o</td><td class="F">95o</td><td class="F">85o</td><td class="F">75o</td><td class="F">65o</td><td class="F">55</td><td class="F">54s</td><td class="F">53s</td><td class="F">52s</td></tr>
+        <tr><th>4</th><td class="F">A4o</td><td class="F">K4o</td><td class="F">Q4o</td><td class="F">J4o</td><td class="F">T4o</td><td class="F">94o</td><td class="F">84o</td><td class="F">74o</td><td class="F">64o</td><td class="F">54o</td><td class="F">44</td><td class="F">43s</td><td class="F">42s</td></tr>
+        <tr><th>3</th><td class="F">A3o</td><td class="F">K3o</td><td class="F">Q3o</td><td class="F">J3o</td><td class="F">T3o</td><td class="F">93o</td><td class="F">83o</td><td class="F">73o</td><td class="F">63o</td><td class="F">53o</td><td class="F">43o</td><td class="F">33</td><td class="F">32s</td></tr>
+        <tr><th>2</th><td class="F">A2o</td><td class="F">K2o</td><td class="F">Q2o</td><td class="F">J2o</td><td class="F">T2o</td><td class="F">92o</td><td class="F">82o</td><td class="F">72o</td><td class="F">62o</td><td class="F">52o</td><td class="F">42o</td><td class="F">32o</td><td class="F">22</td></tr>
+      </table>
+      <div class="range">Flopzilla: TT+, AK, AQs, AJs</div>
+
+      <div class="divider"></div>
+
+      <h2 class="section-title">3-bet vs BTN open</h2>
+      <table class="grid">
+        <tr><th></th><th>A</th><th>K</th><th>Q</th><th>J</th><th>T</th><th>9</th><th>8</th><th>7</th><th>6</th><th>5</th><th>4</th><th>3</th><th>2</th></tr>
+        <tr><th>A</th><td class="T">AA</td><td class="T">AKs</td><td class="T">AQs</td><td class="T">AJs</td><td class="F">ATs</td><td class="F">A9s</td><td class="F">A8s</td><td class="F">A7s</td><td class="F">A6s</td><td class="F">A5s</td><td class="F">A4s</td><td class="F">A3s</td><td class="F">A2s</td></tr>
+        <tr><th>K</th><td class="T">AKo</td><td class="T">KK</td><td class="T">KQs</td><td class="F">KJs</td><td class="F">KTs</td><td class="F">K9s</td><td class="F">K8s</td><td class="F">K7s</td><td class="F">K6s</td><td class="F">K5s</td><td class="F">K4s</td><td class="F">K3s</td><td class="F">K2s</td></tr>
+        <tr><th>Q</th><td class="T">AQo</td><td class="F">KQo</td><td class="T">QQ</td><td class="F">QJs</td><td class="F">QTs</td><td class="F">Q9s</td><td class="F">Q8s</td><td class="F">Q7s</td><td class="F">Q6s</td><td class="F">Q5s</td><td class="F">Q4s</td><td class="F">Q3s</td><td class="F">Q2s</td></tr>
+        <tr><th>J</th><td class="F">AJo</td><td class="F">KJo</td><td class="F">QJo</td><td class="T">JJ</td><td class="F">JTs</td><td class="F">J9s</td><td class="F">J8s</td><td class="F">J7s</td><td class="F">J6s</td><td class="F">J5s</td><td class="F">J4s</td><td class="F">J3s</td><td class="F">J2s</td></tr>
+        <tr><th>T</th><td class="F">ATo</td><td class="F">KTo</td><td class="F">QTo</td><td class="F">JTo</td><td class="T">TT</td><td class="F">T9s</td><td class="F">T8s</td><td class="F">T7s</td><td class="F">T6s</td><td class="F">T5s</td><td class="F">T4s</td><td class="F">T3s</td><td class="F">T2s</td></tr>
+        <tr><th>9</th><td class="F">A9o</td><td class="F">K9o</td><td class="F">Q9o</td><td class="F">J9o</td><td class="F">T9o</td><td class="T">99</td><td class="F">98s</td><td class="F">97s</td><td class="F">96s</td><td class="F">95s</td><td class="F">94s</td><td class="F">93s</td><td class="F">92s</td></tr>
+        <tr><th>8</th><td class="F">A8o</td><td class="F">K8o</td><td class="F">Q8o</td><td class="F">J8o</td><td class="F">T8o</td><td class="F">98o</td><td class="F">88</td><td class="F">87s</td><td class="F">86s</td><td class="F">85s</td><td class="F">84s</td><td class="F">83s</td><td class="F">82s</td></tr>
+        <tr><th>7</th><td class="F">A7o</td><td class="F">K7o</td><td class="F">Q7o</td><td class="F">J7o</td><td class="F">T7o</td><td class="F">97o</td><td class="F">87o</td><td class="F">77</td><td class="F">76s</td><td class="F">75s</td><td class="F">74s</td><td class="F">73s</td><td class="F">72s</td></tr>
+        <tr><th>6</th><td class="F">A6o</td><td class="F">K6o</td><td class="F">Q6o</td><td class="F">J6o</td><td class="F">T6o</td><td class="F">96o</td><td class="F">86o</td><td class="F">76o</td><td class="F">66</td><td class="F">65s</td><td class="F">64s</td><td class="F">63s</td><td class="F">62s</td></tr>
+        <tr><th>5</th><td class="F">A5o</td><td class="F">K5o</td><td class="F">Q5o</td><td class="F">J5o</td><td class="F">T5o</td><td class="F">95o</td><td class="F">85o</td><td class="F">75o</td><td class="F">65o</td><td class="F">55</td><td class="F">54s</td><td class="F">53s</td><td class="F">52s</td></tr>
+        <tr><th>4</th><td class="F">A4o</td><td class="F">K4o</td><td class="F">Q4o</td><td class="F">J4o</td><td class="F">T4o</td><td class="F">94o</td><td class="F">84o</td><td class="F">74o</td><td class="F">64o</td><td class="F">54o</td><td class="F">44</td><td class="F">43s</td><td class="F">42s</td></tr>
+        <tr><th>3</th><td class="F">A3o</td><td class="F">K3o</td><td class="F">Q3o</td><td class="F">J3o</td><td class="F">T3o</td><td class="F">93o</td><td class="F">83o</td><td class="F">73o</td><td class="F">63o</td><td class="F">53o</td><td class="F">43o</td><td class="F">33</td><td class="F">32s</td></tr>
+        <tr><th>2</th><td class="F">A2o</td><td class="F">K2o</td><td class="F">Q2o</td><td class="F">J2o</td><td class="F">T2o</td><td class="F">92o</td><td class="F">82o</td><td class="F">72o</td><td class="F">62o</td><td class="F">52o</td><td class="F">42o</td><td class="F">32o</td><td class="F">22</td></tr>
+      </table>
+      <div class="range">Flopzilla: 99+, AJs+, AQo+, KQs</div>
+
+      <div class="divider"></div>
+
+      <h2 class="section-title">3-бет против SB-опена (только BB)</h2>
+      <table class="grid">
+        <tr><th></th><th>A</th><th>K</th><th>Q</th><th>J</th><th>T</th><th>9</th><th>8</th><th>7</th><th>6</th><th>5</th><th>4</th><th>3</th><th>2</th></tr>
+        <tr><th>A</th><td class="T">AA</td><td class="T">AKs</td><td class="T">AQs</td><td class="T">AJs</td><td class="T">ATs</td><td class="T">A9s</td><td class="T">A8s</td><td class="F">A7s</td><td class="F">A6s</td><td class="F">A5s</td><td class="F">A4s</td><td class="F">A3s</td><td class="F">A2s</td></tr>
+        <tr><th>K</th><td class="T">AKo</td><td class="T">KK</td><td class="T">KQs</td><td class="T">KJs</td><td class="T">KTs</td><td class="F">K9s</td><td class="F">K8s</td><td class="F">K7s</td><td class="F">K6s</td><td class="F">K5s</td><td class="F">K4s</td><td class="F">K3s</td><td class="F">K2s</td></tr>
+        <tr><th>Q</th><td class="T">AQo</td><td class="T">KQo</td><td class="T">QQ</td><td class="T">QJs</td><td class="T">QTs</td><td class="F">Q9s</td><td class="F">Q8s</td><td class="F">Q7s</td><td class="F">Q6s</td><td class="F">Q5s</td><td class="F">Q4s</td><td class="F">Q3s</td><td class="F">Q2s</td></tr>
+        <tr><th>J</th><td class="T">AJo</td><td class="T">KJo</td><td class="T">QJo</td><td class="T">JJ</td><td class="F">JTs</td><td class="F">J9s</td><td class="F">J8s</td><td class="F">J7s</td><td class="F">J6s</td><td class="F">J5s</td><td class="F">J4s</td><td class="F">J3s</td><td class="F">J2s</td></tr>
+        <tr><th>T</th><td class="T">ATo</td><td class="T">KTo</td><td class="F">QTo</td><td class="F">JTo</td><td class="T">TT</td><td class="F">T9s</td><td class="F">T8s</td><td class="F">T7s</td><td class="F">T6s</td><td class="F">T5s</td><td class="F">T4s</td><td class="F">T3s</td><td class="F">T2s</td></tr>
+        <tr><th>9</th><td class="F">A9o</td><td class="F">K9o</td><td class="F">Q9o</td><td class="F">J9o</td><td class="F">T9o</td><td class="T">99</td><td class="F">98s</td><td class="F">97s</td><td class="F">96s</td><td class="F">95s</td><td class="F">94s</td><td class="F">93s</td><td class="F">92s</td></tr>
+        <tr><th>8</th><td class="F">A8o</td><td class="F">K8o</td><td class="F">Q8o</td><td class="F">J8o</td><td class="F">T8o</td><td class="F">98o</td><td class="T">88</td><td class="F">87s</td><td class="F">86s</td><td class="F">85s</td><td class="F">84s</td><td class="F">83s</td><td class="F">82s</td></tr>
+        <tr><th>7</th><td class="F">A7o</td><td class="F">K7o</td><td class="F">Q7o</td><td class="F">J7o</td><td class="F">T7o</td><td class="F">97o</td><td class="F">87o</td><td class="T">77</td><td class="F">76s</td><td class="F">75s</td><td class="F">74s</td><td class="F">73s</td><td class="F">72s</td></tr>
+        <tr><th>6</th><td class="F">A6o</td><td class="F">K6o</td><td class="F">Q6o</td><td class="F">J6o</td><td class="F">T6o</td><td class="F">96o</td><td class="F">86o</td><td class="F">76o</td><td class="T">66</td><td class="F">65s</td><td class="F">64s</td><td class="F">63s</td><td class="F">62s</td></tr>
+        <tr><th>5</th><td class="F">A5o</td><td class="F">K5o</td><td class="F">Q5o</td><td class="F">J5o</td><td class="F">T5o</td><td class="F">95o</td><td class="F">85o</td><td class="F">75o</td><td class="F">65o</td><td class="F">55</td><td class="F">54s</td><td class="F">53s</td><td class="F">52s</td></tr>
+        <tr><th>4</th><td class="F">A4o</td><td class="F">K4o</td><td class="F">Q4o</td><td class="F">J4o</td><td class="F">T4o</td><td class="F">94o</td><td class="F">84o</td><td class="F">74o</td><td class="F">64o</td><td class="F">54o</td><td class="F">44</td><td class="F">43s</td><td class="F">42s</td></tr>
+        <tr><th>3</th><td class="F">A3o</td><td class="F">K3o</td><td class="F">Q3o</td><td class="F">J3o</td><td class="F">T3o</td><td class="F">93o</td><td class="F">83o</td><td class="F">73o</td><td class="F">63o</td><td class="F">53o</td><td class="F">43o</td><td class="F">33</td><td class="F">32s</td></tr>
+        <tr><th>2</th><td class="F">A2o</td><td class="F">K2o</td><td class="F">Q2o</td><td class="F">J2o</td><td class="F">T2o</td><td class="F">92o</td><td class="F">82o</td><td class="F">72o</td><td class="F">62o</td><td class="F">52o</td><td class="F">42o</td><td class="F">32o</td><td class="F">22</td></tr>
+      </table>
+      <div class="range">Flopzilla: 66+, A8s+, ATo+, KTs+, KJo+, QTs+, QJo</div>
+
+    </div>
+  </section>
+
+  <p style="margin-top:40px;font-size:12px;color:#777;text-align:center;">
+    NLH Charts — 6-max · Опен-рейзы / Защита BB / 3-беты · Зелёный = Raise, Красный = 3-Bet, Жёлтый = Call, Серый = Fold
+  </p>
+
+</div>
+  <section class="chapter" id="postflop" style="margin-top:28px;">
+    <div class="chapter-header">④ ПОСТФЛОП — 5 ПРАВИЛ</div>
+    <div class="chapter-body" style="font-size:13px;line-height:1.65;color:#cbd5e1;">
+      <p style="margin-bottom:10px;"><b>1. Нет цели — нет ставки.</b> Перед каждой ставкой или рейзом называю руку-цель: кого хочу получить <b>в колл</b> (вэлью) или <b>в фолд</b> (блеф), и что делаю на следующей улице. Не могу назвать — чек.</p>
+      <p style="margin-bottom:10px;"><b>2. С сильной рукой цель — колл.</b> Сет, две пары, стрит: хочу, чтобы заплатили. Если в голове «хочу фолд» — уменьшаю размер, а не увеличиваю. Кашаут не беру, пока в руке преимущество.</p>
+      <p style="margin-bottom:10px;"><b>3. Считай комбо до фолда.</b> С сильной рукой: сколько комбо меня бьют против комбо, которые бью я. Если вторых не меньше — фолд запрещён.</p>
+      <p style="margin-bottom:10px;"><b>4. Ривер-овербет.</b> Без натса на ривере — фолд на рейз и чек-рейз. Но флеш, стрит и сет — <b>коллю</b>: на NL2 крупная ставка часто сила.</p>
+      <p style="margin-bottom:10px;"><b>5. Блеф — только по наблюдению.</b> Выбиваю соперника, про которого знаю, что он фолдит. Нет наблюдения — чек и вскрытие.</p>
+      <p style="color:#8b98ad;font-size:12px;">Полный список правил и паттернов — в Хабе, вкладка «Ментал».</p>
+    </div>
+  </section>
+</body>
+</html>
