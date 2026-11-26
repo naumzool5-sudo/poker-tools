@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Постфлоп-план NLH</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f7f7f7;
+    margin: 0;
+    color: #222;
+    line-height: 1.5;
+  }
+  .container { max-width: 900px; margin: 0 auto; padding: 30px 24px; }
+
+  h1 {
+    font-size: 26px;
+    margin: 0 0 6px;
+    color: #1a4d8f;
+  }
+  .subtitle {
+    color: #666;
+    font-size: 14px;
+    margin: 0 0 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #1a4d8f;
+  }
+
+  h2 {
+    font-size: 18px;
+    margin: 34px 0 12px;
+    color: white;
+    background: #1a4d8f;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-weight: 700;
+  }
+
+  h3 {
+    font-size: 15px;
+    margin: 24px 0 10px;
+    color: #1a4d8f;
+    border-left: 4px solid #1a4d8f;
+    padding-left: 10px;
+  }
+
+  p { margin: 8px 0; font-size: 14px; }
+
+  ul {
+    margin: 8px 0;
+    padding-left: 22px;
+    font-size: 14px;
+  }
+  ul li { margin-bottom: 4px; }
+
+  .callout {
+    background: #fff8e1;
+    border-left: 4px solid #f5b800;
+    padding: 12px 16px;
+    margin: 14px 0;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .callout-red {
+    background: #fdeaea;
+    border-left: 4px solid #d9534f;
+    padding: 12px 16px;
+    margin: 14px 0;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .callout-green {
+    background: #e8f5e9;
+    border-left: 4px solid #4caf50;
+    padding: 12px 16px;
+    margin: 14px 0;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0 18px;
+    font-size: 13.5px;
+    background: white;
+  }
+  th {
+    background: #eaeaea;
+    text-align: left;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    font-weight: 700;
+  }
+  td {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    vertical-align: top;
+  }
+
+  @media print {
+    body { background: white; }
+    .container { padding: 0; max-width: 100%; }
+    h2 { page-break-after: avoid; }
+    h3 { page-break-after: avoid; }
+    table, .callout, .callout-red, .callout-green { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Постфлоп-план NLH</h1>
+  <p class="subtitle">6-max · Микролимиты · Принципы без частот</p>
+
+  <h2>1. Общие принципы</h2>
+  <ul>
+    <li><strong>Позиция решает.</strong> В позиции — шире и агрессивнее. Вне позиции — тайтовее.</li>
+    <li><strong>Инициатива = право ставить первым.</strong> Кто рейзил префлоп — тот ставит флоп.</li>
+    <li>Не пытайся выиграть каждый банк.</li>
+    <li>На микролимитах <strong>вэлью-бет важнее блефа</strong>.</li>
+    <li>Сила руки = карта + текстура доски + действие оппонента.</li>
+  </ul>
+
+  <h2>2. Ты — агрессор префлоп (PFR)</h2>
+
+  <h3>Флоп: C-bet</h3>
+  <table>
+    <tr><th>Тип доски</th><th>Пример</th><th>Размер</th></tr>
+    <tr><td>Сухая</td><td>A72r, K83r</td><td>1/3 пота</td></tr>
+    <tr><td>Средняя</td><td>KQ5r, JT4r</td><td>1/2 пота</td></tr>
+    <tr><td>Мокрая</td><td>JT9ss, 876ss</td><td>2/3–3/4 пота</td></tr>
+    <tr><td>Спаренная</td><td>KK4, 883</td><td>1/3 пота</td></tr>
+  </table>
+
+  <div class="callout-red">
+    <strong>Когда НЕ ставить C-bet:</strong>
+    <ul style="margin: 6px 0 0;">
+      <li>Доска не подходит твоему диапазону.</li>
+      <li>Против 2+ оппонентов.</li>
+      <li>Против частого чек-рейзера.</li>
+      <li>Со средней рукой, которая хочет шоудаун.</li>
+    </ul>
+  </div>
+
+  <h3>Рука → действие на флопе</h3>
+  <table>
+    <tr><th>Рука</th><th>Действие</th></tr>
+    <tr><td>Топ-пара с хорошим кикером (AK на A72)</td><td>C-bet</td></tr>
+    <tr><td>Оверпара (QQ на 852)</td><td>C-bet</td></tr>
+    <tr><td>Сет / две пары</td><td>C-bet или чек-рейз</td></tr>
+    <tr><td>Топ-пара слабый кикер (A5 на A72)</td><td>C-bet, потом чек-колл</td></tr>
+    <tr><td>Средняя пара (88 на J73)</td><td>Чек/колл или чек/фолд</td></tr>
+    <tr><td>Гатшот / бэкдор</td><td>C-bet, если опп фолдит</td></tr>
+    <tr><td>Воздух с блокерами</td><td>C-bet (редко)</td></tr>
+  </table>
+
+  <h3>Тёрн</h3>
+  <ul>
+    <li>Не бомби тёрн автоматом после колла флопа.</li>
+    <li>Второй баррель только с: топ-парой+, сильным дро, блокерами.</li>
+    <li>Иначе — чек, готовься к чек-фолду или чек-коллу.</li>
+    <li>Размер: <strong>1/2–2/3 пота</strong>.</li>
+  </ul>
+
+  <h3>Ривер</h3>
+  <ul>
+    <li><strong>Вэлью-бет:</strong> топ-пара+, две пары, сеты. Размер 1/2–3/4 пота.</li>
+    <li><strong>Блеф:</strong> только с блокерами и против слабого оппонента. На микролимитах редко.</li>
+    <li><strong>Чек/фолд:</strong> средняя рука без вэлью.</li>
+    <li><strong>Чек/колл:</strong> если оппонент может блефовать.</li>
+  </ul>
+
+  <h2>3. Ты — коллер (защита BB)</h2>
+
+  <h3>Флоп</h3>
+  <ul>
+    <li><strong>Чек почти всегда.</strong> Не донкай без сильной руки.</li>
+    <li><strong>Чек-рейз:</strong> сет, две пары, топ-пара + хороший кикер, сильное дро.</li>
+    <li><strong>Чек-колл:</strong> средняя пара, топ-пара слабый кикер, дро (если pot odds позволяют).</li>
+    <li><strong>Чек-фолд:</strong> мусор без эквити.</li>
+  </ul>
+
+  <h3>Тёрн</h3>
+  <ul>
+    <li>Если чек-рейз флопа не сработал — часто чек.</li>
+    <li>С сильной рукой — продолжай ставить (лид).</li>
+    <li>С дро — считай pot odds.</li>
+  </ul>
+
+  <h3>Ривер</h3>
+  <ul>
+    <li>С сильной рукой — вэлью-бет.</li>
+    <li>Со средней — чек/колл, если оппонент блефует.</li>
+    <li>С мусором — чек/фолд.</li>
+  </ul>
+
+  <h2>4. 3-бет поты</h2>
+
+  <h3>Ты — 3-беттер</h3>
+  <ul>
+    <li>C-bet на большинстве досков.</li>
+    <li>На мокрых — крупнее.</li>
+    <li>Готовься к 4-бету с QQ+, AK.</li>
+  </ul>
+
+  <h3>Ты — коллер 3-бета</h3>
+  <ul>
+    <li>Диапазон узкий: JJ–99, AQs, AJs, KQs.</li>
+    <li>На флопе — чек/фолд без топ-пары или сильного дро.</li>
+    <li>Не привязывайся к оверпарам на мокрых досках.</li>
+  </ul>
+
+  <h2>5. Multiway (2+ оппонента)</h2>
+  <ul>
+    <li>Играй тайтовее и прямолинейнее.</li>
+    <li>C-bet реже (только с сильными руками или хорошими дро).</li>
+    <li>Блеф почти не работает — фолдят реже.</li>
+    <li>Вэлью-беть крупнее — есть кому платить.</li>
+  </ul>
+
+  <h2>6. Банкролл-менеджмент</h2>
+  <ul>
+    <li>Кэш: <strong>20–30 бай-инов</strong> на лимит.</li>
+    <li>Пример: NL10 ($10 бай-ин) → банкролл $200–300.</li>
+    <li>Играй только на те деньги, которые не жалко потерять.</li>
+  </ul>
+
+  <div class="callout-green">
+    <strong>Итог:</strong> играй тайтово-агрессивно, вэлью-беть широко, блефуй редко, не привязывайся к руке без плана.
+  </div>
+
+</div>
+</body>
+</html>
