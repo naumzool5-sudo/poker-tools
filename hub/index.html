@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏆 Мой Покерный Хаб</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card: #1a1d24;
+    --card-hover: #222631;
+    --text: #e6e8ee;
+    --muted: #8b93a7;
+    --gold: #f0b429;
+    --green: #4ade80;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --border: #2a2f3a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.5; padding: 16px;
+    display: flex; justify-content: center; padding-bottom: 100px; /* Увеличили отступ для новых кнопок */
+  }
+  .app { width: 100%; max-width: 800px; background: var(--card); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 20px; border: 1px solid var(--border); }
+  .tabs { display: flex; gap: 4px; background: var(--bg); padding: 4px; border-radius: 10px; margin-bottom: 20px; overflow-x: auto; }
+  .tab-btn { flex: 1; padding: 10px 12px; border: none; background: transparent; color: var(--muted); font-weight: 600; font-size: 13px; border-radius: 8px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+  .tab-btn:hover { background: var(--card-hover); color: var(--text); }
+  .tab-btn.active { background: var(--blue); color: white; }
+  .tab-content { display: none; animation: fadeIn 0.3s; }
+  .tab-content.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  h2 { font-size: 18px; margin-bottom: 12px; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  
+  /* Старт */
+  .mantra-box { background: var(--bg); border-left: 4px solid var(--gold); padding: 16px; border-radius: 8px; font-family: monospace; font-size: 14px; line-height: 1.8; margin-bottom: 20px; color: #cbd5e1; }
+  .filter-box { background: rgba(96, 165, 250, 0.1); border: 1px solid var(--blue); border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center; }
+  .filter-box p:first-child { font-size: 14px; font-weight: bold; color: var(--blue); margin-bottom: 5px; }
+  .filter-box p:last-child { font-size: 16px; color: var(--text); font-weight: 600; font-style: italic; }
+
+  /* План */
+  .plan-header { display: flex; justify-content: space-between; align-items: center; background: var(--bg); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--border); }
+  .plan-progress-text { font-size: 14px; color: var(--muted); }
+  .plan-progress-text b { color: var(--green); font-size: 16px; }
+  .plan-block-title { font-size: 15px; font-weight: 700; margin: 20px 0 10px; color: var(--blue); display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+  .plan-item { display: flex; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; position: relative; }
+  .plan-item:hover { background: var(--card-hover); }
+  .plan-item.done { opacity: 0.6; border-color: rgba(74, 222, 128, 0.3); }
+  .plan-item.done .plan-task { text-decoration: line-through; color: var(--muted); }
+  .plan-status { font-size: 20px; flex-shrink: 0; width: 30px; text-align: center; user-select: none; }
+  .plan-content { flex: 1; padding-right: 25px;}
+  .plan-task { font-weight: 700; font-size: 14px; margin-bottom: 4px; color: var(--text); }
+  .plan-action { font-size: 12px; color: #cbd5e1; margin-bottom: 6px; }
+  .plan-goal { font-size: 11px; color: var(--muted); font-style: italic; }
+  .btn-del-plan { position: absolute; right: 10px; top: 10px; background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px; transition: 0.2s; }
+  .btn-del-plan:hover { color: var(--red); }
+  .icon-lock { position: absolute; right: 12px; top: 12px; font-size: 14px; opacity: 0.5; }
+
+  /* Ментал */
+  .emergency-box { background: rgba(248, 113, 113, 0.1); border: 1px solid var(--red); border-radius: 10px; padding: 15px; margin-bottom: 25px; }
+  .emergency-box h3 { color: var(--red); font-size: 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .emergency-box ol { padding-left: 20px; font-size: 14px; line-height: 1.6; color: #fca5a5; }
+  .emergency-box li { margin-bottom: 8px; }
+  .lesson-card { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+  .lesson-header { padding: 15px; font-weight: 700; font-size: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; transition: 0.2s; }
+  .lesson-header:hover { background: var(--card-hover); }
+  .lesson-header .arrow { transition: transform 0.2s; color: var(--muted); }
+  .lesson-card.open .lesson-header .arrow { transform: rotate(180deg); }
+  .lesson-body { display: none; padding: 0 15px 15px; font-size: 13px; color: #cbd5e1; border-top: 1px solid var(--border); }
+  .lesson-card.open .lesson-body { display: block; }
+  .lesson-body b { color: var(--gold); }
+  .lesson-body p { margin-top: 10px; }
+  .btn-del-lesson { background: none; border: none; color: var(--red); cursor: pointer; font-size: 16px; padding: 0 10px; }
+
+  /* Формы */
+  .add-box { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
+  .add-box input, .add-box textarea, .add-box select { width: 100%; padding: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 14px; font-family: inherit; }
+  .add-box textarea { min-height: 80px; resize: vertical; }
+  .add-box input:focus, .add-box textarea:focus, .add-box select:focus { border-color: var(--blue); outline: none; }
+  .btn-add { flex: 1; padding: 10px; background: var(--blue); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: var(--gold); }
+  .checkbox-row input { width: auto; }
+  .screenshots-list { display: flex; flex-direction: column; gap: 8px; }
+  .screenshot-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 15px; transition: 0.2s; }
+  .screenshot-item:hover { border-color: var(--blue); }
+  .screenshot-link { color: var(--blue); text-decoration: none; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; flex: 1; word-break: break-word; }
+  .screenshot-link:hover { text-decoration: underline; }
+  .screenshot-del { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px; transition: 0.2s; }
+  .screenshot-del:hover { color: var(--red); }
+
+  /* Ачивки */
+  .achiev-dashboard { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px; }
+  .achiev-xp { font-size: 32px; font-weight: 800; color: var(--gold); line-height: 1; margin-bottom: 5px; }
+  .achiev-grade { font-size: 14px; color: var(--muted); font-weight: 600; }
+  .achiev-xp.negative { color: var(--red); }
+  .achiev-block-title { font-size: 14px; font-weight: 700; margin: 20px 0 10px; color: var(--blue); text-transform: uppercase; letter-spacing: 0.5px; }
+  .achiev-item { display: flex; align-items: flex-start; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 15px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; user-select: none; }
+  .achiev-item:hover { background: var(--card-hover); }
+  .achiev-item.done { border-color: var(--green); background: rgba(74, 222, 128, 0.05); }
+  .achiev-item.done .achiev-name { color: var(--green); text-decoration: line-through; }
+  .achiev-item.penalty.done { border-color: var(--red); background: rgba(248, 113, 113, 0.05); }
+  .achiev-item.penalty.done .achiev-name { color: var(--red); text-decoration: none; }
+  .achiev-checkbox { flex: 0 0 20px; width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--muted); margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: 0.2s; font-size: 14px; font-weight: bold; color: transparent; }
+  .achiev-item.done .achiev-checkbox { background: var(--green); border-color: var(--green); color: #0f1115; content: "✓"; }
+  .achiev-item.penalty.done .achiev-checkbox { background: var(--red); border-color: var(--red); color: white; content: "✗"; }
+  .achiev-meta { flex: 1; }
+  .achiev-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .achiev-name { font-weight: 700; font-size: 14px; color: var(--text); }
+  .achiev-xp-val { font-size: 12px; font-weight: 700; color: var(--gold); white-space: nowrap; }
+  .achiev-item.penalty .achiev-xp-val { color: var(--red); }
+  .achiev-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .btn-save-session { width: 100%; padding: 14px; background: var(--blue); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 20px; transition: 0.2s; }
+  .btn-save-session:hover { background: #4a90e2; }
+  .history-item { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .history-item .date { font-size: 12px; color: var(--muted); }
+  .history-item .xp { font-weight: bold; color: var(--gold); }
+
+  /* Прогресс */
+  .progress-block { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+  .progress-block h3 { font-size: 16px; margin-bottom: 15px; color: var(--text); display: flex; align-items: center; gap: 8px;}
+  .input-group { margin-bottom: 15px; }
+  .input-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 5px; }
+  .input-group input { width: 100%; padding: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 16px; font-weight: 700; outline: none; }
+  .input-group input:focus { border-color: var(--blue); }
+  .inline-input { background: transparent; border: none; border-bottom: 1px dashed var(--muted); color: var(--gold); font-size: 16px; font-weight: 700; width: 65px; text-align: center; outline: none; padding: 0; margin: 0; -moz-appearance: textfield; }
+  .inline-input::-webkit-outer-spin-button, .inline-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .inline-input:focus { border-bottom: 1px solid var(--gold); }
+  .bar-container { margin-top: 10px; }
+  .bar-bg { width: 100%; height: 12px; background: var(--card); border-radius: 6px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 5px; }
+  .bar-fill { height: 100%; background: var(--green); width: 0%; transition: width 0.4s ease; }
+  .bar-fill.blue { background: var(--blue); }
+  .bar-fill.gold { background: var(--gold); }
+  .bar-text { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+
+  /* Инструменты */
+  .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 15px; }
+  .tool-btn { display: flex; align-items: center; justify-content: center; padding: 15px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); text-decoration: none; font-weight: 600; font-size: 14px; transition: 0.2s; text-align: center; }
+  .tool-btn:hover { background: var(--card-hover); border-color: var(--blue); transform: translateY(-2px); }
+
+  /* Нижняя панель (теперь с 5 кнопками) */
+  .bottom-panel { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); padding: 10px 16px; display: flex; justify-content: center; gap: 8px; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); z-index: 100; flex-wrap: wrap; }
+  .panel-btn { padding: 8px 12px; border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
+  .btn-save { background: var(--green); color: #0f1115; }
+  .btn-export { background: var(--blue); color: white; }
+  .btn-import { background: var(--border); color: var(--text); }
+  .btn-cloud-save { background: #9333ea; color: white; }
+  .btn-cloud-load { background: #c084fc; color: white; }
+  
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--green); color: #0f1115; padding: 10px 20px; border-radius: 8px; font-weight: bold; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 200; }
+  .toast.show { opacity: 1; }
+  #file-upload, #import-file { display: none; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
+    <img src="cat_pilot.jpg" alt="Пилот" style="width: 65px; height: 65px; border-radius: 50%; border: 2px solid var(--blue); object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+    <h1 style="margin: 0; font-size: 24px;">🚀 Мой Покерный Хаб</h1>
+  </div>
+
+  <div class="tabs" id="tabs-nav">
+    <button class="tab-btn active" onclick="switchTab('start', this)">🚀 Старт</button>
+    <button class="tab-btn" onclick="switchTab('plan', this)">📋 План</button>
+    <button class="tab-btn" onclick="switchTab('mind', this)">🧠 Ментал</button>
+    <button class="tab-btn" onclick="switchTab('achiev', this)">🏆 Ачивки</button>
+    <button class="tab-btn" onclick="switchTab('tools', this)">🛠️ Инструменты</button>
+    <button class="tab-btn" onclick="switchTab('progress', this)">📊 Прогресс</button>
+    <button class="tab-btn" onclick="switchTab('journal', this)">📓 Журнал</button>
+  </div>
+
+  <!-- Вкладка 1: Старт -->
+  <div id="tab-start" class="tab-content active">
+    <h2>Доброе утро, боец!</h2>
+    <p style="color: var(--muted); margin-bottom: 15px;">Ритуал перед стартом сессии. Прочитай, настройся, выдохни.</p>
+    <div class="filter-box">
+      <p>💡 Философский фильтр</p>
+      <p>«Полезно ли это для моего следующего решения?»</p>
+    </div>
+    <details style="background: var(--bg); border-left: 4px solid var(--gold); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+      <summary style="cursor: pointer; font-weight: 700; color: var(--gold); font-size: 15px; outline: none;">📅 13.11.2026. Точка невозврата (нажми)</summary>
+      <ul style="margin-top: 12px; padding-left: 20px; font-size: 13px; color: #cbd5e1; line-height: 1.6;">
+        <li style="margin-bottom: 6px;"><b>Смерть Бендера:</b> Отказ от роли жертвы. Измученный робот удален навсегда.</li>
+        <li style="margin-bottom: 6px;"><b>Конец ожидания:</b> Чуда не будет. Чудом должен стать я сам.</li>
+        <li style="margin-bottom: 6px;"><b>Интеграция Обезьяны:</b> Импульсы признаны, но они на плече, а не за штурвалом.</li>
+        <li style="margin-bottom: 6px;"><b>Смена вектора:</b> От пассивного страдания к строительству системы.</li>
+        <li><b>Причина и следствие:</b> Боль и абсурд последних лет были топливом, а не наказанием.</li>
+      </ul>
+    </details>
+    <div class="mantra-box">
+      <b>МАНТРА v5 (держим в голове всегда):</b><br><br>
+      NL2 · разогрев 10–20 мин на 1 столе · 2 стола — 50 мин · 3 стола — 40–45 мин, два таймера: предупреждение и жёсткое закрытие<br>
+      Стоп-лосс −$3.00 нетто → закрыл клиент<br>
+      HU → вышел. Ривер-овербет: флеш/стрит/сет — колл; остальное без натса — фолд.<br>
+      Блеф на терне — только с блокером на натс или с эквити. Голые оверкарты — чек.<br>
+      Нет цели у ставки → чек. Спокойный, как удав. Дисциплина > отыгрыш.
+    </div>
+    <div style="background: var(--bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+      <h3 style="font-size: 14px; margin-bottom: 10px; color: var(--gold);">Чек-лист ритуала:</h3>
+      <label style="display: block; margin-bottom: 8px; cursor: pointer;"><input type="checkbox" class="save-trigger" style="margin-right: 8px;"> Физическая разминка сделана</label>
+      <label style="display: block; margin-bottom: 8px; cursor: pointer;"><input type="checkbox" class="save-trigger" style="margin-right: 8px;"> Заварен чай без сахара (Обезьяна в кофе, Пилот за штурвалом)</label>
+      <label style="display: block; margin-bottom: 8px; cursor: pointer;"><input type="checkbox" class="save-trigger" style="margin-right: 8px;"> Завод отделен (мысли выписаны и закрыты)</label>
+      <label style="display: block; margin-bottom: 8px; cursor: pointer;"><input type="checkbox" class="save-trigger" style="margin-right: 8px;"> Открыты чарты и тренажер</label>
+    </div>
+  </div>
+
+  <!-- Вкладка 2: План -->
+  <div id="tab-plan" class="tab-content">
+    <h2>📋 План «Выход из болота»</h2>
+    <div class="plan-header">
+      <div class="plan-progress-text">Всего: <b id="plan-total-count">18</b></div>
+      <div class="plan-progress-text">Выполнено: <b id="plan-done-count">0</b></div>
+    </div>
+    <div id="plan-container"></div>
+    <h3 style="font-size: 15px; margin: 30px 0 10px; color: var(--blue); border-bottom: 1px solid var(--border); padding-bottom: 5px;">➕ Добавить новый план</h3>
+    <div class="add-box" style="margin-top: 15px;">
+      <select id="plan-block">
+        <option value="🏭 Завод">🏭 Завод</option>
+        <option value="🧱 Ментал">🧱 Ментал</option>
+        <option value="🃏 Покер">🃏 Покер</option>
+        <option value="💰 Финансы">💰 Финансы</option>
+        <option value="🧘 Состояние">🧘 Состояние</option>
+        <option value="🎓 Обучение">🎓 Обучение</option>
+      </select>
+      <input type="text" id="plan-task" placeholder="Задача (например: Сменить лимит)">
+      <input type="text" id="plan-action" placeholder="Действие (например: Поднять банкролл до $100)">
+      <input type="text" id="plan-goal" placeholder="Цель (например: Переход на NL5)">
+      <label class="checkbox-row"><input type="checkbox" id="plan-fixed"> Жесткая фиксация (нельзя будет удалить)</label>
+      <button class="btn-add" onclick="addNewPlan()">Добавить план</button>
+    </div>
+  </div>
+
+  <!-- Вкладка 3: Ментал -->
+  <div id="tab-mind" class="tab-content">
+    <h2>🧠 Ментал и Уроки</h2>
+    <div style="text-align: center; margin-bottom: 20px;">
+      <img src="cat_stop.jpg" alt="Стоп-кран" style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 4px 8px rgba(0,0,0,0.5);">
+      <p style="font-size: 12px; color: var(--muted); margin-top: 6px; font-style: italic;">Кнопка экстренного торможения. Обезьяна пристегнута.</p>
+    </div>
+    <details style="background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+      <summary style="cursor: pointer; font-weight: 700; color: var(--green); font-size: 15px; outline: none;">🧠 Словарь Пилота: Каргокульт (нажми)</summary>
+      <div style="margin-top: 12px; font-size: 13px; color: #cbd5e1; line-height: 1.6;">
+        <p style="margin-bottom: 8px;"><b>Определение:</b> Имитация формы без понимания сути (бамбуковые вышки вместо аэропорта).</p>
+        <ul style="padding-left: 20px;">
+          <li style="margin-bottom: 6px;"><b>На заводе:</b> Ритуалы ради ритуалов. <i>Мой ответ: получаю деньги и ухожу строить свой аэропорт.</i></li>
+          <li style="margin-bottom: 6px;"><b>В покере:</b> Копирование действий профи без логики. <i>Мой ответ: только математика.</i></li>
+          <li><b>В жизни:</b> Ожидание, что «само рассосется». <i>Мой ответ: причина и следствие.</i></li>
+        </ul>
+      </div>
+    </details>
+    <div class="emergency-box">
+      <h3>🚨 Экстренная помощь (Протокол 1-2-3)</h3>
+      <ol>
+        <li><b>Сит-аут:</b> Не закрывай клиент. Нажми Sit Out на 1-2 минуты.</li>
+        <li><b>Тело:</b> Стопы в пол (5 сек). Назови 5 предметов вокруг. 3 медленных выдоха.</li>
+        <li><b>Фраза-якорь:</b> «Я уже в плюсе. Моя задача — не выиграть, а не потерять дисциплину».</li>
+        <li><b>Правило:</b> Если накрывает 3-й раз за сессию — <b>закрываешь клиент</b>.</li>
+      </ol>
+    </div>
+    <h3 style="font-size: 15px; margin-bottom: 10px; color: var(--muted);">📌 Мои паттерны и уроки</h3>
+    <div class="add-box" style="margin-bottom: 20px;">
+      <input type="text" id="lesson-title" placeholder="Название паттерна">
+      <textarea id="lesson-body" placeholder="Триггер, Реакция, Правило..."></textarea>
+      <button class="btn-add" onclick="addLesson()" style="width: 100%;">Добавить паттерн</button>
+    </div>
+    <div id="lessons-container"></div>
+    <h3 style="font-size: 15px; margin: 25px 0 10px; color: var(--muted);">📸 Разборы рук (Ссылки)</h3>
+    <div class="add-box">
+      <input type="text" id="screenshot-title" placeholder="Название (например: QQ vs Олл-ин)">
+      <input type="text" id="screenshot-url" placeholder="Вставь ссылку (PokerCraft...)">
+      <div style="display: flex; gap: 10px;">
+        <button class="btn-add" onclick="addScreenshotURL()">Добавить ссылку</button>
+        <button class="btn-add" style="background: var(--card-hover); color: var(--text); border: 1px dashed var(--border);" onclick="document.getElementById('file-upload').click()">Загрузить файл</button>
+      </div>
+      <input type="file" id="file-upload" accept="image/*" onchange="addScreenshotFile(event)">
+    </div>
+    <div id="screenshots-list" class="screenshots-list"></div>
+    <details style="background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-top: 20px;">
+      <summary style="cursor: pointer; font-weight: 700; color: var(--gold); font-size: 15px; outline: none;">🗣️ Протокол: «Не доказывай правду» (нажми)</summary>
+      <div style="margin-top: 12px; font-size: 13px; color: #cbd5e1; line-height: 1.6;">
+        <p><b>Ситуация:</b> Импульс объяснить жене/близким абсурд завода или свои инсайты.</p>
+        <p><b>Вопрос Пилота:</b> «А зачем?»</p>
+        <p><b>Логика:</b> Она мне и так верит. Она не требует доказательств. Доказывать правду — пустая трата энергии.</p>
+        <p><b>Действие:</b> Остановиться. Выпить кофе. Оставить инсайты для Хаба.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- Вкладка 4: Ачивки -->
+  <div id="tab-achiev" class="tab-content">
+    <h2>🏆 Трекер ачивок</h2>
+    <div class="achiev-dashboard">
+      <div class="achiev-xp" id="achiev-total-xp">0 XP</div>
+      <div class="achiev-grade" id="achiev-grade">Сессия-разминка</div>
+    </div>
+    <div id="achiev-container"></div>
+    <button class="btn-save-session" onclick="saveSession()">💾 Сохранить сессию в историю</button>
+    <h3 style="font-size: 15px; margin: 30px 0 10px; color: var(--muted);">📜 История сессий</h3>
+    <div id="history-container"></div>
+  </div>
+
+  <!-- Вкладка 5: Инструменты -->
+  <div id="tab-tools" class="tab-content">
+    <h2>🛠️ Мои инструменты</h2>
+    <p style="color: var(--muted); margin-bottom: 15px;">Все инструменты лежат рядом, в облаке. Открываются с любого устройства.</p>
+        <div class="tools-grid">
+      <a href="../guide/index.html" target="_blank" class="tool-btn">📚 Методичка (все разделы)</a>
+      <a href="../analyzer/index.html" target="_blank" class="tool-btn">📊 Анализатор логов</a>
+      <a href="../checklist/index.html" target="_blank" class="tool-btn">✅ Чек-лист сессии</a>
+      <a href="../trainer/index.html" target="_blank" class="tool-btn">🃏 Тренажёр чартов</a>
+      <a href="../charts/index.html" target="_blank" class="tool-btn">📖 Префлоп-чарты</a>
+      <a href="../postflop/index.html" target="_blank" class="tool-btn">🌊 Постфлоп-план</a>
+      <a href="../shpora/index.html" target="_blank" class="tool-btn">📝 Шпора (математика)</a>
+      <a href="../combos/index.html" target="_blank" class="tool-btn">🧮 Комбинаторика</a>
+      <a href="../opponents/index.html" target="_blank" class="tool-btn">👥 Типы оппонентов</a>
+      <a href="https://www.pokerstrategy.com/ru/poker-software-tools/equilab-holdem" target="_blank" class="tool-btn" style="border-color: #f59e0b; color: #f59e0b;">⚖️ Equilab Online</a>
+    </div>
+    <h3 style="font-size: 15px; margin: 30px 0 10px; color: var(--blue); border-bottom: 1px solid var(--border); padding-bottom: 5px;">📚 Мои обучающие материалы</h3>
+    <div class="add-box" style="margin-top: 15px;">
+      <input type="text" id="custom-link-title" placeholder="Название (например: PokerAbility - ISO)">
+      <input type="url" id="custom-link-url" placeholder="Вставь ссылку (https://...)">
+      <button class="btn-add" onclick="addCustomLink()" style="width: 100%;">Добавить ссылку</button>
+    </div>
+    <div id="custom-links-list" class="screenshots-list"></div>
+  </div>
+
+  <!-- Вкладка 6: Прогресс -->
+  <div id="tab-progress" class="tab-content">
+    <h2>📊 Мой прогресс</h2>
+    <div class="progress-block">
+      <h3>💰 Банкролл (Цель: <input type="number" id="target-bankroll-input" class="inline-input"> $)</h3>
+      <div class="input-group">
+        <label>Текущий банкролл ($)</label>
+        <input type="number" id="bankroll-input" step="0.01" placeholder="40.00">
+      </div>
+      <div class="bar-container">
+        <div class="bar-bg"><div class="bar-fill gold" id="bankroll-fill"></div></div>
+        <div class="bar-text"><span>Текущий</span><span>Цель</span></div>
+      </div>
+    </div>
+    <div class="progress-block">
+      <h3>🃏 Чекпоинт рук (Цель: <input type="number" id="target-hands-input" class="inline-input">)</h3>
+      <div class="input-group">
+        <label>Всего сыграно рук (с 5 ноября)</label>
+        <input type="number" id="hands-input" step="1" placeholder="2015">
+      </div>
+      <div class="bar-container">
+        <div class="bar-bg"><div class="bar-fill blue" id="hands-fill"></div></div>
+        <div class="bar-text"><span id="hands-current">0</span><span>Цель</span></div>
+      </div>
+      <div style="margin-top: 15px; text-align: center; font-size: 15px; font-weight: bold; color: var(--text);">
+        До чекпоинта осталось: <span id="hands-remaining" style="color: var(--gold); font-size: 18px;">0</span> рук
+      </div>
+    </div>
+  </div>
+
+  <!-- Вкладка 7: Журнал сессий -->
+  <div id="tab-journal" class="tab-content">
+    <h2>📓 Журнал сессий</h2>
+    <p style="color: var(--muted); margin-bottom: 15px;">Данные из анализатора логов. Руками — только состояние и заметка.</p>
+
+    <div class="progress-block">
+      <h3>Добавить сессию</h3>
+      <div class="input-group">
+        <label>Вставь строку из анализатора (кнопка «📓 Для журнала»)</label>
+        <textarea id="journal-json" rows="3" style="width:100%; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-family: monospace; font-size: 12px;" placeholder='{"date":"26.11.2026","hands":403,"net":-1.05,"rake":1.05,"preRake":0,"bets":32,"minRaises":1,"limps":1}'></textarea>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+        <div class="input-group" style="flex:0 0 120px;">
+          <label>Состояние 1–10</label>
+          <input type="number" id="journal-state" min="1" max="10" step="1" placeholder="7">
+        </div>
+        <div class="input-group" style="flex:0 0 150px;">
+          <label>Ставок без цели</label>
+          <input type="number" id="journal-nogoal" min="0" step="1" placeholder="1">
+        </div>
+        <div class="input-group" style="flex:1; min-width:200px;">
+          <label>Заметка</label>
+          <input type="text" id="journal-note" placeholder="что заметил, что сработало">
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="panel-btn btn-save" onclick="journalAdd()">Добавить в журнал</button>
+        <button class="panel-btn" onclick="journalClear()">Очистить поле</button>
+      </div>
+    </div>
+
+    <div class="progress-block">
+      <h3>Сессии</h3>
+      <div id="journal-table"></div>
+    </div>
+
+    <div class="progress-block">
+      <h3>Итоги</h3>
+      <div id="journal-totals" style="font-size:14px;"></div>
+    </div>
+
+    <div class="progress-block">
+      <h3>Динамика</h3>
+      <div id="journal-chart" style="display:flex; align-items:flex-end; gap:6px; height:120px; padding-top:8px;"></div>
+      <p style="color: var(--muted); font-size:11px; margin-top:8px;">Высота столбика — модуль результата сессии. Зелёный — плюс, красный — минус.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="bottom-panel">
+  <button class="panel-btn btn-cloud-save" onclick="cloudSave()">☁️ В облако</button>
+  <button class="panel-btn btn-cloud-load" onclick="cloudLoad()">☁️ Из облака</button>
+  <button class="panel-btn" onclick="hubSetupSync()">⚙️ Ключи синка</button>
+  <button class="panel-btn btn-save" onclick="saveData()">💾 Сохранить</button>
+  <button class="panel-btn btn-export" onclick="exportData()">📤 Экспорт</button>
+  <button class="panel-btn btn-import" onclick="document.getElementById('import-file').click()">📥 Импорт</button>
+</div>
+
+<input type="file" id="import-file" accept=".json" onchange="importData(event)">
+<div class="toast" id="toast">Сохранено!</div>
+
+<script>
+  // Данные: планы, ачивки, паттерны — ниже.
+  const fixedPlans = [
+    { id: 1, block: '🏭 Завод', task: 'Якорь реальности', action: 'Сделать фото расчетного листа 4-летней давности, поставить на рабочий стол.', goal: 'Напоминать себе: доход не индексируется, не надо рвать жилы за идею.' },
+    { id: 2, block: '🏭 Завод', task: 'Ритуал отсечения', action: 'Выходя с проходной, снять бейдж/спецовку, сказать вслух: «Работа осталась здесь».', goal: 'Физически и ментально переключить мозг с роли «Мастера» на роль «Человека».' },
+    { id: 3, block: '🏭 Завод', task: 'Стоп «пожарам»', action: 'При абсурде (нет материала, отменили бонусы) — зафиксировать факт письменно и отправить начальству. Перестать быть «буфером».', goal: 'Твоя задача — сообщить о проблеме, а не решать её в одиночку.' },
+    { id: 4, block: '🏭 Завод', task: 'Разрыв контракта', action: 'Принять: топ-менеджеры ездят в отпуск, а ты получаешь только оклад.', goal: 'Избавиться от иллюзий и ожидания благодарности. Ты работаешь за деньги, а не за «спасибо».' },
+    { id: 5, block: '🧱 Ментал', task: 'Правило шлюза', action: 'Дома — никаких разговоров о работе, не читать рабочие чаты без крайней нужды.', goal: 'Защитить личное время и не приносить токсины с завода домой.' },
+    { id: 6, block: '🧱 Ментал', task: 'Метод «Разгрузки»', action: 'Если мысли не лезут в голову — выписать их на бумагу, закрыть лист в столе.', goal: '«Сохранить файл» в голове, чтобы освободить оперативную память для семьи и покера.' },
+    { id: 7, block: '🧱 Ментал', task: 'Разделение контроля', action: 'Выписывать две колонки: «Что я контролирую» и «Что я не контролирую».', goal: 'Фокусироваться только на своих решениях, не тратить нервы на то, что от тебя не зависит.' },
+    { id: 8, block: '🃏 Покер', task: 'Ближайшая цель', action: 'Отыграть до чекпоинта 7 500 рук (5 000 пройдено 23.11). Не смотреть на 10 000 рук.', goal: 'Двигаться маленькими шагами.' },
+    { id: 9, block: '🃏 Покер', task: 'Формат игры', action: 'Базово 2 стола. Третий — только разовый тест с метрикой. Меньше пяти игроков за столом — выхожу со стола.', goal: 'Сохранять концентрацию и глубокое мышление.' },
+    { id: 10, block: '🃏 Покер', task: 'Главное правило', action: 'Ноль красных карточек в трекере (никаких тильт-пушей и олл-инов).', goal: 'Дисциплина важнее денег. Оцениваем себя по решениям, а не по балансу.' },
+    { id: 11, block: '🃏 Покер', task: 'Теория', action: 'Работаем только по 1-му блоку (Префлоп) из старых материалов. Постфлоп пока не трогаем.', goal: 'База важнее сложных концепций.' },
+    { id: 12, block: '🃏 Покер', task: 'Чекпоинты', action: 'Смотрим график на 2500, 5000, 7500 и 10000 руках.', goal: 'Контролировать EV и винрейт, чтобы вовремя остановиться и починить утечки.' },
+    { id: 13, block: '💰 Финансы', task: 'Школы', action: 'Категорически не платить за CatOFF/GreenLine на NL2.', goal: 'На этом этапе это выброшенные деньги и каша в голове.' },
+    { id: 14, block: '💰 Финансы', task: 'Банкролл', action: 'Растим текущие ~$42 до $100.', goal: 'Набрать 20 бай-инов для безопасного перехода на NL5.' },
+    { id: 15, block: '💰 Финансы', task: 'Беккинг', action: 'Не рассматривать «конюшни» (GreenLine и т.д.).', goal: 'Сохранить свободу и играть только на свои деньги.' },
+    { id: 16, block: '🧘 Состояние', task: 'Перед сессией', action: 'Физическая разминка (15-20 минут).', goal: 'Снять кортизол, разогнать кровь, настроиться на игру.' },
+    { id: 17, block: '🧘 Состояние', task: 'Отдых', action: 'Спать не меньше 7-8 часов.', goal: 'Мозгу нужна энергия для строительства новых нейронных связей.' },
+    { id: 18, block: '🧘 Состояние', task: 'Самопрощение', action: 'Разрешить себе ошибаться. Ты не робот.', goal: 'Ошибка в покере — это просто ошибка, а не приговор.' }
+  ];
+
+  const achievementsData = [
+    { block: '🧠 Оцениваю Я (Субъективно)', items: [
+      { id: 'a1', name: 'Разминка', xp: 20, desc: 'Сделал физическую разминку перед сессией.' },
+      { id: 'a2', name: 'Чистый разум', xp: 100, desc: 'Ни разу не открыл слоты/рулетку за сессию.' },
+      { id: 'a3', name: 'Дисциплина таймера', xp: 50, desc: 'Встал на перерыв ровно через час, как по будильнику.' },
+      { id: 'a4', name: 'Заметки', xp: 20, desc: 'Записал 1 утечку оппонента или свой спорный спот для разбора.' }
+    ]},
+    { block: '🤖 Оценивает ИИ (По логам)', items: [
+      { id: 'b1', name: 'Хладнокровие', xp: 100, desc: 'Сфолдил на ривере на рейз или чек-рейз без натса. Сет, флеш, стрит — коллил: это вэлью, а не хладнокровный фолд.' },
+      { id: 'b2', name: 'Терпение', xp: 50, desc: 'Сфолдил 10 раздач подряд мусор по чарту, когда было скучно.' },
+      { id: 'b3', name: 'Тонкое велью', xp: 50, desc: 'Ставка на ривере с рукой средней силы, где оппонент платит с худшей.' }
+    ]},
+    { block: '🟥 Штрафы', items: [
+      { id: 'p1', name: 'Тильт-пуш', xp: -100, desc: 'Сделал олл-ин/блеф на эмоциях без эквити и блокеров.' },
+      { id: 'p2', name: 'Оверплей одной пары', xp: -50, desc: 'Заплатил стек с одной парой (особенно на дровяном/спаренном борде).' },
+      { id: 'p3', name: 'Пробитый стоп-лосс', xp: -50, desc: 'Продолжил играть после того, как достиг лимита потерь.' }
+    ]}
+  ];
+
+  const defaultLessons = [
+    { id: 'l1', title: '🌪 FOMO-Тильт (Зависть к экшену)', body: '<b>Триггер:</b> Вижу, как на 2 столах одновременно оппоненты играют огромные банки с мусором.<br><p><b>Реакция:</b> Появляется скука, чувство упущенной выгоды. Хочется тоже поучаствовать.</p><p><b>Правило:</b> Они играют в рулетку, я играю в покер. Их деньги скоро будут у меня. Я просто жду свои руки. <b>Сит-аут, если чувство не уходит.</b></p>' },
+    { id: 'l2', title: '🎣 Ловушка короткого стека (Автопилот)', body: '<b>Ситуация:</b> Ривер, закрывается флеш/дро, оппонент с коротким стеком идет в олл-ин.<br><p><b>Ошибка:</b> Колл с оверпарой (QQ) из-за мысли «у него мало денег, может, он пихает мусор» + накопившаяся усталость (автопилот).</p><p><b>Правило:</b> На NL2 короткий стек на ривере при закрывшемся дро пихает <b>только натс</b>. Это не блеф. <b>Фолд.</b></p>' },
+    { id: 'l3', title: '🤓 Fancy Play Syndrome (Синдром слишком умного)', body: '<b>Ситуация:</b> У меня на ривере натс, оппонент чекает. Я делаю микробет в надежде, что он решит, что я блефую, и запушит.<br><p><b>Ошибка:</b> Усложнение игры. Попытка играть в шахматы с человеком, который играет в шашки.</p><p><b>Правило:</b> С натсом на ривере — ставь <b>50–75% банка</b>. Просто забирай его деньги. Не умничай.</p>' }
+  ];
+
+  document.addEventListener('DOMContentLoaded', () => {
+    window.switchTab = function(tabId, btnElement) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      btnElement.classList.add('active');
+      localStorage.setItem('lastActiveTab', tabId);
+    };
+
+    const lastTab = localStorage.getItem('lastActiveTab');
+    if (lastTab) {
+      const btns = document.querySelectorAll('.tab-btn');
+      btns.forEach(btn => {
+        if (btn.getAttribute('onclick').includes(lastTab)) btn.click();
+      });
+    }
+
+    // ПЛАН
+    const planContainer = document.getElementById('plan-container');
+    const doneCountEl = document.getElementById('plan-done-count');
+    const totalCountEl = document.getElementById('plan-total-count');
+    let customPlans = JSON.parse(localStorage.getItem('hub_custom_plans') || '[]');
+
+    function renderPlan() {
+      planContainer.innerHTML = '';
+      let currentBlock = '';
+      let doneCount = 0;
+      const allPlans = [...fixedPlans.map(p => ({ ...p, isFixed: true })), ...customPlans.map(p => ({ ...p, isFixed: p.isFixed }))];
+      allPlans.sort((a, b) => a.block.localeCompare(b.block));
+
+      allPlans.forEach(item => {
+        const status = parseInt(localStorage.getItem('hub_boloto_' + item.id) || '0');
+        if (status === 2) doneCount++;
+        if (item.block !== currentBlock) {
+          currentBlock = item.block;
+          const blockTitle = document.createElement('div');
+          blockTitle.className = 'plan-block-title';
+          blockTitle.textContent = currentBlock;
+          planContainer.appendChild(blockTitle);
+        }
+        const icons = ['⬜', '🔄', '✅'];
+        const el = document.createElement('div');
+        el.className = 'plan-item' + (status === 2 ? ' done' : '');
+        el.onclick = (e) => { if(e.target.tagName !== 'BUTTON') togglePlanStatus(item.id); };
+        
+        let actionButtons = item.isFixed ? '<span class="icon-lock" title="Жесткая фиксация">🔒</span>' : `<button class="btn-del-plan" onclick="deletePlan('${item.id}')" title="Удалить">✕</button>`;
+        
+        el.innerHTML = `
+          <div class="plan-status">${icons[status]}</div>
+          <div class="plan-content">
+            <div class="plan-task">${item.task}</div>
+            <div class="plan-action">${item.action}</div>
+            <div class="plan-goal">Цель: ${item.goal}</div>
+          </div>
+          ${actionButtons}
+        `;
+        planContainer.appendChild(el);
+      });
+      doneCountEl.textContent = doneCount;
+      totalCountEl.textContent = allPlans.length;
+    }
+
+    window.togglePlanStatus = function(id) {
+      let status = parseInt(localStorage.getItem('hub_boloto_' + id) || '0');
+      status = (status + 1) % 3; 
+      localStorage.setItem('hub_boloto_' + id, status);
+      renderPlan();
+    };
+
+    window.addNewPlan = function() {
+      const block = document.getElementById('plan-block').value;
+      const task = document.getElementById('plan-task').value.trim();
+      const action = document.getElementById('plan-action').value.trim();
+      const goal = document.getElementById('plan-goal').value.trim();
+      const isFixed = document.getElementById('plan-fixed').checked;
+      if (!task || !action) { showToast('⚠️ Заполни хотя бы Задачу и Действие!'); return; }
+      const newPlan = { id: 'cp_' + Date.now(), block, task, action, goal: goal || 'Без цели', isFixed };
+      customPlans.push(newPlan);
+      localStorage.setItem('hub_custom_plans', JSON.stringify(customPlans));
+      document.getElementById('plan-task').value = '';
+      document.getElementById('plan-action').value = '';
+      document.getElementById('plan-goal').value = '';
+      document.getElementById('plan-fixed').checked = false;
+      renderPlan();
+      showToast('✅ План добавлен!');
+    };
+
+    window.deletePlan = function(id) {
+      if (!confirm('Удалить этот план?')) return;
+      customPlans = customPlans.filter(p => p.id !== id);
+      localStorage.setItem('hub_custom_plans', JSON.stringify(customPlans));
+      localStorage.removeItem('hub_boloto_' + id);
+      renderPlan();
+    };
+    renderPlan(); 
+
+    // УРОКИ
+    const lessonsContainer = document.getElementById('lessons-container');
+    let lessons = JSON.parse(localStorage.getItem('hub_lessons'));
+    if (!lessons || lessons.length === 0) { lessons = defaultLessons; localStorage.setItem('hub_lessons', JSON.stringify(lessons)); }
+
+    window.renderLessons = function() {
+      lessonsContainer.innerHTML = '';
+      lessons.forEach((lesson, index) => {
+        const el = document.createElement('div');
+        el.className = 'lesson-card';
+        el.onclick = (e) => { if(e.target.tagName !== 'BUTTON') toggleLesson(el); };
+        el.innerHTML = `
+          <div class="lesson-header">
+            <span>${lesson.title}</span>
+            <div><span class="arrow" style="margin-right: 10px;">▼</span><button class="btn-del-lesson" onclick="deleteLesson(${index})" title="Удалить">✕</button></div>
+          </div>
+          <div class="lesson-body">${lesson.body}</div>
+        `;
+        lessonsContainer.appendChild(el);
+      });
+    };
+
+    window.toggleLesson = function(element) {
+      document.querySelectorAll('.lesson-card').forEach(card => { if (card !== element) card.classList.remove('open'); });
+      element.classList.toggle('open');
+    };
+
+    window.addLesson = function() {
+      const title = document.getElementById('lesson-title').value.trim();
+      const body = document.getElementById('lesson-body').value.trim();
+      if (!title || !body) { showToast('⚠️ Заполни название и текст паттерна!'); return; }
+      lessons.push({ id: 'l' + Date.now(), title, body });
+      localStorage.setItem('hub_lessons', JSON.stringify(lessons));
+      document.getElementById('lesson-title').value = '';
+      document.getElementById('lesson-body').value = '';
+      renderLessons();
+      showToast('✅ Паттерн добавлен!');
+    };
+
+    window.deleteLesson = function(index) {
+      if (!confirm('Удалить этот паттерн?')) return;
+      lessons.splice(index, 1);
+      localStorage.setItem('hub_lessons', JSON.stringify(lessons));
+      renderLessons();
+    };
+    renderLessons();
+
+    // СКРИНШОТЫ
+    const screenshotsList = document.getElementById('screenshots-list');
+    let screenshots = JSON.parse(localStorage.getItem('hub_screenshots') || '[]');
+
+    function renderScreenshots() {
+      screenshotsList.innerHTML = '';
+      screenshots.forEach((shot, index) => {
+        const el = document.createElement('div');
+        el.className = 'screenshot-item';
+        el.innerHTML = `<a href="${shot.url}" target="_blank" class="screenshot-link">📸 ${shot.title}</a><button class="screenshot-del" onclick="deleteScreenshot(${index})" title="Удалить">✕</button>`;
+        screenshotsList.appendChild(el);
+      });
+    }
+
+    window.addScreenshotURL = function() {
+      const title = document.getElementById('screenshot-title').value.trim();
+      const url = document.getElementById('screenshot-url').value.trim();
+      if (!title || !url) { showToast('⚠️ Заполни и название, и ссылку!'); return; }
+      screenshots.push({ title, url });
+      localStorage.setItem('hub_screenshots', JSON.stringify(screenshots));
+      document.getElementById('screenshot-title').value = '';
+      document.getElementById('screenshot-url').value = '';
+      renderScreenshots();
+      showToast('✅ Ссылка добавлена!');
+    };
+
+    window.addScreenshotFile = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const title = document.getElementById('screenshot-title').value.trim() || 'Загруженный скриншот';
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 600;
+          const scale = MAX_WIDTH / img.width;
+          canvas.width = MAX_WIDTH;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const base64Url = canvas.toDataURL('image/jpeg', 0.7);
+          screenshots.push({ title, url: base64Url });
+          try {
+            localStorage.setItem('hub_screenshots', JSON.stringify(screenshots));
+            renderScreenshots();
+            document.getElementById('screenshot-title').value = '';
+            showToast('✅ Файл загружен!');
+          } catch (err) { showToast('⚠️ Ошибка: память переполнена. Удали старые.'); }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    };
+
+    window.deleteScreenshot = function(index) {
+      if (!confirm('Удалить эту запись?')) return;
+      screenshots.splice(index, 1);
+      localStorage.setItem('hub_screenshots', JSON.stringify(screenshots));
+      renderScreenshots();
+    };
+    renderScreenshots();
+
+    // ССЫЛКИ
+    const customLinksList = document.getElementById('custom-links-list');
+    let customLinks = JSON.parse(localStorage.getItem('hub_custom_links') || '[]');
+
+    window.renderCustomLinks = function() {
+      customLinksList.innerHTML = '';
+      if (customLinks.length === 0) { customLinksList.innerHTML = '<div style="color: var(--muted); font-size: 13px; text-align: center; padding: 10px;">Пока нет добавленных материалов.</div>'; return; }
+      customLinks.forEach((link, index) => {
+        const el = document.createElement('div');
+        el.className = 'screenshot-item';
+        el.innerHTML = `<a href="${link.url}" target="_blank" class="screenshot-link">🔗 ${link.title}</a><button class="screenshot-del" onclick="deleteCustomLink(${index})" title="Удалить">✕</button>`;
+        customLinksList.appendChild(el);
+      });
+    };
+
+    window.addCustomLink = function() {
+      const title = document.getElementById('custom-link-title').value.trim();
+      let url = document.getElementById('custom-link-url').value.trim();
+      if (!title || !url) { showToast('⚠️ Заполни название и ссылку!'); return; }
+      if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
+      customLinks.push({ title, url });
+      localStorage.setItem('hub_custom_links', JSON.stringify(customLinks));
+      document.getElementById('custom-link-title').value = '';
+      document.getElementById('custom-link-url').value = '';
+      renderCustomLinks();
+      showToast('✅ Материал добавлен!');
+    };
+
+    window.deleteCustomLink = function(index) {
+      if (!confirm('Удалить эту ссылку?')) return;
+      customLinks.splice(index, 1);
+      localStorage.setItem('hub_custom_links', JSON.stringify(customLinks));
+      renderCustomLinks();
+    };
+    renderCustomLinks();
+
+    // АЧИВКИ
+    const achievContainer = document.getElementById('achiev-container');
+    const xpTotalEl = document.getElementById('achiev-total-xp');
+    const gradeEl = document.getElementById('achiev-grade');
+    const historyContainer = document.getElementById('history-container');
+    let history = JSON.parse(localStorage.getItem('hub_history') || '[]');
+
+    function renderAchievements() {
+      achievContainer.innerHTML = '';
+      let totalXP = 0;
+      achievementsData.forEach(group => {
+        const blockTitle = document.createElement('div');
+        blockTitle.className = 'achiev-block-title';
+        blockTitle.textContent = group.block;
+        achievContainer.appendChild(blockTitle);
+        group.items.forEach(item => {
+          const isDone = localStorage.getItem('hub_achiev_' + item.id) === 'true';
+          if (isDone) totalXP += item.xp;
+          const isPenalty = item.xp < 0;
+          const el = document.createElement('div');
+          el.className = `achiev-item ${isDone ? 'done' : ''} ${isPenalty ? 'penalty' : ''}`;
+          el.onclick = () => toggleAchiev(item.id);
+          el.innerHTML = `
+            <div class="achiev-checkbox">${isDone ? (isPenalty ? '✗' : '✓') : ''}</div>
+            <div class="achiev-meta">
+              <div class="achiev-top"><span class="achiev-name">${item.name}</span><span class="achiev-xp-val">${isPenalty ? '' : '+'}${item.xp} XP</span></div>
+              <div class="achiev-desc">${item.desc}</div>
+            </div>
+          `;
+          achievContainer.appendChild(el);
+        });
+      });
+      xpTotalEl.textContent = `${totalXP} XP`;
+      if (totalXP < 0) xpTotalEl.classList.add('negative'); else xpTotalEl.classList.remove('negative');
+      let grade = "Сессия-разминка";
+      if (totalXP < 0) grade = "☠️ Сессия-катастрофа";
+      else if (totalXP >= 350) grade = "👑 Сессия-мечта. Ты — хладнокровный робот";
+      else if (totalXP >= 250) grade = "🔥 Отличная сессия!";
+      else if (totalXP >= 150) grade = "Хорошая рабочая сессия";
+      gradeEl.textContent = grade;
+    }
+
+    window.toggleAchiev = function(id) {
+      const current = localStorage.getItem('hub_achiev_' + id) === 'true';
+      localStorage.setItem('hub_achiev_' + id, !current);
+      renderAchievements();
+    };
+
+    window.saveSession = function() {
+      const xp = parseInt(xpTotalEl.textContent) || 0;
+      const grade = gradeEl.textContent;
+      const date = new Date().toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const sessionData = { date, xp, grade };
+      history.unshift(sessionData);
+      localStorage.setItem('hub_history', JSON.stringify(history));
+      renderHistory();
+      showToast('✅ Сессия сохранена в историю!');
+      achievementsData.forEach(group => { group.items.forEach(item => localStorage.setItem('hub_achiev_' + item.id, 'false')); });
+      renderAchievements();
+    };
+
+    function renderHistory() {
+      historyContainer.innerHTML = '';
+      if (history.length === 0) { historyContainer.innerHTML = '<div style="color: var(--muted); font-size: 13px; text-align: center; padding: 10px;">Пока пусто.</div>'; return; }
+      history.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'history-item';
+        el.innerHTML = `<div class="date">${item.date}</div><div class="xp">${item.xp} XP</div>`;
+        historyContainer.appendChild(el);
+      });
+    }
+    renderAchievements();
+    renderHistory();
+
+    // ПРОГРЕСС
+    const bankrollInput = document.getElementById('bankroll-input');
+    const bankrollFill = document.getElementById('bankroll-fill');
+    const handsInput = document.getElementById('hands-input');
+    const handsFill = document.getElementById('hands-fill');
+    const handsCurrent = document.getElementById('hands-current');
+    const handsRemaining = document.getElementById('hands-remaining');
+    const targetBankrollInput = document.getElementById('target-bankroll-input');
+    const targetHandsInput = document.getElementById('target-hands-input');
+
+    function updateProgressUI() {
+      const targetBankroll = parseFloat(localStorage.getItem('hub_target_bankroll') || '100');
+      const targetHands = parseInt(localStorage.getItem('hub_target_hands') || '5000');
+      targetBankrollInput.value = targetBankroll;
+      targetHandsInput.value = targetHands;
+      const bankroll = parseFloat(localStorage.getItem('hub_bankroll') || '0');
+      bankrollInput.value = bankroll > 0 ? bankroll : '';
+      let bankrollPct = (bankroll / targetBankroll) * 100;
+      if (bankrollPct > 100) bankrollPct = 100; if (bankrollPct < 0) bankrollPct = 0;
+      bankrollFill.style.width = bankrollPct + '%';
+      const hands = parseInt(localStorage.getItem('hub_hands') || '0');
+      handsInput.value = hands > 0 ? hands : '';
+      let handsPct = (hands / targetHands) * 100;
+      if (handsPct > 100) handsPct = 100; if (handsPct < 0) handsPct = 0;
+      handsFill.style.width = handsPct + '%';
+      handsCurrent.textContent = hands;
+      let remaining = targetHands - hands; if (remaining < 0) remaining = 0;
+      handsRemaining.textContent = remaining;
+    }
+
+    bankrollInput.addEventListener('input', (e) => { localStorage.setItem('hub_bankroll', e.target.value || 0); updateProgressUI(); });
+    handsInput.addEventListener('input', (e) => { localStorage.setItem('hub_hands', e.target.value || 0); updateProgressUI(); });
+    targetBankrollInput.addEventListener('input', (e) => { localStorage.setItem('hub_target_bankroll', e.target.value || 100); updateProgressUI(); });
+    targetHandsInput.addEventListener('input', (e) => { localStorage.setItem('hub_target_hands', e.target.value || 2500); updateProgressUI(); });
+    updateProgressUI();
+
+    // ЧЕК-ЛИСТ
+    const checkboxes = document.querySelectorAll('.save-trigger');
+    checkboxes.forEach((box, index) => {
+      const saved = localStorage.getItem('hub_checkbox_' + index);
+      if (saved === 'true') box.checked = true;
+      box.addEventListener('change', () => { localStorage.setItem('hub_checkbox_' + index, box.checked); });
+    });
+
+    // ТОСТЫ И ЭКСПОРТ/ИМПОРТ
+    window.showToast = function(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    };
+
+    window.saveData = function() { showToast('✅ Все данные сохранены локально'); };
+
+    window.exportData = function() {
+      const data = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('hub_') || key === 'lastActiveTab') data[key] = localStorage.getItem(key);
+      }
+      if (Object.keys(data).length === 0) { showToast('⚠️ Нет данных для экспорта'); return; }
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const date = new Date();
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+      a.href = url;
+      a.download = `poker_hub_backup_${dateStr}.json`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('📤 Экспорт готов');
+    };
+
+    window.importData = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          Object.keys(data).forEach(key => { localStorage.setItem(key, data[key]); });
+          showToast('📥 Данные загружены! Обновление...');
+          setTimeout(() => { location.reload(); }, 1000);
+        } catch (err) { alert('Ошибка импорта: неверный формат файла.'); } 
+        finally { event.target.value = ''; }
+      };
+      reader.readAsText(file);
+    };
+
+    // --- ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ (JSONBin.io) ---
+    const HUB_SYNC_KEY = 'hub_sync_config';
+    function hubSyncCfg() {
+      try { return JSON.parse(localStorage.getItem(HUB_SYNC_KEY) || '{}'); } catch(e) { return {}; }
+    }
+
+    window.hubSetupSync = function() {
+      const cur = hubSyncCfg();
+      const binId = prompt('Bin ID из JSONBin.io:', cur.binId || '');
+      if (binId === null) return;
+      const apiKey = prompt('X-Master-Key из JSONBin.io:', cur.apiKey || '');
+      if (apiKey === null) return;
+      localStorage.setItem(HUB_SYNC_KEY, JSON.stringify({ binId: binId.trim(), apiKey: apiKey.trim() }));
+      showToast('✅ Ключи сохранены. Жми «В облако».');
+    };
+
+    window.cloudSave = async function() {
+      const cfg = hubSyncCfg();
+      if (!cfg.binId || !cfg.apiKey) { window.hubSetupSync(); return; }
+      const data = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key === HUB_SYNC_KEY) continue;
+        if (key.startsWith('hub_') || key === 'lastActiveTab') data[key] = localStorage.getItem(key);
+      }
+      try {
+        const shots = JSON.parse(data['hub_screenshots'] || '[]');
+        if (Array.isArray(shots)) data['hub_screenshots'] = JSON.stringify(shots.filter(s => !String(s.url || '').startsWith('data:')));
+      } catch(e) {}
+      showToast('⏳ Сохранение в облако...');
+      try {
+        const res = await fetch('https://api.jsonbin.io/v3/b/' + cfg.binId, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'X-Master-Key': cfg.apiKey },
+          body: JSON.stringify({ savedAt: new Date().toISOString(), data: data })
+        });
+        if (res.ok) showToast('✅ Сохранено в облако!');
+        else showToast('❌ JSONBin: ошибка ' + res.status + ' (Bin ID или ключ)');
+      } catch(e) { showToast('❌ Ошибка сети'); }
+    };
+
+    window.cloudLoad = async function() {
+      const cfg = hubSyncCfg();
+      if (!cfg.binId || !cfg.apiKey) { window.hubSetupSync(); return; }
+      if (!confirm('Загрузить из облака? Локальные данные будут перезаписаны (картинки-скриншоты останутся).')) return;
+      showToast('⏳ Загрузка из облака...');
+      try {
+        const res = await fetch('https://api.jsonbin.io/v3/b/' + cfg.binId + '/latest', { headers: { 'X-Master-Key': cfg.apiKey } });
+        if (!res.ok) { showToast('❌ JSONBin: ошибка ' + res.status); return; }
+        const json = await res.json();
+        const data = (json.record && json.record.data) || {};
+        if (!data || Object.keys(data).length === 0) { showToast('⚠️ В облаке пусто'); return; }
+        Object.keys(data).forEach(key => {
+          if (key === 'hub_screenshots') {
+            let localShots = [];
+            try { localShots = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
+            if (Array.isArray(localShots) && localShots.some(s => String(s.url || '').startsWith('data:'))) return;
+          }
+          localStorage.setItem(key, data[key]);
+        });
+        showToast('✅ Данные загружены! Перезагрузка...');
+        setTimeout(() => location.reload(), 1000);
+      } catch(e) { showToast('❌ Ошибка сети'); }
+    };
+  });
+</script>
+
+<script>
+/* ЖУРНАЛ СЕССИЙ: хранится в localStorage как hub_journal, синкается в облако вместе с остальным. */
+(function () {
+  const KEY = 'hub_journal';
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; }
+  }
+  function save(list) {
+    localStorage.setItem(KEY, JSON.stringify(list));
+  }
+
+  function fmt(v, d) {
+    const n = Number(v) || 0;
+    return (n >= 0 ? '+' : '−') + Math.abs(n).toFixed(d === undefined ? 2 : d);
+  }
+
+  function render() {
+    const list = load();
+    const box = document.getElementById('journal-table');
+    const totals = document.getElementById('journal-totals');
+    const chart = document.getElementById('journal-chart');
+    if (!box) return;
+
+    if (!list.length) {
+      box.innerHTML = '<p style="color: var(--muted);">Пока пусто. Добавь первую сессию из анализатора.</p>';
+      if (totals) totals.innerHTML = '';
+      if (chart) chart.innerHTML = '';
+      return;
+    }
+
+    const rows = list.map((e, i) => `<tr>
+      <td>${e.date || ''}</td>
+      <td style="text-align:right;">${e.hands || 0}</td>
+      <td style="text-align:right; color:${(Number(e.net) || 0) >= 0 ? 'var(--green, #10b981)' : 'var(--red, #ef4444)'};">${fmt(e.net)}</td>
+      <td style="text-align:right;">$${(Number(e.rake) || 0).toFixed(2)}</td>
+      <td style="text-align:right;">${fmt(e.preRake)}</td>
+      <td style="text-align:right;">${e.noGoal === undefined || e.noGoal === '' ? '—' : e.noGoal}</td>
+      <td style="text-align:right;">${e.state || '—'}</td>
+      <td>${(e.note || '').replace(/</g, '&lt;')}</td>
+      <td><button class="panel-btn" style="padding:2px 8px; font-size:11px;" onclick="journalDelete(${i})">×</button></td>
+    </tr>`).join('');
+
+    box.innerHTML = `<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:13px;">
+      <thead><tr style="color: var(--muted); font-size:12px;">
+        <th style="text-align:left; padding:6px;">Дата</th>
+        <th style="text-align:right;">Руки</th>
+        <th style="text-align:right;">Net</th>
+        <th style="text-align:right;">Рейк</th>
+        <th style="text-align:right;">До рейка</th>
+        <th style="text-align:right;">Без цели</th>
+        <th style="text-align:right;">Сост.</th>
+        <th style="text-align:left;">Заметка</th>
+        <th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+
+    const hands = list.reduce((a, e) => a + (Number(e.hands) || 0), 0);
+    const net = list.reduce((a, e) => a + (Number(e.net) || 0), 0);
+    const rake = list.reduce((a, e) => a + (Number(e.rake) || 0), 0);
+    const bets = list.reduce((a, e) => a + (Number(e.bets) || 0), 0);
+    const bad = list.reduce((a, e) => a + (Number(e.noGoal) || 0), 0);
+    const badKnown = list.filter(e => e.noGoal !== undefined && e.noGoal !== '').length;
+    if (totals) {
+      totals.innerHTML = `Сессий: <b>${list.length}</b> · рук: <b>${hands}</b> · net: <b>${fmt(net)}</b> · рейк: <b>$${rake.toFixed(2)}</b>`
+        + (hands ? ` · net на 100 рук: <b>${(net / (hands / 100)).toFixed(2)}</b>` : '')
+        + (badKnown ? ` · ставок без цели: <b>${bad}</b> за ${badKnown} сессий` : '');
+    }
+
+    if (chart) {
+      const maxAbs = Math.max(...list.map(e => Math.abs(Number(e.net) || 0)), 0.01);
+      chart.innerHTML = list.map(e => {
+        const v = Number(e.net) || 0;
+        const h = Math.max(4, Math.round(Math.abs(v) / maxAbs * 100));
+        const color = v >= 0 ? '#10b981' : '#ef4444';
+        return `<div title="${e.date}: ${fmt(v)}" style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; height:100%;">
+          <div style="height:${h}%; background:${color}; border-radius:3px 3px 0 0;"></div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  window.journalAdd = function () {
+    const raw = (document.getElementById('journal-json').value || '').trim();
+    if (!raw) { showToast('❌ Вставь строку из анализатора'); return; }
+    let obj;
+    try { obj = JSON.parse(raw); } catch (e) { showToast('❌ Это не JSON'); return; }
+    const list = load();
+    obj.state = document.getElementById('journal-state').value || '';
+    obj.noGoal = document.getElementById('journal-nogoal').value === '' ? '' : Number(document.getElementById('journal-nogoal').value);
+    obj.note = document.getElementById('journal-note').value || '';
+    list.push(obj);
+    save(list);
+    document.getElementById('journal-json').value = '';
+    document.getElementById('journal-state').value = '';
+    document.getElementById('journal-nogoal').value = '';
+    document.getElementById('journal-note').value = '';
+    render();
+    showToast('✅ Сессия добавлена');
+  };
+
+  window.journalDelete = function (i) {
+    const list = load();
+    if (!confirm('Удалить сессию ' + (list[i] && list[i].date) + '?')) return;
+    list.splice(i, 1);
+    save(list);
+    render();
+  };
+
+  window.journalClear = function () {
+    document.getElementById('journal-json').value = '';
+  };
+
+  document.addEventListener('DOMContentLoaded', render);
+  if (document.readyState !== 'loading') render();
+})();
+</script>
+<script>
+/* АВТО-ПРОГРЕСС: при открытии хаба подтягивает банкролл, руки и цели из JSONBin. */
+(function () {
+  if (document.body.dataset.autoProgress === 'off') return;
+  var cfg = null;
+  try { cfg = JSON.parse(localStorage.getItem('hub_sync_config') || '{}'); } catch (e) { cfg = null; }
+  if (!cfg || !cfg.binId || !cfg.apiKey) return;
+
+  var KEYS = ['hub_bankroll', 'hub_hands', 'hub_target_bankroll', 'hub_target_hands'];
+  var INPUTS = {
+    hub_bankroll: 'bankroll-input',
+    hub_hands: 'hands-input',
+    hub_target_bankroll: 'target-bankroll-input',
+    hub_target_hands: 'target-hands-input'
+  };
+
+  fetch('https://api.jsonbin.io/v3/b/' + cfg.binId + '/latest', {
+    headers: { 'X-Master-Key': cfg.apiKey }
+  }).then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (json) {
+      if (!json || !json.record || !json.record.data) return;
+      var d = json.record.data;
+      var changed = false;
+      KEYS.forEach(function (k) {
+        if (d[k] === undefined || d[k] === null) return;
+        var val = String(d[k]);
+        if (localStorage.getItem(k) !== val) { localStorage.setItem(k, val); changed = true; }
+        var el = document.getElementById(INPUTS[k]);
+        if (el && el.value !== val) {
+          el.value = val;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+      var stamp = json.record.savedAt || '';
+      var box = document.getElementById('auto-progress-note');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'auto-progress-note';
+        box.style.cssText = 'margin-top:12px;font-size:12px;color:#8b98ad;';
+        var anchor = document.querySelector('#tab-progress .progress-block:last-child');
+        if (anchor && anchor.parentNode) anchor.parentNode.appendChild(box);
+      }
+      var when = stamp ? new Date(stamp).toLocaleString('ru-RU') : '';
+      box.textContent = '☁️ Из облака: ' + (when || 'нет отметки времени') + (changed ? '' : ' (без изменений)');
+    })
+    .catch(function () { /* молча: нет сети или ключей — работаем на локальных данных */ });
+})();
+</script>
+</body>
+</html>
