@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Комбинаторика в покере — Шпаргалка (A4)</title>
+<style>
+  /* Базовые стили для экрана (имитация листа А4) */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
+    background: #cbd5e1; /* Серый фон вокруг листа */
+    color: #1f2937; 
+    line-height: 1.4; 
+    padding: 20px 10px; 
+    display: flex;
+    justify-content: center;
+  }
+  
+  /* Лист А4 */
+  .a4-page { 
+    width: 210mm; 
+    min-height: 297mm; 
+    background: #ffffff; 
+    padding: 15mm 15mm; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15); 
+    border-radius: 2px;
+    position: relative;
+  }
+
+  /* Кнопка печати */
+  .print-btn { 
+    position: absolute; 
+    top: -40px; 
+    right: 0; 
+    padding: 8px 16px; 
+    background: #3b82f6; 
+    color: white; 
+    border: none; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    font-weight: 600; 
+    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: background 0.2s;
+  }
+  .print-btn:hover { background: #2563eb; }
+
+  /* Стили контента */
+  h1 { font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 4px; text-align: center; }
+  .sub { font-size: 13px; color: #64748b; margin-bottom: 20px; text-align: center; }
+  
+  section { margin-bottom: 20px; page-break-inside: avoid; }
+  h2 { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 6px 10px; border-radius: 6px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .base h2 { background: #e0f2fe; color: #0369a1; }
+  .blocker h2 { background: #fef3c7; color: #92400e; }
+  .examples h2 { background: #dcfce7; color: #166534; }
+  .training h2 { background: #f3e8ff; color: #6b21a8; }
+
+  table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 13px; }
+  th, td { padding: 6px 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+  th { background: #f8fafc; font-weight: 700; color: #475569; }
+  .num { font-weight: 700; color: #0f172a; font-family: "Consolas", monospace; }
+  
+  .callout { background: #f8fafc; border-left: 4px solid #3b82f6; padding: 8px 12px; border-radius: 4px; font-size: 13px; margin-bottom: 12px; }
+  .callout-red { background: #fef2f2; border-left: 4px solid #ef4444; padding: 8px 12px; border-radius: 4px; font-size: 13px; margin-bottom: 12px; }
+  
+  .card { font-family: "Consolas", monospace; background: #f1f5f9; padding: 2px 5px; border-radius: 4px; font-weight: 600; color: #334155; font-size: 12px;}
+  
+  /* ИСПРАВЛЕННЫЕ СПИСКИ */
+  ul { 
+    list-style-type: disc; 
+    padding-left: 20px; 
+    margin-top: 8px;
+  }
+  li { 
+    margin-bottom: 8px; 
+    font-size: 13px; 
+    line-height: 1.4;
+  }
+
+  .footer { margin-top: 20px; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #64748b; text-align: center; }
+
+  .example-box { background:#f0fdf4; padding:12px; border-radius:6px; margin-bottom:10px; border:1px solid #bbf7d0; page-break-inside: avoid;}
+  .example-title { font-weight:600; margin-bottom: 4px; font-size: 13px; }
+  .example-text { font-size: 13px; margin-bottom: 4px; }
+  .example-answer { font-size: 13px; color:#166534; font-weight:600; }
+
+  /* Настройки для печати (А4) */
+  @media print {
+    @page {
+      size: A4;
+      margin: 8mm 10mm; /* Уменьшаем поля для печати */
+    }
+    body {
+      background: white;
+      padding: 0;
+      display: block;
+    }
+    .a4-page {
+      width: 100%;
+      min-height: auto;
+      padding: 0;
+      box-shadow: none;
+    }
+    .print-btn {
+      display: none; /* Скрываем кнопку при печати */
+    }
+    /* Принудительно сохраняем цвета фона при печати */
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    section { margin-bottom: 12px; }
+    h2 { margin-bottom: 8px; }
+    table { margin-bottom: 8px; }
+    th, td { padding: 4px 8px; }
+  }
+
+  /* Адаптация под мобильные экраны */
+  @media screen and (max-width: 800px) {
+    .a4-page {
+      width: 100%;
+      min-height: auto;
+      padding: 20px;
+    }
+    .print-btn {
+      position: static;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="a4-page">
+  <button class="print-btn" onclick="window.print()">🖨️ Распечатать / Сохранить в PDF</button>
+
+  <h1>Математика комбинаций</h1>
+  <div class="sub">Как быстро считать руки оппонента за столом</div>
+
+  <!-- БАЗОВЫЕ ЧИСЛА -->
+  <section class="base">
+    <h2>📌 Шаг 1: Базовые числа</h2>
+    <p style="font-size:13px; margin-bottom:8px;">Запомни эти цифры. Это фундамент, с которым мы будем работать.</p>
+    <table>
+      <tr><th>Тип руки</th><th>Пример</th><th>Комбинаций</th></tr>
+      <tr><td>Карманная пара</td><td><span class="card">AA</span>, <span class="card">99</span></td><td class="num">6</td></tr>
+      <tr><td>Одномастная (s)</td><td><span class="card">AKs</span>, <span class="card">QJs</span></td><td class="num">4</td></tr>
+      <tr><td>Разномастная (o)</td><td><span class="card">AKo</span>, <span class="card">QJo</span></td><td class="num">12</td></tr>
+      <tr><td>Любая непарная (s+o)</td><td><span class="card">AK</span>, <span class="card">QJ</span></td><td class="num">16</td></tr>
+    </table>
+  </section>
+
+  <!-- ПРАВИЛО БЛОКЕРОВ -->
+  <section class="blocker">
+    <h2>✂️ Шаг 2: Правило «Мертвых карт» (Блокеры)</h2>
+    <div class="callout">
+      <strong>Главное правило:</strong> Мы всегда вычитаем карты, которые уже видим на столе или у себя на руках. 
+    </div>
+
+    <h3 style="font-size:13px; margin: 12px 0 6px; color:#92400e;">Для карманных пар:</h3>
+    <table>
+      <tr><th>Сколько карт ранга видно</th><th>Сколько комбинаций осталось</th></tr>
+      <tr><td>0 карт (все в колоде)</td><td class="num">6</td></tr>
+      <tr><td>1 карта (на борде или у тебя)</td><td class="num" style="color:#d97706;">3</td></tr>
+      <tr><td>2 карты (например, одна у тебя, одна на борде)</td><td class="num" style="color:#dc2626;">1</td></tr>
+      <tr><td>3 карты (например, 1 у тебя, 2 на борде)</td><td class="num" style="color:#dc2626;">0</td></tr>
+    </table>
+    
+    <div class="callout-red" style="margin-top:12px;">
+      <strong>Внимание! (Частая ошибка):</strong> Если на борде лежит <b>ОДНА</b> карта ранга, и у тебя <b>НЕТ</b> карты этого ранга — у оппонента <b>3 комбинации</b> сета. Не 1! Одна комбинация остается только тогда, когда на виду <b>ДВЕ</b> карты этого ранга.
+    </div>
+  </section>
+
+  <!-- ПРИМЕРЫ -->
+  <section class="examples">
+    <h2>🧠 Шаг 3: Разбор на примерах</h2>
+    
+    <div class="example-box">
+      <p class="example-title">Пример 1 (Раздача из сессии):</p>
+      <p class="example-text">Борд: <span class="card">[K♥ 8♦ 2♣]</span><br>Твоя рука: <span class="card">[K♠ Q♠]</span><br><strong>Вопрос:</strong> Сколько у оппонента сетов KK?</p>
+      <p class="example-answer">Ответ: 1 комбо.<br><span style="font-weight:400; color:#333;">(Видно ДВА Короля: один на флопе, один у тебя. Осталось 1 комбо в колоде).</span></p>
+    </div>
+
+    <div class="example-box">
+      <p class="example-title">Пример 2 (Тренировка):</p>
+      <p class="example-text">Борд: <span class="card">[9♥ 8♦ 2♣]</span><br>Твоя рука: <span class="card">[9♠ 9♣]</span><br><strong>Вопрос:</strong> Сколько у оппонента сетов 99 и 88?</p>
+      <p class="example-answer">Ответ: Сет 99 = 0 комбо. Сет 88 = 3 комбо.<br><span style="font-weight:400; color:#333;">(Девяток видно 3 штуки (твои 2 + 1 на борде) → 0. Восьмерка на борде одна → 3 комбо).</span></p>
+    </div>
+
+    <div class="example-box">
+      <p class="example-title">Пример 3 (Непарные руки):</p>
+      <p class="example-text">Борд: <span class="card">[A♣ J♦ 7♥]</span><br>Твоя рука: <span class="card">[A♦ K♠]</span><br><strong>Вопрос:</strong> Сколько у оппонента AJ?</p>
+      <p class="example-answer">Ответ: 8 комбо.<br><span style="font-weight:400; color:#333;">(Базово AJ это 16 комбо. Но один Туз на борде, один у тебя. Значит, у оппа только 2 Туза. 2 Туза * 4 Валета = 8 комбо).</span></p>
+    </div>
+  </section>
+
+  <!-- ТРЕНИРОВКА (ИСПРАВЛЕННЫЙ БЛОК) -->
+  <section class="training">
+    <h2>⚡ Как тренировать</h2>
+    <ul>
+      <li><strong>Правило «3 секунд»:</strong> Перед сложным коллом на ривере просто задай себе вопрос: <em>«Сколько у него комбо, которые меня бьют?»</em> Даже если не посчитаешь точно, это собьет эмоциональный порыв.</li>
+      <li><strong>Фокус на главном:</strong> Не считай всё подряд. Считай только сеты, стриты, флеши и топ-пары. Остальное (мусор, блефы) — это фон.</li>
+      <li><strong>Используй тренажеры:</strong> Зайди на сайт <b>PokerMath.org</b> (раздел Combinatorics). Там можно ввести свои карты и карты борда, и он покажет точное количество комбо у оппонента. Сверяйся с ним после сессии.</li>
+      <li><strong>Разбор раздач:</strong> Когда скидываешь мне раздачу, всегда пробуй сначала сам посчитать комбинации рук, которые тебя бьют, а потом пиши ответ. Я проверю.</li>
+    </ul>
+  </section>
+
+  <div class="footer">
+    Считаешь комбо — контролируешь страх. Оценка по диапазонам, а не по шоудауну.
+  </div>
+
+</div>
+
+</body>
+</html>
