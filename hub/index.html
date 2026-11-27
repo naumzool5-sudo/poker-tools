@@ -117,6 +117,15 @@
   .history-item .xp { font-weight: bold; color: var(--gold); }
 
   /* Прогресс */
+
+      .journal-list { display: flex; flex-direction: column; gap: 10px; }
+      .journal-card { background: var(--bg, #0b1324); border: 1px solid var(--border, #24304d); border-radius: 10px; padding: 10px 12px; }
+      .jc-head { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; font-size: 13px; }
+      .jc-head b { font-size: 14px; margin-right: 4px; }
+      .jc-num { color: var(--muted, #8b98ad); font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .jc-net { font-weight: 700; font-variant-numeric: tabular-nums; }
+      .jc-note { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border, #24304d); color: #cbd5e1; font-size: 13px; line-height: 1.5; }
+      .jc-del { margin-left: auto; }
   .progress-block { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
   .progress-block h3 { font-size: 16px; margin-bottom: 15px; color: var(--text); display: flex; align-items: center; gap: 8px;}
   .input-group { margin-bottom: 15px; }
@@ -971,31 +980,22 @@
       return;
     }
 
-    const rows = list.map((e, i) => `<tr>
-      <td>${e.date || ''}</td>
-      <td style="text-align:right;">${e.hands || 0}</td>
-      <td style="text-align:right; color:${(Number(e.net) || 0) >= 0 ? 'var(--green, #10b981)' : 'var(--red, #ef4444)'};">${fmt(e.net)}</td>
-      <td style="text-align:right;">$${(Number(e.rake) || 0).toFixed(2)}</td>
-      <td style="text-align:right;">${fmt(e.preRake)}</td>
-      <td style="text-align:right;">${e.noGoal === undefined || e.noGoal === '' ? '—' : e.noGoal}</td>
-      <td style="text-align:right;">${e.state || '—'}</td>
-      <td>${(e.note || '').replace(/</g, '&lt;')}</td>
-      <td><button class="panel-btn" style="padding:2px 8px; font-size:11px;" onclick="journalDelete(${i})">×</button></td>
-    </tr>`).join('');
+    const rows = list.map((e, i) => `
+      <div class="journal-card">
+        <div class="jc-head">
+          <b>${e.date || ''}</b>
+          <span class="jc-num">${e.hands || 0} рук</span>
+          <span class="jc-net" style="color:${(Number(e.net) || 0) >= 0 ? '#10b981' : '#ef4444'}">${fmt(e.net)}</span>
+          <span class="jc-num">рейк $${(Number(e.rake) || 0).toFixed(2)}</span>
+          <span class="jc-num">до рейка ${fmt(e.preRake)}</span>
+          <span class="jc-num">без цели: ${e.noGoal === undefined || e.noGoal === '' ? '—' : e.noGoal}</span>
+          <span class="jc-num">состояние: ${e.state || '—'}</span>
+          <button class="panel-btn jc-del" style="padding:2px 8px; font-size:11px;" onclick="journalDelete(${i})">×</button>
+        </div>
+        ${e.note ? `<div class="jc-note">${(e.note || '').replace(/</g, '&lt;')}</div>` : ''}
+      </div>`).join('');
 
-    box.innerHTML = `<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:13px;">
-      <thead><tr style="color: var(--muted); font-size:12px;">
-        <th style="text-align:left; padding:6px;">Дата</th>
-        <th style="text-align:right;">Руки</th>
-        <th style="text-align:right;">Net</th>
-        <th style="text-align:right;">Рейк</th>
-        <th style="text-align:right;">До рейка</th>
-        <th style="text-align:right;">Без цели</th>
-        <th style="text-align:right;">Сост.</th>
-        <th style="text-align:left;">Заметка</th>
-        <th></th>
-      </tr></thead>
-      <tbody>${rows}</tbody></table></div>`;
+    box.innerHTML = `<div class="journal-list">${rows}</div>`;
 
     const hands = list.reduce((a, e) => a + (Number(e.hands) || 0), 0);
     const net = list.reduce((a, e) => a + (Number(e.net) || 0), 0);
