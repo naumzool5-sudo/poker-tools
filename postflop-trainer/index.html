@@ -419,7 +419,7 @@ function renderSpotList() {
     const current = i === idx;
     return `<button class="spot-row${current ? " current" : ""}" data-i="${i}">
         <b>${i + 1}.</b>
-        <span>${s.id}</span>
+        <span>${s.id}${s.correct ? "" : " · без эталона"}</span>
         <span style="color:var(--muted);">${s.street} · ${s.board} · ${s.hole} · ${s.position}</span>
         ${done ? '<span style="margin-left:auto; color:#10b981; font-weight:700;">✓</span>' : ""}
       </button>`;
@@ -490,7 +490,8 @@ function check() {
   const plan = document.getElementById("plan").value;
   const v = document.getElementById("verdict");
 
-  const actOk = selected === s.correct;
+  const hasCorrect = !!(s.correct && s.correct.trim());
+  const actOk = hasCorrect ? (selected === s.correct) : null;
   const gOk = goalIsNamed(goal);
   const pOk = planIsNamed(plan);
 
@@ -503,7 +504,7 @@ function check() {
 
   v.innerHTML = `
     <div style="margin-bottom:10px;">
-      <span class="${actOk ? 'ok' : 'no'}">${actOk ? '✅ действие верное' : '❌ действие: эталон — ' + s.correct}</span>
+      <span class="${actOk === null ? 'mid' : (actOk ? 'ok' : 'no')}">${actOk === null ? '⚠️ эталон не задан — действие не оцениваю' : (actOk ? '✅ действие верное' : '❌ действие: эталон — ' + s.correct)}</span>
       <span style="color:var(--muted);"> · </span>
       <span class="${gOk ? 'ok' : 'mid'}">${gOk ? '✅ цель названа' : '⚠️ цель не названа'}</span>
       <span style="color:var(--muted);"> · </span>
@@ -783,9 +784,9 @@ function initAddPanel() {
   document.getElementById("add-save").addEventListener("click", () => {
     if (!parsedSpot) return;
     const options = document.getElementById("add-options").value.split(",").map(x => x.trim()).filter(Boolean);
-    const correct = document.getElementById("add-correct").value.trim();
+    let correct = document.getElementById("add-correct").value.trim();
     if (!options.length) return alert("Нужен хотя бы один вариант действия");
-    if (!options.includes(correct)) return alert("Эталон должен быть одним из вариантов");
+    if (correct && !options.includes(correct)) options.push(correct);
 
     const spot = {
       id: parsedSpot.id,
