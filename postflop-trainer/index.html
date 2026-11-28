@@ -35,6 +35,7 @@
   .badge { min-width:42px; padding:4px 8px; border-radius:999px; border:1px solid var(--line);
            background:#1d2740; color:#c9d4ea; font-size:11px; font-weight:700; text-align:center; }
   .badge.hero { background:#1d4ed8; border-color:#3b82f6; color:#fff; }
+  .badge.villain { background:#7f1d1d; border-color:#ef4444; color:#fecaca; }
   .dealer { position:absolute; width:17px; height:17px; border-radius:50%; background:#e5e7eb; color:#111;
             font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center; }
 
@@ -235,6 +236,7 @@ const RING = ["BTN", "SB", "BB", "UTG", "MP", "CO"];
 const BUILTIN_SPOTS = [
  {
   "id": "HD3156966835",
+  "villains": ["MP"],
   "street": "Тёрн",
   "board": "Js 7c Qs 8c",
   "hole": "Kc Kh",
@@ -255,6 +257,7 @@ const BUILTIN_SPOTS = [
  },
  {
   "id": "HD3156921463",
+  "villains": ["BTN"],
   "street": "Тёрн",
   "board": "3c 4s Qd Kh",
   "hole": "2d Kd",
@@ -275,6 +278,7 @@ const BUILTIN_SPOTS = [
  },
  {
   "id": "HD3156989202",
+  "villains": ["BB"],
   "street": "Флоп",
   "board": "9s 5c 2d",
   "hole": "Jd Ad",
@@ -294,6 +298,7 @@ const BUILTIN_SPOTS = [
  },
  {
   "id": "HD3156875482",
+  "villains": ["CO"],
   "street": "Тёрн",
   "board": "Kd 8d 9h 5s",
   "hole": "Ah Kc",
@@ -344,10 +349,11 @@ function tableHtml(spot) {
     const key = RING[(heroIdx + i) % RING.length];
     const hero = i === 0;
     const label = key === "UTG" ? "EP" : key;
+    const villain = !hero && (spot.villains || []).includes(label);
     const cards = hero ? `<div class="cards">${spot.hole.split(" ").map(cardHtml).join("")}</div>` : "";
     const dealer = (key === "BTN") ? `<div class="dealer" style="left:calc(50% + 24px); top:1px;">D</div>` : "";
     return `<div class="seat" style="left:${slot.x}%; top:${slot.y}%;" data-pos="${label}">
-        ${cards}<div class="badge${hero ? " hero" : ""} range-open">${label}</div>${dealer}
+        ${cards}<div class="badge${hero ? " hero" : ""}${villain ? " villain" : ""} range-open">${label}</div>${dealer}
       </div>`;
   }).join("");
 
@@ -703,7 +709,7 @@ function render() {
   app.innerHTML = `
     <div class="card-panel">
       <div style="display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:8px;">
-        <span>${s.id} <span style="color:${s.addedBy === "pilot" ? "#93c5fd" : "#9ca3af"};">· ${s.addedBy === "pilot" ? "моя раздача" : "раздача тренера"}</span></span><span class="tag">${s.street}</span>
+        <span>${s.id} <span style="color:${s.addedBy === "pilot" ? "#93c5fd" : "#9ca3af"};">· ${s.addedBy === "pilot" ? "моя раздача" : "раздача тренера"}</span>${(s.villains && s.villains.length) ? ` <span style="color:#fca5a5;">· против ${s.villains.join(", ")}</span>` : ""}</span><span class="tag">${s.street}</span>
       </div>
       ${tableHtml(s)}
       <div class="hist">${s.hist}</div>
@@ -1017,7 +1023,24 @@ function parseHandText(text) {
     if (!line.startsWith("Dealt to") && !line.startsWith("Seat ") && !line.startsWith("Table ")) hist.push(line);
   }
 
-  return { id, hole, position, stack, decisions, boards };
+  // кто остался в раздаче к флопу (кроме Hero)
+  const preBlock = (text.split(/\*\*\* FLOP \*\*\*/)[0] || "");
+  const foldedPre = new Set([...preBlock.matchAll(/^(\w+): folds/gm)].map(m => m[1]));
+  const inPre = new Set([...preBlock.matchAll(/^(\w+): (?:calls|raises|bets) \$/gm)].map(m => m[1]));
+  const heroPos = position === "EP" ? "UTG" : position;
+  const heroIdx2 = RING.indexOf(heroPos);
+  const labelOf = {};
+  if (heroIdx2 >= 0) SLOTS.forEach((_, i) => { labelOf[i] = RING[(heroIdx2 + i) % RING.length]; });
+
+  const order = Object.values(labelOf);
+  const seatNames = [...text.matchAll(/Seat (\d+): (\w+) \(/g)].map(m => m[2]);
+  const posByName = {};
+  seats.forEach((s2, i2) => { posByName[s2.name] = order[i2] || ""; });
+
+  const villains = [...inPre].filter(n => n !== "Hero" && !foldedPre.has(n))
+    .map(n => (posByName[n] === "UTG" ? "EP" : posByName[n])).filter(Boolean);
+
+  return { id, hole, position, stack, decisions, boards, villains };
 }
 
 function streetRu(en) { return { FLOP: "Флоп", TURN: "Тёрн", RIVER: "Ривер" }[en] || "Флоп"; }
@@ -1049,7 +1072,8 @@ function initAddPanel() {
       board: d.board,
       street: streetRu(d.street),
       pot: d.pot,
-      hist: d.history
+      hist: d.history,
+      villains: res.villains || []
     };
 
     document.getElementById("add-found").textContent =
@@ -1081,6 +1105,7 @@ function initAddPanel() {
       pot: parseFloat(document.getElementById("add-pot").value) || parsedSpot.pot,
       stack: parsedSpot.stack,
       hist: parsedSpot.hist,
+      villains: parsedSpot.villains || [],
       options,
       correct,
       goal: document.getElementById("add-goal").value.trim(),
