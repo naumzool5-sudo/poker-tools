@@ -177,6 +177,7 @@
     <button class="tab-btn" onclick="switchTab('tools', this)">🛠️ Инструменты</button>
     <button class="tab-btn" onclick="switchTab('progress', this)">📊 Прогресс</button>
     <button class="tab-btn" onclick="switchTab('journal', this)">📓 Журнал</button>
+    <button class="tab-btn" onclick="switchTab('postflop', this)">🎯 Постфлоп</button>
   </div>
 
   <!-- Вкладка 1: Старт -->
@@ -362,6 +363,36 @@
       <div style="margin-top: 15px; text-align: center; font-size: 15px; font-weight: bold; color: var(--text);">
         До чекпоинта осталось: <span id="hands-remaining" style="color: var(--gold); font-size: 18px;">0</span> рук
       </div>
+    </div>
+  </div>
+
+  <!-- Вкладка 8: Постфлоп-тренажёр -->
+  <div id="tab-postflop" class="tab-content">
+    <h2>🎯 Постфлоп-тренажёр</h2>
+    <p style="color: var(--muted); margin-bottom: 15px;">Прогресс тренировок и твои сужения диапазонов.</p>
+
+    <div class="progress-block">
+      <div class="btns" style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="panel-btn btn-save" onclick="ppOpen()">▶️ Открыть тренажёр</button>
+        <button class="panel-btn" onclick="ppConnect()">⚙️ Bin ID тренажёра</button>
+        <button class="panel-btn" onclick="ppLoad()">☁️ Обновить из облака</button>
+      </div>
+      <div id="pp-status" style="color: var(--muted); font-size: 12px; margin-top: 10px;"></div>
+    </div>
+
+    <div class="progress-block">
+      <h3>Счёт</h3>
+      <div id="pp-score" style="font-size: 14px;">—</div>
+    </div>
+
+    <div class="progress-block">
+      <h3>Последние ответы</h3>
+      <div id="pp-answers" style="font-size: 13px;">—</div>
+    </div>
+
+    <div class="progress-block">
+      <h3>Сужения диапазонов</h3>
+      <div id="pp-narrow" style="font-size: 13px;">—</div>
     </div>
   </div>
 
@@ -1055,6 +1086,100 @@
 
   document.addEventListener('DOMContentLoaded', render);
   if (document.readyState !== 'loading') render();
+})();
+</script>
+
+<script>
+/* ПОСТФЛОП: читаем бин тренажёра и показываем прогресс */
+(function () {
+  const CFG_KEY = "hub_pp_config";
+
+  function cfg() {
+    try { return JSON.parse(localStorage.getItem(CFG_KEY) || "{}"); } catch (e) { return {}; }
+  }
+
+  function masterKey() {
+    try {
+      const hub = JSON.parse(localStorage.getItem("hub_sync_config") || "{}");
+      return hub.apiKey || "";
+    } catch (e) { return ""; }
+  }
+
+  window.ppOpen = function () {
+    window.open("../postflop-trainer/index.html", "_blank");
+  };
+
+  window.ppConnect = function () {
+    const cur = cfg();
+    const id = prompt("Bin ID постфлоп-тренажёра:", cur.binId || "");
+    if (id === null) return;
+    localStorage.setItem(CFG_KEY, JSON.stringify({ binId: id.trim() }));
+    showToast("Bin ID сохранён");
+    window.ppLoad();
+  };
+
+  window.ppLoad = async function () {
+    const c = cfg();
+    const key = masterKey();
+    const status = document.getElementById("pp-status");
+    if (!c.binId) { status.textContent = "Не задан Bin ID тренажёра — нажми «⚙️ Bin ID тренажёра»."; return; }
+    if (!key) { status.textContent = "В Хабе не подключена синхронизация — нужен ключ. Нажми «⚙️ Ключи синка»."; return; }
+
+    status.textContent = "Загружаю...";
+    try {
+      const res = await fetch("https://api.jsonbin.io/v3/b/" + c.binId + "/latest", { headers: { "X-Master-Key": key } });
+      if (!res.ok) { status.textContent = "Ошибка JSONBin: " + res.status; return; }
+      const json = await res.json();
+      const rec = json.record || {};
+      render(rec, json.metadata && json.metadata.updatedAt);
+    } catch (e) {
+      status.textContent = "Ошибка сети";
+    }
+  };
+
+  function render(rec, updatedAt) {
+    const status = document.getElementById("pp-status");
+    const when = updatedAt ? new Date(updatedAt).toLocaleString("ru-RU") : "";
+    status.textContent = "Обновлено: " + (when || "—");
+
+    const st = rec.stats || {};
+    const answers = rec.answers || [];
+    const narrowed = rec.narrowed || [];
+    const goalPct = st.answered ? Math.round(100 * st.goal / st.answered) : 0;
+    const planPct = st.answered ? Math.round(100 * st.plan / st.answered) : 0;
+
+    document.getElementById("pp-score").innerHTML =
+      `Решений: <b>${st.answered || 0}</b> · цель названа: <b>${st.goal || 0}</b> (${goalPct}%) · план назван: <b>${st.plan || 0}</b> (${planPct}%)`;
+
+    if (!answers.length) {
+      document.getElementById("pp-answers").innerHTML = "<span style='color:var(--muted)'>Пока нет ответов.</span>";
+    } else {
+      document.getElementById("pp-answers").innerHTML = answers.slice(-3).reverse().map(a => `
+        <div style="background:#0b1324; border:1px solid var(--border); border-radius:8px; padding:8px; margin-bottom:6px;">
+          <div><b>${a.hand}</b> · ${a.street} · ${a.board} · ${a.hole} · ${a.position}</div>
+          <div style="color:var(--muted);">действие: ${a.action || "—"} ${a.actOk === null ? "(эталон не задан)" : (a.actOk ? "✅" : "❌")}</div>
+          <div>цель: «${(a.goal || "").replace(/</g, "&lt;")}» ${a.goalOk ? "<span style='color:#10b981'>✅</span>" : "<span style='color:#f59e0b'>⚠️</span>"}</div>
+          <div>план: «${(a.plan || "").replace(/</g, "&lt;")}» ${a.planOk ? "<span style='color:#10b981'>✅</span>" : "<span style='color:#f59e0b'>⚠️</span>"}</div>
+        </div>`).join("");
+    }
+
+    if (!narrowed.length) {
+      document.getElementById("pp-narrow").innerHTML = "<span style='color:var(--muted)'>Пока нет сужений.</span>";
+    } else {
+      const last = narrowed[narrowed.length - 1];
+      document.getElementById("pp-narrow").innerHTML = `
+        <div>Всего сужений: <b>${narrowed.length}</b></div>
+        <div style="background:#0b1324; border:1px solid var(--border); border-radius:8px; padding:8px; margin-top:6px;">
+          <div><b>${last.hand}</b> · ${last.street} · ${last.board} · против ${last.villain}</div>
+          <div style="color:var(--muted);">${last.rangeLabel}</div>
+          <div>комбо: <b>${last.baseCombos} → ${last.leftCombos}</b></div>
+          <div style="color:var(--muted);">выкинуто: ${(last.removed || []).join(", ")}</div>
+        </div>`;
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => { if (cfg().binId) window.ppLoad(); });
+  if (document.readyState !== "loading" && cfg().binId) window.ppLoad();
 })();
 </script>
 <script>
