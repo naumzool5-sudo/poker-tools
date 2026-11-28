@@ -421,6 +421,7 @@ function renderSpotList() {
         <b>${i + 1}.</b>
         <span>${s.id}${s.correct ? "" : " · без эталона"}</span>
         <span style="color:var(--muted);">${s.street} · ${s.board} · ${s.hole} · ${s.position}</span>
+        <span style="font-size:10.5px; padding:1px 7px; border-radius:999px; border:1px solid ${s.addedBy === "pilot" ? "#2563eb" : "#4b5563"}; color:${s.addedBy === "pilot" ? "#93c5fd" : "#9ca3af"};">${s.addedBy === "pilot" ? "моя" : "тренер"}</span>
         ${done ? '<span style="margin-left:auto; color:#10b981; font-weight:700;">✓</span>' : ""}
       </button>`;
   }).join("");
@@ -447,7 +448,7 @@ function render() {
   app.innerHTML = `
     <div class="card-panel">
       <div style="display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:8px;">
-        <span>${s.id}</span><span class="tag">${s.street}</span>
+        <span>${s.id} <span style="color:${s.addedBy === "pilot" ? "#93c5fd" : "#9ca3af"};">· ${s.addedBy === "pilot" ? "моя раздача" : "раздача тренера"}</span></span><span class="tag">${s.street}</span>
       </div>
       ${tableHtml(s)}
       <div class="hist">${s.hist}</div>
@@ -625,6 +626,8 @@ if ("serviceWorker" in navigator) {
 }
 
 function rebuildSpots() {
+  BUILTIN_SPOTS.forEach(s => { if (!s.addedBy) s.addedBy = "coach"; });
+  (state.custom || []).forEach(s => { if (!s.addedBy) s.addedBy = "pilot"; });
   SPOTS = BUILTIN_SPOTS.concat(state.custom || []);
 }
 
@@ -802,7 +805,8 @@ function initAddPanel() {
       goal: document.getElementById("add-goal").value.trim(),
       plan: document.getElementById("add-plan").value.trim(),
       note: document.getElementById("add-note").value.trim(),
-      custom: true
+      custom: true,
+      addedBy: "pilot"
     };
 
     state.custom = (state.custom || []).filter(x => !(x.id === spot.id && x.street === spot.street));
