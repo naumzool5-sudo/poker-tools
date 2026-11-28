@@ -94,6 +94,7 @@
         font-size: 8.5px; border-radius: 4px; background: #18213a; color: #475569; font-weight: 600; }
   .pc.st-three { background: #7c3aed; color: #fff; }
   .pc.st-call { background: #f59e0b; color: #1f2937; }
+  .pc.cut { background: #111827; color: #374151; text-decoration: line-through; }
   @media (max-width: 480px) { .pc { font-size: 7px; } }
 
   @media (max-width: 480px) {
@@ -219,6 +220,11 @@
     <div id="range-tabs" class="range-tabs"></div>
     <div id="range-grid" class="range-grid"></div>
     <div id="range-legend" class="score" style="margin-top:8px;"></div>
+    <div class="btns" style="margin-top:10px;">
+      <button class="plain" id="narrow-btn" style="flex:1;">✂️ Сузить по его линии</button>
+      <button class="primary hidden" id="narrow-save" style="flex:1;">Сохранить сужение</button>
+    </div>
+    <div id="narrow-info" class="score" style="margin-top:6px;"></div>
   </div>
 </div>
 
@@ -518,10 +524,73 @@ function gridCells(entry) {
   return cells.join("");
 }
 
-function openRangeModal(pos, spotIndex) {
+let narrowState = null;
+
+function handCombos(hand) {
+  if (hand.length === 2) return 6;
+  if (hand.endsWith("s")) return 4;
+  return 12;
+}
+
+function combosOf(setObj, removed) {
+  let total = 0;
+  setObj.forEach(h => { if (!removed.has(h)) total += handCombos(h); });
+  return total;
+}
+
+function totalCombos(entry) {
+  return combosOf(entry.three, new Set()) + combosOf(entry.call, new Set());
+}
+
+function renderNarrowGrid() {
+  const box = document.getElementById("range-grid");
+  if (!box || !narrowState) return;
+  const entry = narrowState.entry;
+  const cells = [];
+  for (let a = 0; a < 13; a++) {
+    for (let b = 0; b < 13; b++) {
+      const r1 = RANKS13[a], r2 = RANKS13[b];
+      let hand, cls;
+      if (a === b) { hand = r1 + r1; cls = "pair"; }
+      else if (a < b) { hand = r1 + r2 + "s"; cls = "suited"; }
+      else { hand = r2 + r1 + "o"; cls = "offsuit"; }
+      let st = "";
+      if (entry.three.has(hand)) st = "st-three";
+      else if (entry.call.has(hand)) st = "st-call";
+      if (narrowState.removed.has(hand)) st += " cut";
+      cells.push(`<div class="pc ${cls} ${st}" data-hand="${hand}">${hand}</div>`);
+    }
+  }
+  box.innerHTML = cells.join("");
+
+  const base = totalCombos(entry);
+  const left = combosOf(entry.three, narrowState.removed) + combosOf(entry.call, narrowState.removed);
+  document.getElementById("range-legend").textContent =
+    (entry.three.size ? "3-бет/рейз: " + entry.three.size + " рук" : "") +
+    (entry.call.size ? " · колл: " + entry.call.size + " рук" : "");
+  document.getElementById("narrow-info").textContent =
+    `Комбо: было ${base} → осталось ${left}` +
+    (narrowState.removed.size ? ` · выкинуто рук: ${narrowState.removed.size}` : "");
+
+  box.querySelectorAll(".pc").forEach(cell => cell.addEventListener("click", () => {
+    const h = cell.dataset.hand;
+    if (!entry.three.has(h) && !entry.call.has(h)) return;
+    if (narrowState.removed.has(h)) narrowState.removed.delete(h);
+    else narrowState.removed.add(h);
+    renderNarrowGrid();
+  }));
+}
+
+function openRangeModal(pos, spotIdx) {
   const list = rangesForPosition(pos);
   const modal = document.getElementById("range-modal");
   if (!modal) return;
+
+  document.getElementById("narrow-info").textContent = "";
+  document.getElementById("narrow-save").classList.add("hidden");
+  document.getElementById("narrow-btn").classList.remove("hidden");
+  document.getElementById("narrow-btn").disabled = true;
+
   if (!list.length) {
     document.getElementById("range-title").textContent = pos;
     document.getElementById("range-tabs").innerHTML = "";
@@ -530,29 +599,28 @@ function openRangeModal(pos, spotIndex) {
     modal.classList.add("open");
     return;
   }
-  let active = Math.min(spotIndex || 0, list.length - 1);
+
+  const spot = SPOTS[spotIdx] || {};
   document.getElementById("range-title").textContent = "Диапазон: " + pos;
 
-  const tabs = list.map((e, i) =>
-    `<button class="range-tab${i === active ? " active" : ""}" data-tab="${i}">${e.label}</button>`).join("");
-  document.getElementById("range-tabs").innerHTML = tabs;
+  document.getElementById("range-tabs").innerHTML = list.map((e, i) =>
+    `<button class="range-tab" data-tab="${i}">${e.label}</button>`).join("");
 
-  const draw = (idx) => {
-    const e = list[idx];
-    document.getElementById("range-grid").innerHTML = gridCells(e);
-    document.getElementById("range-legend").textContent =
-      (e.three.size ? "3-бет/рейз: " + e.three.size + " рук" : "") +
-      (e.call.size ? " · колл: " + e.call.size + " рук" : "");
-    document.querySelectorAll(".range-tab").forEach((b, i2) => b.classList.toggle("active", i2 === idx));
+  const draw = (i) => {
+    narrowState = { entry: list[i], removed: new Set(), spot: spot, pos: pos };
+    renderNarrowGrid();
+    document.querySelectorAll(".range-tab").forEach((b, k) => b.classList.toggle("active", k === i));
+    document.getElementById("narrow-btn").disabled = false;
   };
-  draw(active);
 
   document.getElementById("range-tabs").querySelectorAll(".range-tab").forEach(b => {
     b.addEventListener("click", () => draw(Number(b.dataset.tab)));
   });
 
+  draw(0);
   modal.classList.add("open");
 }
+
 /*RANGES-END*/
 /*CORE-END*/
 
@@ -560,13 +628,14 @@ function openRangeModal(pos, spotIndex) {
 const STATE_KEY = "pp_state";
 const SYNC_KEY = "pp_sync_config";
 
-let state = { answered: [], stats: { answered: 0, goal: 0, plan: 0 }, answers: [], savedAt: 0, note: "" };
+let state = { answered: [], stats: { answered: 0, goal: 0, plan: 0 }, answers: [], narrowed: [], savedAt: 0, note: "" };
 try {
   const raw = JSON.parse(localStorage.getItem(STATE_KEY) || "{}");
   if (raw && typeof raw === "object") state = Object.assign(state, raw);
   if (!Array.isArray(state.answered)) state.answered = [];
   if (!state.stats) state.stats = { answered: 0, goal: 0, plan: 0 };
   if (!Array.isArray(state.answers)) state.answers = [];
+  if (!Array.isArray(state.narrowed)) state.narrowed = [];
 } catch (e) {}
 
 function saveState() {
@@ -1143,6 +1212,41 @@ initInstall();
 bootQuiz();
 initListToggle();
 initAddPanel();
+
+document.getElementById("narrow-btn").addEventListener("click", () => {
+  if (!narrowState) return;
+  document.getElementById("narrow-btn").classList.add("hidden");
+  document.getElementById("narrow-save").classList.remove("hidden");
+});
+
+document.getElementById("narrow-save").addEventListener("click", () => {
+  if (!narrowState) return;
+  const e = narrowState.entry;
+  const base = totalCombos(e);
+  const left = combosOf(e.three, narrowState.removed) + combosOf(e.call, narrowState.removed);
+  const spot = narrowState.spot || {};
+
+  state.narrowed.push({
+    at: new Date().toISOString(),
+    hand: spot.id || "",
+    street: spot.street || "",
+    board: spot.board || "",
+    heroPosition: spot.position || "",
+    villain: narrowState.pos,
+    rangeLabel: e.label,
+    baseCombos: base,
+    leftCombos: left,
+    removed: [...narrowState.removed]
+  });
+  if (state.narrowed.length > 200) state.narrowed = state.narrowed.slice(-200);
+
+  saveState();
+  cloudPush(true);
+  document.getElementById("narrow-save").classList.add("hidden");
+  document.getElementById("narrow-btn").classList.remove("hidden");
+  document.getElementById("narrow-info").textContent =
+    `Сохранено: ${left} комбо из ${base} · отправлено в облако`;
+});
 
 document.getElementById("range-close").addEventListener("click", () => {
   document.getElementById("range-modal").classList.remove("open");
