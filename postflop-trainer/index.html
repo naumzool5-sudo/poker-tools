@@ -76,6 +76,25 @@
   .spot-row.current { background:#1d4ed8; border-color:#3b82f6; }
   .hidden { display:none !important; }
 
+
+  .range-open { cursor: pointer; }
+  .seat[data-pos]:hover .badge { border-color: #60a5fa; color: #bfdbfe; }
+  .range-modal { position: fixed; inset: 0; background: rgba(9,13,25,.82); display: none;
+                 align-items: center; justify-content: center; padding: 12px; z-index: 50; }
+  .range-modal.open { display: flex; }
+  .range-box { background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+               padding: 14px; width: 100%; max-width: 560px; max-height: 90vh; overflow: auto; }
+  .range-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .range-tab { font-size: 11.5px; padding: 5px 9px; border-radius: 999px; border: 1px solid var(--line);
+               background: #1b2440; color: var(--muted); cursor: pointer; }
+  .range-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .range-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 2px; }
+  .pc { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
+        font-size: 8.5px; border-radius: 4px; background: #18213a; color: #475569; font-weight: 600; }
+  .pc.st-three { background: #7c3aed; color: #fff; }
+  .pc.st-call { background: #f59e0b; color: #1f2937; }
+  @media (max-width: 480px) { .pc { font-size: 7px; } }
+
   @media (max-width: 480px) {
     .wrap { padding:10px 10px calc(80px + env(safe-area-inset-bottom)); }
     h1 { font-size:16px; }
@@ -98,7 +117,7 @@
     <h1>Постфлоп-тренажёр</h1>
     <span class="chip off" id="sync-chip">☁️ выкл</span>
   </header>
-  <div class="sub" id="subline">Черновик: перед ставкой назови цель и план.</div>
+  <div class="sub" id="subline">Перед ставкой назови цель и план. Нажми на позицию за столом — покажу её префлоп-диапазон.</div>
 
   <div class="btns" style="margin:0 0 12px;">
     <button class="plain" id="top-pull" style="flex:1; border-color:#2563eb; color:#93c5fd;">☁️ Из облака</button>
@@ -189,6 +208,20 @@
     <button class="plain hidden" id="install-btn" style="flex:1;">📲 Установить на телефон</button>
   </div>
 </div>
+
+<div class="range-modal" id="range-modal">
+  <div class="range-box">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px;">
+      <h3 id="range-title" style="margin:0; font-size:15px;">Диапазон</h3>
+      <button class="plain" id="range-close" style="padding:6px 12px;">Закрыть</button>
+    </div>
+    <div id="range-tabs" class="range-tabs"></div>
+    <div id="range-grid" class="range-grid"></div>
+    <div id="range-legend" class="score" style="margin-top:8px;"></div>
+  </div>
+</div>
+
+
 
 <script>
 /*CORE-BEGIN*/
@@ -313,8 +346,8 @@ function tableHtml(spot) {
     const label = key === "UTG" ? "EP" : key;
     const cards = hero ? `<div class="cards">${spot.hole.split(" ").map(cardHtml).join("")}</div>` : "";
     const dealer = (key === "BTN") ? `<div class="dealer" style="left:calc(50% + 24px); top:1px;">D</div>` : "";
-    return `<div class="seat" style="left:${slot.x}%; top:${slot.y}%;">
-        ${cards}<div class="badge${hero ? " hero" : ""}">${label}</div>${dealer}
+    return `<div class="seat" style="left:${slot.x}%; top:${slot.y}%;" data-pos="${label}">
+        ${cards}<div class="badge${hero ? " hero" : ""} range-open">${label}</div>${dealer}
       </div>`;
   }).join("");
 
@@ -325,6 +358,196 @@ function tableHtml(spot) {
     </div>`;
 }
 let SPOTS = BUILTIN_SPOTS.slice();
+/*RANGES-PREFLOP*/
+const RANGES_PREFLOP = {
+ "rfi": {
+  "EP": "AA, AKs, AQs, AJs, ATs, AKo, KK, KQs, KJs, KTs, AQo, KQo, QQ, QJs, QTs, AJo, KJo, JJ, JTs, ATo, TT, 99, 88, 77",
+  "MP": "AA, AKs, AQs, AJs, ATs, A9s, AKo, KK, KQs, KJs, KTs, K9s, AQo, KQo, QQ, QJs, QTs, Q9s, AJo, KJo, QJo, JJ, JTs, J9s, ATo, TT, T9s, 99, 98s, 88, 87s, 77, 76s, 66, 65s, 55",
+  "CO": "AA, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, AKo, KK, KQs, KJs, KTs, K9s, AQo, KQo, QQ, QJs, QTs, Q9s, AJo, KJo, QJo, JJ, JTs, J9s, ATo, KTo, QTo, JTo, TT, T9s, A9o, 99, 98s, 88, 87s, 77, 76s, 66, 65s, 55, 54s, 44, 33, 22",
+  "BTN": "AA, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, AKo, KK, KQs, KJs, KTs, K9s, K8s, K7s, K6s, K5s, K4s, K3s, K2s, AQo, KQo, QQ, QJs, QTs, Q9s, Q8s, Q7s, Q6s, Q5s, AJo, KJo, QJo, JJ, JTs, J9s, J8s, J7s, ATo, KTo, QTo, JTo, TT, T9s, T8s, T7s, A9o, K9o, Q9o, J9o, T9o, 99, 98s, 97s, 96s, A8o, 88, 87s, 86s, 85s, A7o, 87o, 77, 76s, 75s, 74s, A6o, 66, 65s, 64s, 63s, A5o, 55, 54s, 53s, A4o, 44, 43s, A3o, 33, 32s, A2o, 22",
+  "SB": "AA, AKs, AQs, AJs, ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, AKo, KK, KQs, KJs, KTs, K9s, K8s, K7s, AQo, KQo, QQ, QJs, QTs, Q9s, Q8s, AJo, KJo, QJo, JJ, JTs, J9s, J8s, ATo, KTo, QTo, JTo, TT, T9s, T8s, T7s, A9o, K9o, 99, 98s, 97s, 96s, 88, 87s, 86s, 77, 76s, 75s, 66, 65s, 55, 54s, 44, 33, 22"
+ },
+ "3bet_ip": {
+  "CO vs EP": "AA, AKs, AKo, KK, QQ",
+  "CO vs MP": "AA, AKs, AQs, AKo, KK, QQ, JJ",
+  "BTN vs EP": "AA, AKs, AKo, KK, QQ",
+  "BTN vs MP": "AA, AKs, AQs, AKo, KK, QQ, JJ",
+  "BTN vs CO": "AA, AKs, AQs, AJs, AKo, KK, QQ, JJ, TT"
+ },
+ "3bet_oop": {
+  "SB vs EP": "AA, AKs, AKo, KK, QQ",
+  "SB vs MP": "AA, AKs, AQs, AKo, KK, QQ, JJ",
+  "SB vs CO": "AA, AKs, AQs, AJs, AKo, KK, QQ, JJ, TT",
+  "SB vs BTN": "AA, AKs, AQs, AJs, AKo, KK, KQs, AQo, QQ, JJ, TT, 99"
+ },
+ "bb": {
+  "vs EP": {
+   "3bet": "AA, AKs, AKo, KK, QQ, JJ, TT",
+   "call": "AQs, AJs, ATs, KQs, KJs, AQo, KQo, QJs, AJo, JTs, 99, 88, 77, 66, 55, 44, 33, 22"
+  },
+  "vs MP": {
+   "3bet": "AA, AKs, AQs, AKo, KK, QQ, JJ, TT",
+   "call": "AJs, ATs, A9s, KQs, KJs, KTs, K9s, AQo, KQo, QJs, QTs, Q9s, AJo, KJo, QJo, JTs, J9s, ATo, KTo, QTo, JTo, T9s, A9o, 99, 98s, 88, 87s, 77, 76s, 66, 65s, 55, 44, 33, 22"
+  },
+  "vs CO": {
+   "3bet": "AA, AKs, AQs, AJs, AKo, KK, QQ, JJ, TT",
+   "call": "ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KQs, KJs, KTs, K9s, AQo, KQo, QJs, QTs, Q9s, AJo, KJo, QJo, JTs, J9s, ATo, KTo, QTo, JTo, T9s, T8s, A9o, 99, 98s, 97s, 88, 87s, 86s, 77, 76s, 75s, 66, 65s, 55, 54s, 44, 33, 22"
+  },
+  "vs BTN": {
+   "3bet": "AA, AKs, AQs, AJs, AKo, KK, KQs",
+   "call": "ATs, A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KJs, KTs, K9s, K8s, K7s, K6s, K5s, AQo, KQo, QQ, QJs, QTs, Q9s, Q8s, Q7s, AJo, KJo, QJo, JJ, JTs, J9s, J8s, J7s, ATo, KTo, QTo, JTo, TT, T9s, T8s, T7s, T6s, A9o, K9o, Q9o, J9o, T9o, 99, 98s, 97s, 96s, 95s, A8o, K8o, Q8o, J8o, T8o, 98o, 88, 87s, 86s, 85s, 84s, A7o, K7o, 97o, 87o, 77, 76s, 75s, 74s, 73s, A6o, 86o, 76o, 66, 65s, 64s, 63s, 62s, A5o, 75o, 65o, 55, 54s, 53s, 52s, A4o, 64o, 54o, 44, 43s, 42s, A3o, 53o, 43o, 33, 32s, A2o, 22"
+  },
+  "vs SB": {
+   "3bet": "AA, AKs, AQs, AJs, ATs, AKo, KK, KQs, AQo, KQo, QQ, A6o",
+   "call": "A9s, A8s, A7s, A6s, A5s, A4s, A3s, A2s, KJs, KTs, K9s, K8s, K7s, K6s, K5s, K4s, K3s, K2s, QJs, QTs, Q9s, Q8s, Q7s, Q6s, Q5s, Q4s, Q3s, Q2s, AJo, KJo, QJo, JJ, JTs, J9s, J8s, J7s, J6s, J5s, J4s, J3s, J2s, ATo, KTo, QTo, JTo, TT, T9s, T8s, T7s, T6s, T5s, T4s, T3s, T2s, A9o, K9o, Q9o, J9o, T9o, 99, 98s, 97s, 96s, 95s, 94s, 93s, 92s, A8o, K8o, Q8o, J8o, T8o, 98o, 88, 87s, 86s, 85s, 84s, 83s, 82s, A7o, K7o, Q7o, J7o, T7o, 97o, 87o, 77, 76s, 75s, 74s, 73s, 72s, K6o, Q6o, J6o, T6o, 96o, 86o, 76o, 66, 65s, 64s, 63s, 62s, A5o, K5o, Q5o, J5o, T5o, 95o, 85o, 75o, 65o, 55, 54s, 53s, 52s, A4o, K4o, Q4o, J4o, T4o, 94o, 84o, 74o, 64o, 54o, 44, 43s, 42s, A3o, K3o, Q3o, J3o, T3o, 33, 32s, A2o, K2o, Q2o, J2o, T2o, 22"
+  }
+ }
+};
+
+const RANKS13 = "AKQJT98765432";
+
+function rIdx(c) { return RANKS13.indexOf(c); }
+
+function expandRange(spec) {
+  const out = new Set();
+  if (!spec) return out;
+  for (const raw of String(spec).split(",")) {
+    const t = raw.trim();
+    if (!t) continue;
+
+    // диапазон вида 22-99 или A2s-A9s
+    const dash = t.match(/^([2-9TJQKA])([2-9TJQKA])([so]?)-([2-9TJQKA])([2-9TJQKA])([so]?)$/);
+    if (dash) {
+      const [, r1, r2, su1, r3, r4] = dash;
+      if (r1 === r2) {
+        const a = rIdx(r1), b = rIdx(r3);
+        for (let k = Math.min(a, b); k <= Math.max(a, b); k++) out.add(RANKS13[k] + RANKS13[k]);
+      } else {
+        const suf = su1 || "s";
+        const hi = r1, lo1 = rIdx(r2), lo2 = rIdx(r4);
+        for (let k = Math.min(lo1, lo2); k <= Math.max(lo1, lo2); k++) {
+          if (RANKS13[k] !== hi) out.add(hi + RANKS13[k] + suf);
+        }
+      }
+      continue;
+    }
+
+    const plus = t.endsWith("+");
+    const base = plus ? t.slice(0, -1) : t;
+    const m = base.match(/^([2-9TJQKA])([2-9TJQKA])([so]?)$/);
+    if (!m) continue;
+    const [, r1, r2, suffix] = m;
+
+    // RANKS13 = "AKQJT98765432": индекс 0 — туз, дальше по убыванию силы.
+    if (r1 === r2) {
+      const from = rIdx(r1);
+      const to = plus ? 0 : from;
+      for (let k = from; k >= to; k--) out.add(RANKS13[k] + RANKS13[k]);
+      continue;
+    }
+
+    const hi = r1;
+    const loFrom = rIdx(r2);
+    const loTo = plus ? rIdx(hi) + 1 : loFrom;
+    for (let k = loFrom; k >= loTo; k--) {
+      const lo = RANKS13[k];
+      if (lo === hi) continue;
+      if (suffix === "s") out.add(hi + lo + "s");
+      else if (suffix === "o") out.add(hi + lo + "o");
+      else { out.add(hi + lo + "s"); out.add(hi + lo + "o"); }
+    }
+  }
+  return out;
+}
+
+function rangesForPosition(pos) {
+  const list = [];
+  const key = pos === "EP" ? "EP" : pos;
+
+  if (RANGES_PREFLOP.rfi && RANGES_PREFLOP.rfi[key]) {
+    list.push({ label: "Открытие (RFI) с " + key, three: expandRange(RANGES_PREFLOP.rfi[key]), call: new Set() });
+  }
+
+  const threeIp = RANGES_PREFLOP["3bet_ip"] || {};
+  const threeOop = RANGES_PREFLOP["3bet_oop"] || {};
+  Object.keys(threeIp).forEach(spot => {
+    if (spot.startsWith(key + " ")) {
+      list.push({ label: "3-бет: " + spot, three: expandRange(threeIp[spot]), call: new Set() });
+    }
+  });
+  Object.keys(threeOop).forEach(spot => {
+    if (spot.startsWith(key + " ")) {
+      list.push({ label: "3-бет: " + spot, three: expandRange(threeOop[spot]), call: new Set() });
+    }
+  });
+
+  if (key === "BB" && RANGES_PREFLOP.bb) {
+    Object.keys(RANGES_PREFLOP.bb).forEach(spot => {
+      const d = RANGES_PREFLOP.bb[spot];
+      list.push({
+        label: "Защита BB " + spot,
+        three: expandRange(d["3bet"]),
+        call: d["call"] === "__COMPUTED__" ? new Set() : expandRange(d["call"])
+      });
+    });
+  }
+  return list;
+}
+
+function gridCells(entry) {
+  const cells = [];
+  for (let i = 0; i < 13; i++) {
+    for (let j = 0; j < 13; j++) {
+      const r1 = RANKS13[i], r2 = RANKS13[j];
+      let hand, cls;
+      if (i === j) { hand = r1 + r1; cls = "pair"; }
+      else if (i < j) { hand = r1 + r2 + "s"; cls = "suited"; }
+      else { hand = r2 + r1 + "o"; cls = "offsuit"; }
+      let state = "";
+      if (entry.three.has(hand)) state = "st-three";
+      else if (entry.call.has(hand)) state = "st-call";
+      cells.push(`<div class="pc ${cls} ${state}">${hand}</div>`);
+    }
+  }
+  return cells.join("");
+}
+
+function openRangeModal(pos, spotIndex) {
+  const list = rangesForPosition(pos);
+  const modal = document.getElementById("range-modal");
+  if (!modal) return;
+  if (!list.length) {
+    document.getElementById("range-title").textContent = pos;
+    document.getElementById("range-tabs").innerHTML = "";
+    document.getElementById("range-grid").innerHTML = "<p class='score'>Для этой позиции чартов нет.</p>";
+    document.getElementById("range-legend").textContent = "";
+    modal.classList.add("open");
+    return;
+  }
+  let active = Math.min(spotIndex || 0, list.length - 1);
+  document.getElementById("range-title").textContent = "Диапазон: " + pos;
+
+  const tabs = list.map((e, i) =>
+    `<button class="range-tab${i === active ? " active" : ""}" data-tab="${i}">${e.label}</button>`).join("");
+  document.getElementById("range-tabs").innerHTML = tabs;
+
+  const draw = (idx) => {
+    const e = list[idx];
+    document.getElementById("range-grid").innerHTML = gridCells(e);
+    document.getElementById("range-legend").textContent =
+      (e.three.size ? "3-бет/рейз: " + e.three.size + " рук" : "") +
+      (e.call.size ? " · колл: " + e.call.size + " рук" : "");
+    document.querySelectorAll(".range-tab").forEach((b, i2) => b.classList.toggle("active", i2 === idx));
+  };
+  draw(active);
+
+  document.getElementById("range-tabs").querySelectorAll(".range-tab").forEach(b => {
+    b.addEventListener("click", () => draw(Number(b.dataset.tab)));
+  });
+
+  modal.classList.add("open");
+}
+/*RANGES-END*/
 /*CORE-END*/
 
 /* ---------- состояние и синхронизация ---------- */
@@ -503,7 +726,14 @@ function render() {
       <div class="verdict" id="verdict"></div>
     </div>
   `;
-  document.getElementById("opts").addEventListener("click", e => {
+  const tableEl = document.querySelector(".table-wrap");
+  if (tableEl) tableEl.addEventListener("click", e => {
+    const seat = e.target.closest(".seat");
+    if (!seat || !seat.dataset.pos) return;
+    openRangeModal(seat.dataset.pos, 0);
+  });
+
+  document.getElementById("opts").addEventListener("click", (e) => {
     const b = e.target.closest(".opt");
     if (!b || answered) return;
     document.querySelectorAll(".opt").forEach(x => x.classList.remove("sel"));
@@ -888,6 +1118,13 @@ initInstall();
 bootQuiz();
 initListToggle();
 initAddPanel();
+
+document.getElementById("range-close").addEventListener("click", () => {
+  document.getElementById("range-modal").classList.remove("open");
+});
+document.getElementById("range-modal").addEventListener("click", (e) => {
+  if (e.target.id === "range-modal") e.target.classList.remove("open");
+});
 updateAddCount();
 if (syncCfg()) cloudPull(true);
 </script>
