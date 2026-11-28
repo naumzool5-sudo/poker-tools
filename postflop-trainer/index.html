@@ -74,16 +74,19 @@
 
 <script>
 /*CORE-BEGIN*/
-/* Раскладка мест как на столе: BTN сверху, CO слева-сверху, SB справа-сверху,
-   MP слева-снизу, BB справа-снизу, EP (герой) снизу по центру. */
-const SEATS = [
-  { key: "BTN", x: 50,  y: 6,  dealer: true },
-  { key: "CO",  x: 12,  y: 28 },
-  { key: "SB",  x: 88,  y: 28 },
-  { key: "MP",  x: 14,  y: 70 },
-  { key: "BB",  x: 86,  y: 70 },
-  { key: "EP",  x: 50,  y: 92 }
+/* Круг: слоты идут по часовой стрелке, начиная с нижнего.
+   Герой всегда сидит снизу, остальные позиции вращаются вокруг него. */
+const SLOTS = [
+  { x: 50, y: 92 }, // низ — место героя
+  { x: 14, y: 70 }, // слева-снизу
+  { x: 12, y: 28 }, // слева-сверху
+  { x: 50, y: 6  }, // верх
+  { x: 88, y: 28 }, // справа-сверху
+  { x: 86, y: 70 }  // справа-снизу
 ];
+
+/* Порядок позиций по часовой стрелке */
+const RING = ["BTN", "SB", "BB", "UTG", "MP", "CO"];
 
 const SPOTS = [
   {
@@ -170,14 +173,17 @@ function planIsNamed(text) {
 }
 
 function tableHtml(spot) {
-  const heroSeat = spot.pos;
-  const seats = SEATS.map(s => {
-    const hero = s.key === heroSeat;
+  const heroPos = spot.pos === "EP" ? "UTG" : spot.pos;
+  const heroIdx = RING.indexOf(heroPos);
+  const seats = SLOTS.map((slot, i) => {
+    const key = RING[(heroIdx + i) % RING.length];
+    const hero = i === 0;
+    const label = key === "UTG" ? "EP" : key;
     const cards = hero ? `<div class="cards">${spot.hole.split(" ").map(c => cardHtml(c)).join("")}</div>` : "";
-    const dealer = s.dealer ? `<div class="dealer" style="left:calc(50% + 26px); top:2px;">D</div>` : "";
-    return `<div class="seat" style="left:${s.x}%; top:${s.y}%;">
+    const dealer = (key === "BTN") ? `<div class="dealer" style="left:calc(50% + 26px); top:2px;">D</div>` : "";
+    return `<div class="seat" style="left:${slot.x}%; top:${slot.y}%;">
         ${cards}
-        <div class="badge${hero ? " hero" : ""}">${s.key}</div>
+        <div class="badge${hero ? " hero" : ""}">${label}</div>
         ${dealer}
       </div>`;
   }).join("");
