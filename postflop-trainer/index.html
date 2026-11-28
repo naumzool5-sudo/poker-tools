@@ -331,12 +331,13 @@ let SPOTS = BUILTIN_SPOTS.slice();
 const STATE_KEY = "pp_state";
 const SYNC_KEY = "pp_sync_config";
 
-let state = { answered: [], stats: { answered: 0, goal: 0, plan: 0 }, savedAt: 0, note: "" };
+let state = { answered: [], stats: { answered: 0, goal: 0, plan: 0 }, answers: [], savedAt: 0, note: "" };
 try {
   const raw = JSON.parse(localStorage.getItem(STATE_KEY) || "{}");
   if (raw && typeof raw === "object") state = Object.assign(state, raw);
   if (!Array.isArray(state.answered)) state.answered = [];
   if (!state.stats) state.stats = { answered: 0, goal: 0, plan: 0 };
+  if (!Array.isArray(state.answers)) state.answers = [];
 } catch (e) {}
 
 function saveState() {
@@ -532,6 +533,24 @@ function check() {
   state.stats.answered++;
   if (gOk) state.stats.goal++;
   if (pOk) state.stats.plan++;
+
+  state.answers.push({
+    at: new Date().toISOString(),
+    hand: s.id,
+    street: s.street,
+    board: s.board,
+    hole: s.hole,
+    position: s.position,
+    action: selected || "",
+    correct: s.correct || "",
+    actOk: actOk === null ? null : actOk,
+    goal: goal,
+    goalOk: gOk,
+    plan: plan,
+    planOk: pOk
+  });
+  if (state.answers.length > 300) state.answers = state.answers.slice(-300);
+
   saveAnswered();
 
   v.innerHTML = `
@@ -676,6 +695,7 @@ document.getElementById("restart").addEventListener("click", () => {
   answeredSet.clear();
   state.answered = [];
   state.stats = { answered: 0, goal: 0, plan: 0 };
+  state.answers = [];
   saveState();
   cloudPush(true);
   bootQuiz();
