@@ -1,70 +1,105 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Тренажёр постфлопа (черновик)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b2440">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Постфлоп-тренажёр</title>
 <style>
   :root { --bg:#1b2440; --panel:#232e4d; --line:#33405f; --text:#e8edf7; --muted:#93a0bd;
-          --accent:#3b82f6; --good:#10b981; --bad:#ef4444; --warn:#f59e0b; --felt:#14532d; }
-  * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.55 -apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
-  .wrap { max-width:780px; margin:0 auto; padding:16px 14px 60px; }
-  h1 { font-size:19px; margin:0 0 2px; }
-  .sub { color:var(--muted); font-size:12px; margin-bottom:14px; }
+          --accent:#3b82f6; --good:#10b981; --bad:#ef4444; --warn:#f59e0b; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { overscroll-behavior-y: contain; }
+  body { margin:0; background:var(--bg); color:var(--text);
+         font:15px/1.55 -apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+         padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
+  .wrap { max-width:780px; margin:0 auto; padding:14px 14px calc(90px + env(safe-area-inset-bottom)); }
+  header { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  h1 { font-size:18px; margin:0; flex:1; }
+  .sub { color:var(--muted); font-size:12px; margin-bottom:12px; }
+  .chip { font-size:11px; padding:4px 9px; border-radius:999px; border:1px solid var(--line); color:var(--muted); white-space:nowrap; }
+  .chip.on { color:var(--good); border-color:#065f46; }
+  .chip.off { color:var(--warn); border-color:#78350f; }
+  button { font-family:inherit; }
 
-  /* стол */
-  .table-wrap { position:relative; width:100%; aspect-ratio: 675/470; margin-bottom:14px; }
-  .felt { position:absolute; left:10%; top:12%; width:80%; height:76%;
+  .table-wrap { position:relative; width:100%; aspect-ratio: 675/470; margin-bottom:12px; }
+  .felt { position:absolute; left:9%; top:12%; width:82%; height:76%;
           background: radial-gradient(ellipse at center, #1a5c34 0%, #12401f 70%, #0d3319 100%);
           border:6px solid #2c3a56; border-radius:50%; box-shadow: inset 0 0 40px rgba(0,0,0,.55); }
   .seat { position:absolute; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:4px; }
-  .badge { min-width:44px; padding:5px 8px; border-radius:999px; border:1px solid var(--line);
+  .badge { min-width:42px; padding:4px 8px; border-radius:999px; border:1px solid var(--line);
            background:#1d2740; color:#c9d4ea; font-size:11px; font-weight:700; text-align:center; }
   .badge.hero { background:#1d4ed8; border-color:#3b82f6; color:#fff; }
-  .dealer { position:absolute; width:18px; height:18px; border-radius:50%; background:#e5e7eb; color:#111;
+  .dealer { position:absolute; width:17px; height:17px; border-radius:50%; background:#e5e7eb; color:#111;
             font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center; }
 
-  /* карты */
-  .cards { display:flex; gap:6px; justify-content:center; margin-top:2px; }
-  .card { width:44px; height:62px; border-radius:7px; background:#f8fafc; color:#0f172a;
+  .cards { display:flex; gap:5px; justify-content:center; margin-top:2px; }
+  .card { width:40px; height:56px; border-radius:7px; background:#f8fafc; color:#0f172a;
           display:flex; flex-direction:column; align-items:center; justify-content:center;
-          font-weight:800; font-size:17px; line-height:1; box-shadow:0 2px 6px rgba(0,0,0,.4); }
+          font-weight:800; font-size:16px; line-height:1; box-shadow:0 2px 6px rgba(0,0,0,.4); }
   .card.red { color:#dc2626; }
-  .card.back { background:#1e293b; border:1px solid #334155; color:#64748b; font-size:20px; }
-  .board { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:flex; gap:8px; }
-  .board .card { width:52px; height:72px; font-size:20px; }
-  .pot { position:absolute; left:50%; top:calc(50% + 62px); transform:translateX(-50%);
+  .board { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:flex; gap:7px; }
+  .board .card { width:46px; height:64px; font-size:19px; }
+  .pot { position:absolute; left:50%; top:calc(50% + 56px); transform:translateX(-50%);
          background:rgba(0,0,0,.45); border:1px solid var(--line); border-radius:999px;
-         padding:3px 12px; font-size:12px; color:#cbd5e1; white-space:nowrap; }
+         padding:3px 11px; font-size:11.5px; color:#cbd5e1; white-space:nowrap; }
 
-  /* карточка вопроса */
   .card-panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:12px; }
   .hist { background:#18213a; border:1px solid var(--line); border-radius:8px; padding:10px;
           font-size:13px; color:#cbd5e1; white-space:pre-line; margin-bottom:12px; }
-  .opts { display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 12px; }
-  .opt { padding:9px 13px; border-radius:8px; border:1px solid var(--line); background:#1b2440;
-         color:var(--text); font-weight:600; cursor:pointer; font-size:13px; }
+  .opts { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:6px 0 12px; }
+  .opt { padding:12px 10px; border-radius:10px; border:1px solid var(--line); background:#1b2440;
+         color:var(--text); font-weight:600; cursor:pointer; font-size:14px; width:100%; }
+  .opt:active { transform: scale(.985); }
   .opt.sel { background:var(--accent); border-color:var(--accent); color:#fff; }
   label { display:block; color:var(--muted); font-size:12px; margin:10px 0 4px; }
-  input[type=text] { width:100%; padding:9px 11px; background:#18213a; color:var(--text);
-                     border:1px solid var(--line); border-radius:8px; font-size:14px; }
+  input[type=text], input[type=password] { width:100%; padding:11px 12px; background:#18213a; color:var(--text);
+        border:1px solid var(--line); border-radius:10px; font-size:16px; }
   .btns { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
-  button.primary { padding:10px 16px; border-radius:8px; border:1px solid var(--accent);
-                   background:var(--accent); color:#fff; font-weight:700; cursor:pointer; }
-  button.plain { padding:10px 16px; border-radius:8px; border:1px solid var(--line);
-                 background:#1b2440; color:var(--text); font-weight:600; cursor:pointer; }
+  button.primary { padding:12px 18px; border-radius:10px; border:1px solid var(--accent);
+                   background:var(--accent); color:#fff; font-weight:700; cursor:pointer; font-size:15px; flex:1; }
+  button.plain { padding:12px 16px; border-radius:10px; border:1px solid var(--line);
+                 background:#1b2440; color:var(--text); font-weight:600; cursor:pointer; font-size:14px; }
   .verdict { margin-top:14px; font-size:14px; }
   .ok { color:var(--good); } .no { color:var(--bad); } .mid { color:var(--warn); }
   .score { color:var(--muted); font-size:13px; }
   .tag { display:inline-block; padding:1px 8px; border-radius:99px; border:1px solid var(--line);
          font-size:11px; color:var(--muted); }
+  .spot-row { text-align:left; width:100%; background:#18213a; border:1px solid var(--line);
+              border-radius:9px; padding:8px 10px; color:var(--text); cursor:pointer; font-size:12.5px;
+              display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .spot-row.current { background:#1d4ed8; border-color:#3b82f6; }
+  .hidden { display:none !important; }
+
+  @media (max-width: 480px) {
+    .wrap { padding:10px 10px calc(80px + env(safe-area-inset-bottom)); }
+    h1 { font-size:16px; }
+    .card-panel { padding:11px; border-radius:10px; }
+    .table-wrap { aspect-ratio: 1/1; }
+    .felt { left:4%; top:10%; width:92%; height:80%; border-width:5px; }
+    .card { width:34px; height:48px; font-size:14px; border-radius:6px; }
+    .board .card { width:40px; height:56px; font-size:17px; }
+    .pot { top:calc(50% + 48px); font-size:10.5px; padding:2px 9px; }
+    .badge { min-width:38px; font-size:10px; padding:3px 7px; }
+    .opts { grid-template-columns:1fr; }
+    .opt { padding:13px 10px; font-size:15px; }
+    .hist { font-size:12.5px; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Тренажёр постфлопа</h1>
-  <div class="sub">Черновик: 5 раздач из сессии 26.11. Перед ставкой назови цель и план.</div>
+  <header>
+    <h1>Постфлоп-тренажёр</h1>
+    <span class="chip off" id="sync-chip">☁️ выкл</span>
+  </header>
+  <div class="sub" id="subline">Черновик: перед ставкой назови цель и план.</div>
+
   <div class="card-panel">
     <div id="spot-list-toggle" style="display:flex; justify-content:space-between; align-items:baseline; gap:8px; cursor:pointer; user-select:none;">
       <h3 style="margin:0; font-size:15px;"><span id="spot-arrow">▾</span> Раздачи в тренажёре</h3>
@@ -72,30 +107,47 @@
     </div>
     <div id="spot-list" style="margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
   </div>
+
   <div id="app"></div>
+
   <div class="card-panel">
     <div class="score" id="score"></div>
     <div class="btns"><button class="plain" id="restart">Начать заново</button></div>
+  </div>
+
+  <div class="card-panel">
+    <div id="sync-toggle" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; user-select:none;">
+      <h3 style="margin:0; font-size:15px;"><span id="sync-arrow">▸</span> ☁️ Синхронизация</h3>
+      <span class="chip" id="sync-state">не настроена</span>
+    </div>
+    <div id="sync-body" class="hidden" style="margin-top:12px;">
+      <label>Bin ID (JSONBin)</label>
+      <input type="text" id="sync-bin" placeholder="65f1a...">
+      <label>X-Master-Key</label>
+      <input type="password" id="sync-key" placeholder="$2b$10$...">
+      <div class="btns">
+        <button class="primary" id="sync-connect">Подключить</button>
+        <button class="plain" id="sync-pull">Из облака</button>
+        <button class="plain" id="sync-push">В облако</button>
+        <button class="plain" id="sync-off">Отключить</button>
+      </div>
+      <p class="score" id="sync-hint" style="margin:10px 0 0;"></p>
+    </div>
+  </div>
+
+  <div class="btns" style="margin-top:0;">
+    <button class="plain hidden" id="install-btn" style="flex:1;">📲 Установить на телефон</button>
   </div>
 </div>
 
 <script>
 /*CORE-BEGIN*/
-/* Круг: слоты идут по часовой стрелке, начиная с нижнего.
-   Герой всегда сидит снизу, остальные позиции вращаются вокруг него. */
 const SLOTS = [
-  { x: 50, y: 92 }, // низ — место героя
-  { x: 14, y: 70 }, // слева-снизу
-  { x: 12, y: 28 }, // слева-сверху
-  { x: 50, y: 6  }, // верх
-  { x: 88, y: 28 }, // справа-сверху
-  { x: 86, y: 70 }  // справа-снизу
+  { x: 50, y: 92 }, { x: 14, y: 70 }, { x: 12, y: 28 },
+  { x: 50, y: 6  }, { x: 88, y: 28 }, { x: 86, y: 70 }
 ];
-
-/* Порядок позиций по часовой стрелке */
 const RING = ["BTN", "SB", "BB", "UTG", "MP", "CO"];
 
-/* Данные спотов — между маркерами SPOTS-BEGIN/SPOTS-END */
 /*SPOTS-BEGIN*/
 const SPOTS = [
  {
@@ -181,16 +233,13 @@ const SPOTS = [
 
 const SUIT = { s: "♠", h: "♥", d: "♦", c: "♣" };
 
-function cardHtml(card, big) {
+function cardHtml(card) {
   const r = card[0], s = card[1];
   const red = (s === "h" || s === "d") ? " red" : "";
-  return `<div class="card${red}${big ? " big" : ""}"><span>${r}</span><span>${SUIT[s]}</span></div>`;
+  return `<div class="card${red}"><span>${r}</span><span>${SUIT[s]}</span></div>`;
 }
 
-function boardHtml(board) {
-  return board.split(" ").map(c => cardHtml(c, true)).join("");
-}
-
+function boardHtml(board) { return board.split(" ").map(cardHtml).join(""); }
 function normalize(s) { return (s || "").toLowerCase().replace(/\s+/g, " ").trim(); }
 
 function goalIsNamed(text) {
@@ -206,40 +255,138 @@ function planIsNamed(text) {
 }
 
 function tableHtml(spot) {
-  const heroPos = spot.pos === "EP" ? "UTG" : spot.pos;
+  const heroPos = spot.position === "EP" ? "UTG" : spot.position;
   const heroIdx = RING.indexOf(heroPos);
   const seats = SLOTS.map((slot, i) => {
     const key = RING[(heroIdx + i) % RING.length];
     const hero = i === 0;
     const label = key === "UTG" ? "EP" : key;
-    const cards = hero ? `<div class="cards">${spot.hole.split(" ").map(c => cardHtml(c)).join("")}</div>` : "";
-    const dealer = (key === "BTN") ? `<div class="dealer" style="left:calc(50% + 26px); top:2px;">D</div>` : "";
+    const cards = hero ? `<div class="cards">${spot.hole.split(" ").map(cardHtml).join("")}</div>` : "";
+    const dealer = (key === "BTN") ? `<div class="dealer" style="left:calc(50% + 24px); top:1px;">D</div>` : "";
     return `<div class="seat" style="left:${slot.x}%; top:${slot.y}%;">
-        ${cards}
-        <div class="badge${hero ? " hero" : ""}">${label}</div>
-        ${dealer}
+        ${cards}<div class="badge${hero ? " hero" : ""}">${label}</div>${dealer}
       </div>`;
   }).join("");
 
   return `<div class="table-wrap">
-      <div class="felt"></div>
-      ${seats}
+      <div class="felt"></div>${seats}
       <div class="board">${boardHtml(spot.board)}</div>
       <div class="pot">Банк $${spot.pot.toFixed(2)} · стек $${spot.stack.toFixed(2)}</div>
     </div>`;
 }
 /*CORE-END*/
 
+/* ---------- состояние и синхронизация ---------- */
+const STATE_KEY = "pp_state";
+const SYNC_KEY = "pp_sync_config";
+
+let state = { answered: [], stats: { answered: 0, goal: 0, plan: 0 }, savedAt: 0, note: "" };
+try {
+  const raw = JSON.parse(localStorage.getItem(STATE_KEY) || "{}");
+  if (raw && typeof raw === "object") state = Object.assign(state, raw);
+  if (!Array.isArray(state.answered)) state.answered = [];
+  if (!state.stats) state.stats = { answered: 0, goal: 0, plan: 0 };
+} catch (e) {}
+
+function saveState() {
+  state.savedAt = Date.now();
+  try { localStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+
+function syncCfg() {
+  try { return JSON.parse(localStorage.getItem(SYNC_KEY) || "null"); } catch (e) { return null; }
+}
+
+function updateSyncUI() {
+  const cfg = syncCfg();
+  const chip = document.getElementById("sync-chip");
+  const st = document.getElementById("sync-state");
+  const hint = document.getElementById("sync-hint");
+  if (chip) {
+    chip.className = "chip " + (cfg ? "on" : "off");
+    chip.textContent = cfg ? "☁️ синк" : "☁️ выкл";
+  }
+  if (st) st.textContent = cfg ? "подключена" : "не настроена";
+  if (cfg && hint) hint.textContent = "Данные уходят в облако после каждого ответа.";
+}
+
+async function cloudPull(silent) {
+  const cfg = syncCfg();
+  if (!cfg || !cfg.binId || !cfg.apiKey) return false;
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}/latest`, { headers: { "X-Master-Key": cfg.apiKey } });
+    if (!res.ok) { if (!silent) alert("JSONBin: ошибка " + res.status); return false; }
+    const json = await res.json();
+    const rec = json.record || {};
+    if (rec.stats) {
+      state = Object.assign({}, state, rec);
+      saveState();
+      bootQuiz();
+      if (!silent) alert("Загружено из облака");
+      return true;
+    }
+    if (!silent) alert("В облаке пока нет данных");
+  } catch (e) {
+    if (!silent) alert("Ошибка сети");
+  }
+  return false;
+}
+
+let pushTimer = null;
+function cloudPush(force) {
+  const cfg = syncCfg();
+  if (!cfg || !cfg.binId || !cfg.apiKey) return;
+  if (pushTimer) clearTimeout(pushTimer);
+  pushTimer = setTimeout(async () => {
+    try {
+      await fetch(`https://api.jsonbin.io/v3/b/${cfg.binId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "X-Master-Key": cfg.apiKey },
+        body: JSON.stringify({ savedAt: new Date().toISOString(), ...state })
+      });
+    } catch (e) {}
+  }, force ? 0 : 800);
+}
+
+/* ---------- тренажёр ---------- */
 let idx = 0, selected = null, answered = false;
-const answeredSet = new Set();
-const stats = { answered: 0, goal: 0, plan: 0 };
+const answeredSet = new Set(state.answered || []);
+
+function saveAnswered() {
+  state.answered = Array.from(answeredSet);
+  saveState();
+  cloudPush();
+}
+
+function renderSpotList() {
+  const box = document.getElementById("spot-list");
+  const counter = document.getElementById("spot-count");
+  if (!box) return;
+  box.innerHTML = SPOTS.map((s, i) => {
+    const done = answeredSet.has(i);
+    const current = i === idx;
+    return `<button class="spot-row${current ? " current" : ""}" data-i="${i}">
+        <b>${i + 1}.</b>
+        <span>${s.id}</span>
+        <span style="color:var(--muted);">${s.street} · ${s.board} · ${s.hole} · ${s.position}</span>
+        ${done ? '<span style="margin-left:auto; color:#10b981; font-weight:700;">✓</span>' : ""}
+      </button>`;
+  }).join("");
+  box.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    idx = Number(b.dataset.i);
+    selected = null;
+    answered = false;
+    render();
+  }));
+  if (counter) counter.textContent = `пройдено ${answeredSet.size} из ${SPOTS.length}`;
+}
 
 function render() {
   const app = document.getElementById("app");
   if (idx >= SPOTS.length) {
-    app.innerHTML = `<div class="card-panel"><h2 style="margin-top:0;">Черновик пройден</h2>
-      <p>Решений: ${stats.answered} · цель названа: ${stats.goal} · план назван: ${stats.plan}</p>
-      <p style="color:var(--muted); font-size:13px;">В полной версии: десятки спотов из твоих логов, разбивка по улицам и типам ошибок, счёт «ставок без цели», синхронизация с Хабом.</p></div>`;
+    app.innerHTML = `<div class="card-panel"><h2 style="margin-top:0;">Прототип пройден</h2>
+      <p>Решений: ${state.stats.answered} · цель названа: ${state.stats.goal} · план назван: ${state.stats.plan}</p>
+      <p class="score">Полная версия: споты из логов по кнопке, разбивка по улицам и ошибкам, синхронизация с Хабом.</p></div>`;
     updateScore();
     renderSpotList();
     return;
@@ -259,10 +406,10 @@ function render() {
       </div>
 
       <label>Цель: кого хочешь увидеть в колле или в фолде?</label>
-      <input type="text" id="goal" placeholder="например: колл от Ax, фолд от A-high">
+      <input type="text" id="goal" placeholder="колл от Ax, фолд от A-high" autocomplete="off">
 
       <label>План на следующую улицу</label>
-      <input type="text" id="plan" placeholder="например: на рейз — фолд, на чек — бет 2/3">
+      <input type="text" id="plan" placeholder="на рейз — фолд, на чек — бет 2/3" autocomplete="off">
 
       <div class="btns">
         <button class="primary" id="check">Проверить</button>
@@ -297,9 +444,10 @@ function check() {
 
   answered = true;
   answeredSet.add(idx);
-  stats.answered++;
-  if (gOk) stats.goal++;
-  if (pOk) stats.plan++;
+  state.stats.answered++;
+  if (gOk) state.stats.goal++;
+  if (pOk) state.stats.plan++;
+  saveAnswered();
 
   v.innerHTML = `
     <div style="margin-bottom:10px;">
@@ -316,10 +464,16 @@ function check() {
     <div style="color:#cbd5e1; font-size:13px;">${s.note}</div>
   `;
   updateScore();
+  renderSpotList();
 }
 
-const LIST_KEY = "trainerSpotsOpen";
+function updateScore() {
+  const el = document.getElementById("score");
+  if (el) el.textContent = `Счёт: ${state.stats.answered} решений, цель названа ${state.stats.goal} раз, план ${state.stats.plan} раз.`;
+}
 
+/* ---------- список: сворачивание ---------- */
+const LIST_KEY = "trainerSpotsOpen";
 function applyListState(open) {
   const list = document.getElementById("spot-list");
   const arrow = document.getElementById("spot-arrow");
@@ -327,7 +481,6 @@ function applyListState(open) {
   list.style.display = open ? "flex" : "none";
   if (arrow) arrow.textContent = open ? "▾" : "▸";
 }
-
 function initListToggle() {
   const toggle = document.getElementById("spot-list-toggle");
   if (!toggle) return;
@@ -336,53 +489,91 @@ function initListToggle() {
   applyListState(open);
   toggle.addEventListener("click", () => {
     const isOpen = document.getElementById("spot-list").style.display !== "none";
-    const next = !isOpen;
-    applyListState(next);
-    try { localStorage.setItem(LIST_KEY, next ? "1" : "0"); } catch (e) {}
+    applyListState(!isOpen);
+    try { localStorage.setItem(LIST_KEY, !isOpen ? "1" : "0"); } catch (e) {}
   });
 }
 
-function renderSpotList() {
-  const box = document.getElementById("spot-list");
-  const counter = document.getElementById("spot-count");
-  if (!box) return;
-  box.innerHTML = SPOTS.map((s, i) => {
-    const done = answeredSet.has(i);
-    const current = i === idx;
-    const bg = current ? "#1d4ed8" : "#18213a";
-    const border = current ? "#3b82f6" : "#33405f";
-    return `<button data-i="${i}" style="text-align:left; background:${bg}; border:1px solid ${border};
-        border-radius:8px; padding:7px 10px; color:var(--text); cursor:pointer; font-size:12.5px;
-        display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-        <b>${i + 1}.</b>
-        <span>${s.id}</span>
-        <span style="color:var(--muted);">${s.street} · ${s.board} · ${s.hole} · ${s.position}</span>
-        ${done ? '<span style="margin-left:auto; color:#10b981; font-weight:700;">✓</span>' : ""}
-      </button>`;
-  }).join("");
-  box.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
-    idx = Number(b.dataset.i);
-    selected = null;
-    answered = false;
-    render();
-  }));
-  if (counter) counter.textContent = `пройдено ${answeredSet.size} из ${SPOTS.length}`;
+/* ---------- синхронизация: кнопки ---------- */
+function initSync() {
+  const toggle = document.getElementById("sync-toggle");
+  const body = document.getElementById("sync-body");
+  const arrow = document.getElementById("sync-arrow");
+  const cfg = syncCfg();
+  if (cfg) {
+    document.getElementById("sync-bin").value = cfg.binId || "";
+    document.getElementById("sync-key").value = cfg.apiKey || "";
+  }
+  if (toggle) toggle.addEventListener("click", () => {
+    const hidden = body.classList.contains("hidden");
+    body.classList.toggle("hidden", !hidden);
+    if (arrow) arrow.textContent = hidden ? "▾" : "▸";
+  });
+
+  document.getElementById("sync-connect").addEventListener("click", async () => {
+    const binId = document.getElementById("sync-bin").value.trim();
+    const apiKey = document.getElementById("sync-key").value.trim();
+    if (!binId || !apiKey) return alert("Заполни Bin ID и ключ");
+    localStorage.setItem(SYNC_KEY, JSON.stringify({ binId, apiKey }));
+    updateSyncUI();
+    const pulled = await cloudPull(true);
+    if (!pulled) cloudPush(true);
+    alert("Подключено");
+  });
+
+  document.getElementById("sync-pull").addEventListener("click", () => {
+    if (confirm("Загрузить из облака? Локальный прогресс будет заменён.")) cloudPull(false);
+  });
+
+  document.getElementById("sync-push").addEventListener("click", () => { cloudPush(true); alert("Отправлено в облако"); });
+
+  document.getElementById("sync-off").addEventListener("click", () => {
+    if (!confirm("Отключить синхронизацию?")) return;
+    localStorage.removeItem(SYNC_KEY);
+    updateSyncUI();
+  });
 }
 
-function updateScore() {
-  document.getElementById("score").textContent =
-    `Счёт: ${stats.answered} решений, цель названа ${stats.goal} раз, план ${stats.plan} раз.`;
+/* ---------- установка как приложение ---------- */
+let installEvent = null;
+function initInstall() {
+  const btn = document.getElementById("install-btn");
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault();
+    installEvent = e;
+    btn.classList.remove("hidden");
+  });
+  btn.addEventListener("click", async () => {
+    if (!installEvent) return;
+    installEvent.prompt();
+    await installEvent.userChoice;
+    installEvent = null;
+    btn.classList.add("hidden");
+  });
+  window.addEventListener("appinstalled", () => btn.classList.add("hidden"));
 }
 
-document.getElementById("restart").addEventListener("click", () => {
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+
+function bootQuiz() {
   idx = 0; selected = null; answered = false;
-  stats.answered = stats.goal = stats.plan = 0;
   answeredSet.clear();
+  (state.answered || []).forEach(i => answeredSet.add(Number(i)));
   render();
-});
+  updateScore();
+}
 
-render();
+/* старт */
+updateSyncUI();
+initSync();
+initInstall();
+bootQuiz();
 initListToggle();
+if (syncCfg()) cloudPull(true);
 </script>
 </body>
 </html>
