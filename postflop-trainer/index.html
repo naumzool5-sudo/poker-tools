@@ -66,8 +66,8 @@
   <h1>Тренажёр постфлопа</h1>
   <div class="sub">Черновик: 5 раздач из сессии 26.11. Перед ставкой назови цель и план.</div>
   <div class="card-panel">
-    <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;">
-      <h3 style="margin:0; font-size:15px;">Раздачи в тренажёре</h3>
+    <div id="spot-list-toggle" style="display:flex; justify-content:space-between; align-items:baseline; gap:8px; cursor:pointer; user-select:none;">
+      <h3 style="margin:0; font-size:15px;"><span id="spot-arrow">▾</span> Раздачи в тренажёре</h3>
       <span class="score" id="spot-count"></span>
     </div>
     <div id="spot-list" style="margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
@@ -318,6 +318,30 @@ function check() {
   updateScore();
 }
 
+const LIST_KEY = "trainerSpotsOpen";
+
+function applyListState(open) {
+  const list = document.getElementById("spot-list");
+  const arrow = document.getElementById("spot-arrow");
+  if (!list) return;
+  list.style.display = open ? "flex" : "none";
+  if (arrow) arrow.textContent = open ? "▾" : "▸";
+}
+
+function initListToggle() {
+  const toggle = document.getElementById("spot-list-toggle");
+  if (!toggle) return;
+  let open = true;
+  try { open = localStorage.getItem(LIST_KEY) !== "0"; } catch (e) {}
+  applyListState(open);
+  toggle.addEventListener("click", () => {
+    const isOpen = document.getElementById("spot-list").style.display !== "none";
+    const next = !isOpen;
+    applyListState(next);
+    try { localStorage.setItem(LIST_KEY, next ? "1" : "0"); } catch (e) {}
+  });
+}
+
 function renderSpotList() {
   const box = document.getElementById("spot-list");
   const counter = document.getElementById("spot-count");
@@ -358,6 +382,7 @@ document.getElementById("restart").addEventListener("click", () => {
 });
 
 render();
+initListToggle();
 </script>
 </body>
 </html>
