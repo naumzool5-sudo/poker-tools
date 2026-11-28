@@ -416,22 +416,53 @@ function renderSpotList() {
   if (!box) return;
   box.innerHTML = SPOTS.map((s, i) => {
     const done = answeredSet.has(i);
-    const current = i === idx;
-    return `<button class="spot-row${current ? " current" : ""}" data-i="${i}">
+    const mine = s.addedBy === "pilot";
+    const del = mine
+      ? `<button class="spot-del" data-del="${i}" title="Удалить раздачу"
+           style="flex:0 0 34px; border:1px solid #7f1d1d; background:#2a1520; color:#f87171;
+                  border-radius:9px; cursor:pointer; font-size:15px; line-height:1;">×</button>`
+      : "";
+    return `<div style="display:flex; gap:6px; align-items:stretch;">
+      <button class="spot-row${i === idx ? " current" : ""}" data-i="${i}" style="flex:1;">
         <b>${i + 1}.</b>
         <span>${s.id}${s.correct ? "" : " · без эталона"}</span>
         <span style="color:var(--muted);">${s.street} · ${s.board} · ${s.hole} · ${s.position}</span>
-        <span style="font-size:10.5px; padding:1px 7px; border-radius:999px; border:1px solid ${s.addedBy === "pilot" ? "#2563eb" : "#4b5563"}; color:${s.addedBy === "pilot" ? "#93c5fd" : "#9ca3af"};">${s.addedBy === "pilot" ? "моя" : "тренер"}</span>
+        <span style="font-size:10.5px; padding:1px 7px; border-radius:999px; border:1px solid ${mine ? "#2563eb" : "#4b5563"}; color:${mine ? "#93c5fd" : "#9ca3af"};">${mine ? "моя" : "тренер"}</span>
         ${done ? '<span style="margin-left:auto; color:#10b981; font-weight:700;">✓</span>' : ""}
-      </button>`;
+      </button>
+      ${del}
+    </div>`;
   }).join("");
-  box.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+
+  box.querySelectorAll(".spot-row").forEach(b => b.addEventListener("click", () => {
     idx = Number(b.dataset.i);
     selected = null;
     answered = false;
     render();
   }));
+  box.querySelectorAll(".spot-del").forEach(b => b.addEventListener("click", (e) => {
+    e.stopPropagation();
+    deleteSpot(Number(b.dataset.del));
+  }));
+
   if (counter) counter.textContent = `пройдено ${answeredSet.size} из ${SPOTS.length}`;
+}
+
+function deleteSpot(i) {
+  const s = SPOTS[i];
+  if (!s) return;
+  if (s.addedBy !== "pilot") return alert("Это раздача тренера — её удалить нельзя.");
+  if (!confirm(`Удалить раздачу ${s.id} (${s.street}, ${s.board})?`)) return;
+
+  state.custom = (state.custom || []).filter(x => !(x.id === s.id && x.street === s.street && x.board === s.board));
+  saveState();
+  cloudPush(true);
+  rebuildSpots();
+  answeredSet.clear();
+  (state.answered || []).forEach(k => answeredSet.add(Number(k)));
+  if (idx >= SPOTS.length) idx = Math.max(0, SPOTS.length - 1);
+  render();
+  updateAddCount();
 }
 
 function render() {
