@@ -3,140 +3,191 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Тренажёр постфлопа (прототип)</title>
+<title>Тренажёр постфлопа (черновик)</title>
 <style>
-  :root { --bg:#0f172a; --panel:#16203a; --line:#24304d; --text:#e2e8f0; --muted:#8b98ad; --accent:#3b82f6; --good:#10b981; --bad:#ef4444; --warn:#f59e0b; }
+  :root { --bg:#1b2440; --panel:#232e4d; --line:#33405f; --text:#e8edf7; --muted:#93a0bd;
+          --accent:#3b82f6; --good:#10b981; --bad:#ef4444; --warn:#f59e0b; --felt:#14532d; }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--text); font:15px/1.55 -apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
-  .wrap { max-width:820px; margin:0 auto; padding:18px 14px 60px; }
-  h1 { font-size:20px; margin:0 0 4px; }
-  .sub { color:var(--muted); font-size:12px; margin-bottom:16px; }
-  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:14px; }
-  .rowline { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:12px; margin-bottom:10px; }
-  .board { display:flex; gap:8px; margin:12px 0 6px; }
-  .c { width:52px; height:72px; border-radius:8px; background:#0b1324; border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; }
-  .c-s { color:#e2e8f0; } .c-h { color:#ef4444; } .c-d { color:#3b82f6; } .c-c { color:#10b981; }
-  .hole { font-size:15px; margin-bottom:10px; }
-  .hist { background:#0b1324; border:1px solid var(--line); border-radius:8px; padding:10px; font-size:13px; color:#cbd5e1; white-space:pre-line; margin-bottom:12px; }
-  .opts { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
-  .opt { padding:9px 14px; border-radius:8px; border:1px solid var(--line); background:#131c31; color:var(--text); font-weight:600; cursor:pointer; font-size:13px; }
+  .wrap { max-width:780px; margin:0 auto; padding:16px 14px 60px; }
+  h1 { font-size:19px; margin:0 0 2px; }
+  .sub { color:var(--muted); font-size:12px; margin-bottom:14px; }
+
+  /* стол */
+  .table-wrap { position:relative; width:100%; aspect-ratio: 675/470; margin-bottom:14px; }
+  .felt { position:absolute; left:10%; top:12%; width:80%; height:76%;
+          background: radial-gradient(ellipse at center, #1a5c34 0%, #12401f 70%, #0d3319 100%);
+          border:6px solid #2c3a56; border-radius:50%; box-shadow: inset 0 0 40px rgba(0,0,0,.55); }
+  .seat { position:absolute; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .badge { min-width:44px; padding:5px 8px; border-radius:999px; border:1px solid var(--line);
+           background:#1d2740; color:#c9d4ea; font-size:11px; font-weight:700; text-align:center; }
+  .badge.hero { background:#1d4ed8; border-color:#3b82f6; color:#fff; }
+  .dealer { position:absolute; width:18px; height:18px; border-radius:50%; background:#e5e7eb; color:#111;
+            font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+
+  /* карты */
+  .cards { display:flex; gap:6px; justify-content:center; margin-top:2px; }
+  .card { width:44px; height:62px; border-radius:7px; background:#f8fafc; color:#0f172a;
+          display:flex; flex-direction:column; align-items:center; justify-content:center;
+          font-weight:800; font-size:17px; line-height:1; box-shadow:0 2px 6px rgba(0,0,0,.4); }
+  .card.red { color:#dc2626; }
+  .card.back { background:#1e293b; border:1px solid #334155; color:#64748b; font-size:20px; }
+  .board { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:flex; gap:8px; }
+  .board .card { width:52px; height:72px; font-size:20px; }
+  .pot { position:absolute; left:50%; top:calc(50% + 62px); transform:translateX(-50%);
+         background:rgba(0,0,0,.45); border:1px solid var(--line); border-radius:999px;
+         padding:3px 12px; font-size:12px; color:#cbd5e1; white-space:nowrap; }
+
+  /* карточка вопроса */
+  .card-panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:12px; }
+  .hist { background:#18213a; border:1px solid var(--line); border-radius:8px; padding:10px;
+          font-size:13px; color:#cbd5e1; white-space:pre-line; margin-bottom:12px; }
+  .opts { display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 12px; }
+  .opt { padding:9px 13px; border-radius:8px; border:1px solid var(--line); background:#1b2440;
+         color:var(--text); font-weight:600; cursor:pointer; font-size:13px; }
   .opt.sel { background:var(--accent); border-color:var(--accent); color:#fff; }
   label { display:block; color:var(--muted); font-size:12px; margin:10px 0 4px; }
-  input[type=text] { width:100%; padding:9px 11px; background:#0b1324; color:var(--text); border:1px solid var(--line); border-radius:8px; font-size:14px; }
+  input[type=text] { width:100%; padding:9px 11px; background:#18213a; color:var(--text);
+                     border:1px solid var(--line); border-radius:8px; font-size:14px; }
   .btns { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
-  button.primary { padding:10px 16px; border-radius:8px; border:1px solid var(--accent); background:var(--accent); color:#fff; font-weight:700; cursor:pointer; }
-  button.plain { padding:10px 16px; border-radius:8px; border:1px solid var(--line); background:#131c31; color:var(--text); font-weight:600; cursor:pointer; }
+  button.primary { padding:10px 16px; border-radius:8px; border:1px solid var(--accent);
+                   background:var(--accent); color:#fff; font-weight:700; cursor:pointer; }
+  button.plain { padding:10px 16px; border-radius:8px; border:1px solid var(--line);
+                 background:#1b2440; color:var(--text); font-weight:600; cursor:pointer; }
   .verdict { margin-top:14px; font-size:14px; }
   .ok { color:var(--good); } .no { color:var(--bad); } .mid { color:var(--warn); }
   .score { color:var(--muted); font-size:13px; }
-  .tag { display:inline-block; padding:1px 8px; border-radius:99px; border:1px solid var(--line); font-size:11px; color:var(--muted); }
+  .tag { display:inline-block; padding:1px 8px; border-radius:99px; border:1px solid var(--line);
+         font-size:11px; color:var(--muted); }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Тренажёр постфлопа</h1>
-  <div class="sub">Прототип: 5 раздач из твоей сессии 26.11. Задача одна — перед ставкой назвать цель и план.</div>
-
+  <div class="sub">Черновик: 5 раздач из сессии 26.11. Перед ставкой назови цель и план.</div>
   <div id="app"></div>
-
-  <div class="card">
-    <div class="score" id="score">Счёт: 0 решений, цель названа 0 раз, план 0 раз.</div>
-    <div class="btns">
-      <button class="plain" id="restart">Начать заново</button>
-    </div>
+  <div class="card-panel">
+    <div class="score" id="score"></div>
+    <div class="btns"><button class="plain" id="restart">Начать заново</button></div>
   </div>
 </div>
 
 <script>
 /*CORE-BEGIN*/
+/* Раскладка мест как на столе: BTN сверху, CO слева-сверху, SB справа-сверху,
+   MP слева-снизу, BB справа-снизу, EP (герой) снизу по центру. */
+const SEATS = [
+  { key: "BTN", x: 50,  y: 6,  dealer: true },
+  { key: "CO",  x: 12,  y: 28 },
+  { key: "SB",  x: 88,  y: 28 },
+  { key: "MP",  x: 14,  y: 70 },
+  { key: "BB",  x: 86,  y: 70 },
+  { key: "EP",  x: 50,  y: 92 }
+];
+
 const SPOTS = [
   {
     id: "HD3155428523",
-    pos: "CO", stack: 2.06, pot: 0.14, street: "Флоп",
-    board: "Ah Jd 2d", hole: "Js Jh",
-    hist: "Префлоп: ты открыл до $0.06, BTN заколлировал.\nФлоп: ты ставишь $0.13, BTN колл.\nТёрн: ты ставишь $0.20, BTN колл.\nРивер: ты ставишь $0.79, BTN идёт олл-ин, ты коллишь $0.88.",
+    pos: "CO", street: "Флоп", board: "Ah Jd 2d", hole: "Js Jh",
+    pot: 0.14, stack: 2.06,
+    hist: "Префлоп: ты открыл до $0.06, BTN заколлировал.\nФлоп: ты ставишь $0.13, BTN колл.\nТёрн: $0.20 — колл. Ривер: $0.79, он в олл-ин, ты коллишь.",
     options: ["Чек", "Бет 1/3 банка", "Бет 2/3 банка", "Олл-ин"],
     correct: "Бет 1/3 банка",
-    goal: "Хочу колл от Ax и от Jx. Фолды мне не нужны: слабее почти ничего нет, но тузы платят три улицы.",
-    plan: "Тёрн: бет ~2/3 на спаренной доске. Ривер: добор 3/4, но на рейз — не скидывать сет (правило ривера).",
-    note: "Сет на A-high — это ставка на колл, а не на фолд. Малый размер на флопе — чтобы не выгнать тузы."
+    goal: "Хочу колл от Ax и Jx. Фолды не нужны: слабее платят, но тузы платят три улицы.",
+    plan: "Тёрн — 2/3 на спаренной доске. Ривер — добор 3/4, на рейз сет не скидываю.",
+    note: "Сет на A-high — ставка на колл, а не на фолд. Малый размер на флопе, чтобы не выгнать тузы."
   },
   {
     id: "HD3155383397",
-    pos: "BTN", stack: 2.97, pot: 0.15, street: "Флоп",
-    board: "8s Qh 7h", hole: "Ah Qs",
+    pos: "BTN", street: "Флоп", board: "8s Qh 7h", hole: "Ah Qs",
+    pot: 0.15, stack: 2.97,
     hist: "Префлоп: ты открыл до $0.06, BB заколлировал.\nФлоп: BB чек.",
     options: ["Чек", "Бет 1/3 банка", "Бет 2/3 банка", "Олл-ин"],
     correct: "Бет 2/3 банка",
-    goal: "Колл от Qx и от флеш-дро. Дро с сердцем не выкидываю бесплатно: у меня нет блокера на пики/червы, доска дровяная.",
-    plan: "Тёрн на несвязанной карте — второй баррель. На рейз флопа — фолд: на NL2 чек-рейз флопа это сила.",
-    note: "Топ-пара с тузом на дровяной доске — ставка крупнее, потому что оплачивает дро. Но не для стека: на рейз флопа ты фолдишь."
+    goal: "Колл от Qx и от флеш-дро. Дро не выкидываю бесплатно — доска дровяная.",
+    plan: "Тёрн на несвязанной — второй баррель. На рейз флопа — фолд: на NL2 это сила.",
+    note: "Топ-пара с тузом на дровяной — крупнее, дро платит. Но не для стека: на рейз флопа фолд."
   },
   {
     id: "HD3155456312",
-    pos: "BTN", stack: 1.91, pot: 0.45, street: "Тёрн",
-    board: "Ah 9h Js 4h", hole: "Ac Kc",
-    hist: "Префлоп: ты открыл до $0.06, BB заколлировал.\nФлоп: бет $0.07 — колл.\nТёрн: BB чек.",
+    pos: "BTN", street: "Тёрн", board: "Ah 9h Js 4h", hole: "Ac Kc",
+    pot: 0.45, stack: 1.91,
+    hist: "Префлоп: открыл до $0.06, BB колл.\nФлоп: бет $0.07 — колл.\nТёрн: BB чек.",
     options: ["Чек", "Бет 1/3 банка", "Бет 2/3 банка", "Олл-ин"],
     correct: "Бет 1/3 банка",
-    goal: "Колл от Ax и Jx. Хочу также забрать пот у дро, но размером не раздувать: на этой доске любой рейз означает флеш.",
-    plan: "На рейз — сразу фолд: у меня топ-пара без червы, флеш уже собрался.",
-    note: "То же правило, что и в раздаче #2, только размер меньше: доска стала мокрее, а рука не усилилась."
+    goal: "Колл от Ax и Jx. Заодно забираю у дро, но размер не раздуваю: любой рейз тут — флеш.",
+    plan: "На рейз — сразу фолд: у меня топ-пара без червы.",
+    note: "То же правило, что и в #2, но размер меньше: доска мокрее, рука не усилилась."
   },
   {
     id: "HD3155459956",
-    pos: "BB", stack: 2.47, pot: 0.44, street: "Тёрн",
-    board: "4s Ks 5c 3c", hole: "Kh Ah",
-    hist: "Префлоп: ты заколлировал рейз до $0.20.\nФлоп: чек, соперник ставит $0.18, ты колл.\nТёрн: чек соперника.",
+    pos: "BB", street: "Тёрн", board: "4s Ks 5c 3c", hole: "Kh Ah",
+    pot: 0.44, stack: 2.47,
+    hist: "Префлоп: колл рейза до $0.20.\nФлоп: чек, он $0.18, ты колл.\nТёрн: он чек.",
     options: ["Чек", "Бет 1/2 банка", "Бет 2/3 банка", "Олл-ин"],
     correct: "Бет 1/2 банка",
-    goal: "Колл от Kx и от дро. Олл-ин цели не имеет: хуже не заплатят, лучше не сфолдят.",
-    plan: "Ривер: если карта не закрывает дро — небольшой добор, иначе чек.",
-    note: "Это та самая раздача, где ты шовнул $2.07 в банк $0.44. Ставка там не имела адресата — ни колла от худших, ни фолда от лучших."
+    goal: "Колл от Kx и дро. Олл-ин цели не имеет: хуже не заплатят, лучше не сфолдят.",
+    plan: "Ривер: если дро не закрылось — небольшой добор, иначе чек.",
+    note: "Та самая раздача: шов $2.07 в банк $0.44 без адресата."
   },
   {
     id: "HD3155458905",
-    pos: "BB", stack: 2.42, pot: 0.30, street: "Ривер",
-    board: "3s Td Ks 4d 7s", hole: "9s Qs",
-    hist: "Префлоп: колл рейза.\nФлоп и тёрн: чек-чек.\nРивер: соперник чек.",
+    pos: "BB", street: "Ривер", board: "3s Td Ks 4d 7s", hole: "9s Qs",
+    pot: 0.30, stack: 2.42,
+    hist: "Префлоп: колл рейза.\nФлоп и тёрн: чек-чек.\nРивер: он чек.",
     options: ["Чек", "Бет 1/3 банка", "Бет 2/3 банка", "Олл-ин"],
     correct: "Бет 1/3 банка",
-    goal: "Хочу фолд от A-high и от мелких пар, которые дошли до вскрытия. Своей рукой я не выигрываю вскрытие — Q-high.",
+    goal: "Фолд от A-high и мелких пар. Своей рукой вскрытие не выигрываю — Q-high.",
     plan: "Если колл — на этом всё, ставку не продолжаю.",
-    note: "Это блеф с адресатом: говорю, кого выбиваю. Такая ставка — не «на всякий случай», а решение."
+    note: "Блеф с адресатом: называю, кого выбиваю. Это решение, а не «вдруг»."
   }
 ];
 
-function parseCard(s) {
-  return { rank: s[0], suit: s[1] };
-}
+const SUIT = { s: "♠", h: "♥", d: "♦", c: "♣" };
 
-function cardHtml(card) {
-  const { rank, suit } = parseCard(card);
-  const sym = { s: "♠", h: "♥", d: "♦", c: "♣" }[suit];
-  return `<div class="c c-${suit}">${rank}${sym}</div>`;
+function cardHtml(card, big) {
+  const r = card[0], s = card[1];
+  const red = (s === "h" || s === "d") ? " red" : "";
+  return `<div class="card${red}${big ? " big" : ""}"><span>${r}</span><span>${SUIT[s]}</span></div>`;
 }
 
 function boardHtml(board) {
-  return board.split(" ").map(cardHtml).join("");
+  return board.split(" ").map(c => cardHtml(c, true)).join("");
 }
 
-function normalize(s) {
-  return (s || "").toLowerCase().replace(/\s+/g, " ").trim();
-}
+function normalize(s) { return (s || "").toLowerCase().replace(/\s+/g, " ").trim(); }
 
 function goalIsNamed(text) {
   const t = normalize(text);
   if (t.length < 8) return false;
-  const keywords = ["колл", "фолд", "выбить", "заплат", "хуже", "лучше", "дро", "вэлью", "сфолд", "payload", "pay"];
-  return keywords.some(k => t.includes(k));
+  return ["колл", "фолд", "выбить", "заплат", "хуже", "лучше", "дро", "вэлью", "сфолд"].some(k => t.includes(k));
 }
 
 function planIsNamed(text) {
   const t = normalize(text);
   if (t.length < 10) return false;
-  const keywords = ["тёрн", "терн", "ривер", "флоп", "если", "чек", "бет", "фолд", "колл"];
-  return keywords.some(k => t.includes(k));
+  return ["тёрн", "терн", "ривер", "флоп", "если", "чек", "бет", "фолд", "колл"].some(k => t.includes(k));
+}
+
+function tableHtml(spot) {
+  const heroSeat = spot.pos;
+  const seats = SEATS.map(s => {
+    const hero = s.key === heroSeat;
+    const cards = hero ? `<div class="cards">${spot.hole.split(" ").map(c => cardHtml(c)).join("")}</div>` : "";
+    const dealer = s.dealer ? `<div class="dealer" style="left:calc(50% + 26px); top:2px;">D</div>` : "";
+    return `<div class="seat" style="left:${s.x}%; top:${s.y}%;">
+        ${cards}
+        <div class="badge${hero ? " hero" : ""}">${s.key}</div>
+        ${dealer}
+      </div>`;
+  }).join("");
+
+  return `<div class="table-wrap">
+      <div class="felt"></div>
+      ${seats}
+      <div class="board">${boardHtml(spot.board)}</div>
+      <div class="pot">Банк $${spot.pot.toFixed(2)} · стек $${spot.stack.toFixed(2)}</div>
+    </div>`;
 }
 /*CORE-END*/
 
@@ -146,21 +197,19 @@ const stats = { answered: 0, goal: 0, plan: 0 };
 function render() {
   const app = document.getElementById("app");
   if (idx >= SPOTS.length) {
-    app.innerHTML = `<div class="card"><h2 style="margin-top:0;">Прототип пройден</h2>
+    app.innerHTML = `<div class="card-panel"><h2 style="margin-top:0;">Черновик пройден</h2>
       <p>Решений: ${stats.answered} · цель названа: ${stats.goal} · план назван: ${stats.plan}</p>
-      <p style="color:var(--muted); font-size:13px;">В полной версии: десятки спотов из твоих логов, разбивка по улицам и типам ошибок, счёт «ставок без цели» по сессиям, синхронизация с Хабом.</p></div>`;
+      <p style="color:var(--muted); font-size:13px;">В полной версии: десятки спотов из твоих логов, разбивка по улицам и типам ошибок, счёт «ставок без цели», синхронизация с Хабом.</p></div>`;
     updateScore();
     return;
   }
   const s = SPOTS[idx];
   app.innerHTML = `
-    <div class="card">
-      <div class="rowline">
-        <span>${s.pos} · стек $${s.stack.toFixed(2)} · банк $${s.pot.toFixed(2)}</span>
-        <span class="tag">${s.street}</span>
+    <div class="card-panel">
+      <div style="display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-bottom:8px;">
+        <span>${s.id}</span><span class="tag">${s.street}</span>
       </div>
-      <div class="board">${boardHtml(s.board)}</div>
-      <div class="hole">Твоя рука: ${s.hole.split(" ").map(cardHtml).join("")}</div>
+      ${tableHtml(s)}
       <div class="hist">${s.hist}</div>
 
       <label>Что делаешь?</label>
@@ -217,7 +266,7 @@ function check() {
       <span style="color:var(--muted);"> · </span>
       <span class="${pOk ? 'ok' : 'mid'}">${pOk ? '✅ план назван' : '⚠️ план не назван'}</span>
     </div>
-    <div style="background:#0b1324; border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:10px;">
+    <div style="background:#18213a; border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:10px;">
       <div style="margin-bottom:6px;"><b>Цель эталона:</b> ${s.goal}</div>
       <div><b>План эталона:</b> ${s.plan}</div>
     </div>
