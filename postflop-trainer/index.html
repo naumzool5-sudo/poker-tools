@@ -100,6 +100,11 @@
   </header>
   <div class="sub" id="subline">Черновик: перед ставкой назови цель и план.</div>
 
+  <div class="btns" style="margin:0 0 12px;">
+    <button class="plain" id="top-pull" style="flex:1; border-color:#2563eb; color:#93c5fd;">☁️ Из облака</button>
+    <button class="plain" id="top-push" style="flex:1; border-color:#16a34a; color:#86efac;">☁️ В облако</button>
+  </div>
+
   <div class="card-panel">
     <div id="spot-list-toggle" style="display:flex; justify-content:space-between; align-items:baseline; gap:8px; cursor:pointer; user-select:none;">
       <h3 style="margin:0; font-size:15px;"><span id="spot-arrow">▾</span> Раздачи в тренажёре</h3>
@@ -573,6 +578,18 @@ function initSync() {
   });
 
   document.getElementById("sync-push").addEventListener("click", () => { cloudPush(true); alert("Отправлено в облако"); });
+
+  const topPull = document.getElementById("top-pull");
+  const topPush = document.getElementById("top-push");
+  if (topPull) topPull.addEventListener("click", () => {
+    if (!syncCfg()) { alert("Сначала подключи синхронизацию: Bin ID и ключ ниже."); return; }
+    cloudPull(false);
+  });
+  if (topPush) topPush.addEventListener("click", () => {
+    if (!syncCfg()) { alert("Сначала подключи синхронизацию: Bin ID и ключ ниже."); return; }
+    cloudPush(true);
+    alert("Отправлено в облако");
+  });
 
   document.getElementById("sync-off").addEventListener("click", () => {
     if (!confirm("Отключить синхронизацию?")) return;
