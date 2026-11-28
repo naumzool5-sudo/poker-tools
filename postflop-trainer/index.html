@@ -65,6 +65,13 @@
 <div class="wrap">
   <h1>Тренажёр постфлопа</h1>
   <div class="sub">Черновик: 5 раздач из сессии 26.11. Перед ставкой назови цель и план.</div>
+  <div class="card-panel">
+    <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;">
+      <h3 style="margin:0; font-size:15px;">Раздачи в тренажёре</h3>
+      <span class="score" id="spot-count"></span>
+    </div>
+    <div id="spot-list" style="margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
+  </div>
   <div id="app"></div>
   <div class="card-panel">
     <div class="score" id="score"></div>
@@ -224,6 +231,7 @@ function tableHtml(spot) {
 /*CORE-END*/
 
 let idx = 0, selected = null, answered = false;
+const answeredSet = new Set();
 const stats = { answered: 0, goal: 0, plan: 0 };
 
 function render() {
@@ -233,6 +241,7 @@ function render() {
       <p>Решений: ${stats.answered} · цель названа: ${stats.goal} · план назван: ${stats.plan}</p>
       <p style="color:var(--muted); font-size:13px;">В полной версии: десятки спотов из твоих логов, разбивка по улицам и типам ошибок, счёт «ставок без цели», синхронизация с Хабом.</p></div>`;
     updateScore();
+    renderSpotList();
     return;
   }
   const s = SPOTS[idx];
@@ -272,6 +281,7 @@ function render() {
   document.getElementById("check").addEventListener("click", check);
   document.getElementById("next").addEventListener("click", () => { idx++; selected = null; answered = false; render(); });
   updateScore();
+  renderSpotList();
 }
 
 function check() {
@@ -286,6 +296,7 @@ function check() {
   const pOk = planIsNamed(plan);
 
   answered = true;
+  answeredSet.add(idx);
   stats.answered++;
   if (gOk) stats.goal++;
   if (pOk) stats.plan++;
@@ -307,6 +318,33 @@ function check() {
   updateScore();
 }
 
+function renderSpotList() {
+  const box = document.getElementById("spot-list");
+  const counter = document.getElementById("spot-count");
+  if (!box) return;
+  box.innerHTML = SPOTS.map((s, i) => {
+    const done = answeredSet.has(i);
+    const current = i === idx;
+    const bg = current ? "#1d4ed8" : "#18213a";
+    const border = current ? "#3b82f6" : "#33405f";
+    return `<button data-i="${i}" style="text-align:left; background:${bg}; border:1px solid ${border};
+        border-radius:8px; padding:7px 10px; color:var(--text); cursor:pointer; font-size:12.5px;
+        display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <b>${i + 1}.</b>
+        <span>${s.id}</span>
+        <span style="color:var(--muted);">${s.street} · ${s.board} · ${s.hole} · ${s.position}</span>
+        ${done ? '<span style="margin-left:auto; color:#10b981; font-weight:700;">✓</span>' : ""}
+      </button>`;
+  }).join("");
+  box.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    idx = Number(b.dataset.i);
+    selected = null;
+    answered = false;
+    render();
+  }));
+  if (counter) counter.textContent = `пройдено ${answeredSet.size} из ${SPOTS.length}`;
+}
+
 function updateScore() {
   document.getElementById("score").textContent =
     `Счёт: ${stats.answered} решений, цель названа ${stats.goal} раз, план ${stats.plan} раз.`;
@@ -315,6 +353,7 @@ function updateScore() {
 document.getElementById("restart").addEventListener("click", () => {
   idx = 0; selected = null; answered = false;
   stats.answered = stats.goal = stats.plan = 0;
+  answeredSet.clear();
   render();
 });
 
