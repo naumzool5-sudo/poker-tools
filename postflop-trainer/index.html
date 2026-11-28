@@ -567,6 +567,16 @@ function bootQuiz() {
   updateScore();
 }
 
+document.getElementById("restart").addEventListener("click", () => {
+  if (!confirm("Сбросить прогресс тренажёра?")) return;
+  answeredSet.clear();
+  state.answered = [];
+  state.stats = { answered: 0, goal: 0, plan: 0 };
+  saveState();
+  cloudPush(true);
+  bootQuiz();
+});
+
 /* старт */
 updateSyncUI();
 initSync();
