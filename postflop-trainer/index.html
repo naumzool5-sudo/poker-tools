@@ -116,6 +116,51 @@
   </div>
 
   <div class="card-panel">
+    <div id="add-toggle" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; user-select:none;">
+      <h3 style="margin:0; font-size:15px;"><span id="add-arrow">▸</span> ➕ Добавить раздачу</h3>
+      <span class="chip" id="add-count"></span>
+    </div>
+    <div id="add-body" class="hidden" style="margin-top:12px;">
+      <label>Вставь текст раздачи из лога GG (можно одну)</label>
+      <textarea id="add-text" rows="6" placeholder="Poker Hand #HD...: Hold'em No Limit ($0.01/$0.02) ..." style="width:100%; background:#18213a; color:var(--text); border:1px solid var(--line); border-radius:10px; padding:10px; font-family:monospace; font-size:12px;"></textarea>
+      <div class="btns"><button class="primary" id="add-parse">Разобрать текст</button></div>
+
+      <div id="add-form" class="hidden" style="margin-top:10px;">
+        <div class="score" id="add-found" style="margin-bottom:8px;"></div>
+
+        <label>Улица</label>
+        <select id="add-street" style="width:100%; padding:11px; border-radius:10px; background:#18213a; color:var(--text); border:1px solid var(--line); font-size:15px;">
+          <option value="Флоп">Флоп</option><option value="Тёрн">Тёрн</option><option value="Ривер">Ривер</option>
+        </select>
+
+        <label>Банк перед решением ($)</label>
+        <input type="text" id="add-pot" inputmode="decimal">
+
+        <label>Варианты действий (через запятую)</label>
+        <input type="text" id="add-options" value="Чек, Бет 1/3 банка, Бет 2/3 банка, Олл-ин">
+
+        <label>Правильное действие (эталон)</label>
+        <input type="text" id="add-correct">
+
+        <label>Цель эталона</label>
+        <input type="text" id="add-goal" placeholder="колл от Qx, фолд от A-high">
+
+        <label>План эталона</label>
+        <input type="text" id="add-plan" placeholder="на рейз — фолд, на чек — бет 2/3">
+
+        <label>Заметка (почему так)</label>
+        <input type="text" id="add-note">
+
+        <div class="btns">
+          <button class="primary" id="add-save">Сохранить в тренажёр</button>
+          <button class="plain" id="add-cancel">Отмена</button>
+        </div>
+        <p class="score" id="add-msg" style="margin-top:8px;"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-panel">
     <div id="sync-toggle" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; user-select:none;">
       <h3 style="margin:0; font-size:15px;"><span id="sync-arrow">▸</span> ☁️ Синхронизация</h3>
       <span class="chip" id="sync-state">не настроена</span>
@@ -149,7 +194,7 @@ const SLOTS = [
 const RING = ["BTN", "SB", "BB", "UTG", "MP", "CO"];
 
 /*SPOTS-BEGIN*/
-const SPOTS = [
+const BUILTIN_SPOTS = [
  {
   "id": "HD3156966835",
   "street": "Тёрн",
@@ -274,6 +319,7 @@ function tableHtml(spot) {
       <div class="pot">Банк $${spot.pot.toFixed(2)} · стек $${spot.stack.toFixed(2)}</div>
     </div>`;
 }
+let SPOTS = BUILTIN_SPOTS.slice();
 /*CORE-END*/
 
 /* ---------- состояние и синхронизация ---------- */
@@ -322,6 +368,7 @@ async function cloudPull(silent) {
       state = Object.assign({}, state, rec);
       saveState();
       bootQuiz();
+      updateAddCount();
       if (!silent) alert("Загружено из облака");
       return true;
     }
@@ -559,7 +606,12 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+function rebuildSpots() {
+  SPOTS = BUILTIN_SPOTS.concat(state.custom || []);
+}
+
 function bootQuiz() {
+  rebuildSpots();
   idx = 0; selected = null; answered = false;
   answeredSet.clear();
   (state.answered || []).forEach(i => answeredSet.add(Number(i)));
@@ -577,12 +629,193 @@ document.getElementById("restart").addEventListener("click", () => {
   bootQuiz();
 });
 
+
+/* ---------- добавление раздачи из текста лога ---------- */
+const POS6 = ["SB", "BB", "UTG", "MP", "CO", "BTN"];
+const POS5 = ["SB", "BB", "UTG", "CO", "BTN"];
+const POS4 = ["SB", "BB", "CO", "BTN"];
+const POS3 = ["SB", "BB", "BTN"];
+const POS2 = ["SB", "BB"];
+
+let parsedSpot = null;
+
+function parseHandText(text) {
+  const idm = text.match(/Poker Hand #(\w+)/);
+  if (!idm) return null;
+  const id = idm[1];
+
+  const holeM = text.match(/Dealt to Hero \[([^\]]+)\]/);
+  const hole = holeM ? holeM[1].trim() : "";
+
+  // места и кнопка -> позиция
+  const seats = [...text.matchAll(/Seat (\d+): (\w+) \(\$[\d.]+ in chips\)/g)].map(m => ({ n: +m[1], name: m[2] }));
+  const btnM = text.match(/Seat #(\d+) is the button/);
+  let position = "";
+  if (seats.length && btnM) {
+    const btn = +btnM[1];
+    const maxSeat = Math.max(...seats.map(x => x.n));
+    const order = [];
+    for (let k = 1; k <= maxSeat; k++) {
+      const n = ((btn - 1 + k) % maxSeat) + 1;
+      const seat = seats.find(x => x.n === n);
+      if (seat) order.push(seat.name);
+    }
+    const labels = { 6: POS6, 5: POS5, 4: POS4, 3: POS3, 2: POS2 }[order.length] || order.map((_, i) => "P" + i);
+    const hi = order.indexOf("Hero");
+    position = hi >= 0 ? labels[hi] : "";
+  }
+
+  const stackM = text.match(/Seat \d+: Hero \(\$([\d.]+) in chips\)/);
+  const stack = stackM ? +stackM[1] : 0;
+
+  // улицы и доски
+  const boards = {};
+  let street = "PRE";
+  const lines = text.split(/\r?\n/);
+  const hist = [];
+  let committed = {};
+  let board = "";
+  const decisions = [];
+
+  for (const line of lines) {
+    const sm = line.match(/^\*\*\* (?:FIRST |SECOND )?(FLOP|TURN|RIVER|SHOWDOWN|SUMMARY) \*\*\*(.*)$/);
+    if (sm) {
+      street = sm[1];
+      const allBrackets = [...sm[2].matchAll(/\[([^\]]*)\]/g)].map(x => x[1].trim());
+      if (["FLOP", "TURN", "RIVER"].includes(street) && allBrackets.length) {
+        const cards = allBrackets.join(" ").split(/\s+/).filter(Boolean);
+        boards[street] = cards.join(" ");
+        board = boards[street];
+      }
+      continue;
+    }
+    if (!["PRE", "FLOP", "TURN", "RIVER"].includes(street)) continue;
+    if (!line.trim()) continue;
+
+    const heroAct = line.match(/^Hero: (checks|bets|calls|raises|folds)(?:[^$]*\$([\d.]+))?(?: to \$([\d.]+))?/);
+    if (heroAct && street !== "PRE") {
+      decisions.push({
+        street,
+        board,
+        pot: +Object.values(committed).reduce((a, b) => a + b, 0).toFixed(2),
+        action: heroAct[1],
+        history: hist.slice(-12).join("\n")
+      });
+    }
+
+    const post = line.match(/^(\w+): posts (?:small|big) blind \$([\d.]+)/);
+    const bet = line.match(/^(\w+): bets \$([\d.]+)/);
+    const raise = line.match(/^(\w+): raises \$([\d.]+) to \$([\d.]+)/);
+    const call = line.match(/^(\w+): calls \$([\d.]+)/);
+    if (post) committed[post[1]] = (committed[post[1]] || 0) + +post[2];
+    else if (bet) committed[bet[1]] = (committed[bet[1]] || 0) + +bet[2];
+    else if (raise) committed[raise[1]] = +raise[3];
+    else if (call) committed[call[1]] = (committed[call[1]] || 0) + +call[2];
+
+    if (!line.startsWith("Dealt to") && !line.startsWith("Seat ") && !line.startsWith("Table ")) hist.push(line);
+  }
+
+  return { id, hole, position, stack, decisions, boards };
+}
+
+function streetRu(en) { return { FLOP: "Флоп", TURN: "Тёрн", RIVER: "Ривер" }[en] || "Флоп"; }
+
+function initAddPanel() {
+  const toggle = document.getElementById("add-toggle");
+  const body = document.getElementById("add-body");
+  const arrow = document.getElementById("add-arrow");
+  if (!toggle) return;
+
+  toggle.addEventListener("click", () => {
+    const hidden = body.classList.contains("hidden");
+    body.classList.toggle("hidden", !hidden);
+    arrow.textContent = hidden ? "▾" : "▸";
+  });
+
+  document.getElementById("add-parse").addEventListener("click", () => {
+    const text = document.getElementById("add-text").value;
+    const res = parseHandText(text);
+    if (!res || !res.hole) return alert("Не нашёл раздачу. Нужен текст лога GG с «Dealt to Hero».");
+    if (!res.decisions.length) return alert("В этой раздаче нет постфлоп-решений Hero.");
+
+    const d = res.decisions[0];
+    parsedSpot = {
+      id: res.id,
+      hole: res.hole,
+      position: res.position,
+      stack: res.stack,
+      board: d.board,
+      street: streetRu(d.street),
+      pot: d.pot,
+      hist: d.history
+    };
+
+    document.getElementById("add-found").textContent =
+      `${res.id} · ${res.hole} · ${res.position} · решений в раздаче: ${res.decisions.length} (беру первое)`;
+    document.getElementById("add-street").value = parsedSpot.street;
+    document.getElementById("add-pot").value = parsedSpot.pot.toFixed(2);
+    document.getElementById("add-form").classList.remove("hidden");
+    document.getElementById("add-msg").textContent = "";
+  });
+
+  document.getElementById("add-cancel").addEventListener("click", () => {
+    document.getElementById("add-form").classList.add("hidden");
+    parsedSpot = null;
+  });
+
+  document.getElementById("add-save").addEventListener("click", () => {
+    if (!parsedSpot) return;
+    const options = document.getElementById("add-options").value.split(",").map(x => x.trim()).filter(Boolean);
+    const correct = document.getElementById("add-correct").value.trim();
+    if (!options.length) return alert("Нужен хотя бы один вариант действия");
+    if (!options.includes(correct)) return alert("Эталон должен быть одним из вариантов");
+
+    const spot = {
+      id: parsedSpot.id,
+      street: document.getElementById("add-street").value,
+      board: parsedSpot.board,
+      hole: parsedSpot.hole,
+      position: parsedSpot.position,
+      pot: parseFloat(document.getElementById("add-pot").value) || parsedSpot.pot,
+      stack: parsedSpot.stack,
+      hist: parsedSpot.hist,
+      options,
+      correct,
+      goal: document.getElementById("add-goal").value.trim(),
+      plan: document.getElementById("add-plan").value.trim(),
+      note: document.getElementById("add-note").value.trim(),
+      custom: true
+    };
+
+    state.custom = (state.custom || []).filter(x => !(x.id === spot.id && x.street === spot.street));
+    state.custom.push(spot);
+    saveState();
+    cloudPush(true);
+
+    SPOTS = BUILTIN_SPOTS.concat(state.custom);
+    renderSpotList();
+    document.getElementById("add-form").classList.add("hidden");
+    document.getElementById("add-text").value = "";
+    document.getElementById("add-msg").textContent = "Раздача добавлена в тренажёр и отправлена в облако.";
+    updateAddCount();
+  });
+}
+
+function updateAddCount() {
+  const el = document.getElementById("add-count");
+  if (!el) return;
+  const n = (state.custom || []).length;
+  el.textContent = n ? `моих: ${n}` : "";
+}
+
 /* старт */
 updateSyncUI();
 initSync();
 initInstall();
 bootQuiz();
 initListToggle();
+initAddPanel();
+updateAddCount();
 if (syncCfg()) cloudPull(true);
 </script>
 </body>
